@@ -1,42 +1,49 @@
 const fetch = require("node-fetch");
 const sizes = ['4', '2', '1'];
 
-var ffzEmotes = [];
-var gameRunning = false;
-var solution = "";
+var games = {};
+
+
+class Game {
+    constructor(channel, solution){
+        this.channel = channel;
+        this.solution = solution;
+    }
+}
+
 
 module.exports = {
-    getRandomUrl: function(channel){
-        gameRunning = true;
-        let randomNumber = Math.floor(Math.random() * ffzEmotes.length);
-        let emote = ffzEmotes[randomNumber];
+    getRandomUrl: function(channelObj){
+        let randomNumber = Math.floor(Math.random() * channelObj.ffzEmotes.length);
+        let emote = channelObj.ffzEmotes[randomNumber];
         for (const size of sizes){
             if (emote['urls'].hasOwnProperty(size)){
-                solution  = emote['name'];
+                let newGame = new Game(channelObj.name, emote['name']);
+                games[channelObj.name] = newGame;
                 return 'https:'+emote['urls'][size];
             }
         }
     },
-    loadEmotes: function(){
-        let ffzChannel = 'https://api.frankerfacez.com/v1/room/fabzeef';
+    loadEmotes: function(channelObj){
+        let ffzChannel = 'https://api.frankerfacez.com/v1/room/' + channelObj.name.substring(1);
 
-        get_json_prom(ffzChannel)
-            .then((channelObj) => {
-                if (channelObj.hasOwnProperty("error")){
+        return get_json_prom(ffzChannel)
+            .then((ffObj) => {
+                if (ffObj.hasOwnProperty("error")){
                     return;
                 }
-                ffzEmotes = channelObj['sets'][channelObj['room']['set']]['emoticons'];
-                console.log('ffz loaded!');
+                console.log('ffz in '+ channelObj.name +' loaded!');
+                return ffObj['sets'][ffObj['room']['set']]['emoticons'];
             });
     },
-    setGameState: function(state){
-        gameRunning = state;
+    endGame: function(channelName){
+        delete games[channelName];
     },
-    getGameState: function(){
-        return gameRunning;
+    getGameState: function(channelName){
+        return games.hasOwnProperty(channelName);
     },
-    getGameSolution: function(){
-        return solution;
+    getGameSolution: function(channelName){
+        return games[channelName].solution;
     }
 };
 

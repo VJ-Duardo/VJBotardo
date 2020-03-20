@@ -2,6 +2,7 @@ const tmi = require('tmi.js');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const braille = require('./generatebraille.js');
+const channels = require('./channel.js');
 
 const opts = {
   identity: {
@@ -9,7 +10,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1", "dankardo1"
+    "duardo1", "meristic", "dankardo1"
   ]
 };
 
@@ -22,7 +23,19 @@ client.on('disconnected', onDisconnectHandler);
 client.connect();
 
 
-var state = {gameRunning: false, game: ""};
+
+class Channel {
+    constructor(name){
+        this.name = name;
+        this.gameRunning = false;
+        this.game = null;
+        this.ffzEmotes = [];
+    }
+}
+
+var channelsObjs = {};
+
+
 
 function onMessageHandler (channel, userstate, message, self) {
     if (self) {
@@ -31,8 +44,8 @@ function onMessageHandler (channel, userstate, message, self) {
 
     const commandName = message.trim();
 
-    if (state.gameRunning){
-        state.game(channel, commandName, userstate);
+    if (channelsObjs[channel].gameRunning){
+        channelsObjs[channel].game(channel, commandName, userstate);
     } else{
         if (commandName === '!guess') {
             guessTheEmote(channel);
@@ -45,31 +58,40 @@ function onMessageHandler (channel, userstate, message, self) {
 
 
 function guessTheEmote(channel, message="", user=""){
-    state.gameRunning = true;
-    state.game = guessTheEmote;
-    if (!guess.getGameState()){
+    if (typeof channelsObjs[channel].ffzEmotes === 'undefined'){
+        client.action(channel, 'No ffz emotes in this chat!');
+        return;
+    }
+    channelsObjs[channel].gameRunning = true;
+    channelsObjs[channel].game = guessTheEmote;
+    if (!guess.getGameState(channel)){
         client.action(channel, 'GUESS THE EMOTE!');
-          let emote = guess.getRandomUrl(channel);
-          braille.processImage(emote)
+        let emote = guess.getRandomUrl(channelsObjs[channel]);
+        braille.processImage(emote)
             .then((brailleString) => {
                 client.say(channel, brailleString);
             });  
     } else {
-        if (message === guess.getGameSolution()){
-            client.action(channel, user['display-name'] + " guessed it right! It's "+ guess.getGameSolution());
-            guess.setGameState(false);
-            state.gameRunning = false;
+        if (message === guess.getGameSolution(channel)){
+            client.action(channel, user['display-name'] + " guessed it right! It's "+ guess.getGameSolution(channel));
+            guess.endGame(channel);
+            channelsObjs[channel].gameRunning = false;
         } else {
-            console.log(guess.getGameSolution());
+            console.log(guess.getGameSolution(channel));
         }
     }
 }
 
 
 function onConnectedHandler (addr, port) {
-    guess.loadEmotes();
-    for (const channel of opts.channels){
-        client.action(channel, "ALLO ZULUL");
+    for (const channelName of opts.channels){
+        client.action(channelName, "ALLO ZULUL");
+        let newChannel = new Channel(channelName);
+        guess.loadEmotes(newChannel)
+                .then((emoteList) => {
+                    newChannel.ffzEmotes = emoteList;
+                    channelsObjs[channelName] = newChannel;
+        });
     }
     console.log(`* Connected to ${addr}:${port}`);
 }
