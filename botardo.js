@@ -1,5 +1,7 @@
 const tmi = require('tmi.js');
 const pass = require('./password.js');
+const guess = require('./guesstheemote.js');
+const braille = require('./generatebraille.js');
 
 const opts = {
   identity: {
@@ -7,7 +9,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1"
+    "duardo1", "dankardo1"
   ]
 };
 
@@ -20,6 +22,8 @@ client.on('disconnected', onDisconnectHandler);
 client.connect();
 
 
+var state = {gameRunning: false, game: ""};
+
 function onMessageHandler (channel, userstate, message, self) {
     if (self) {
         return; 
@@ -27,16 +31,46 @@ function onMessageHandler (channel, userstate, message, self) {
 
     const commandName = message.trim();
 
-    if (commandName === '!guess') {
-        client.action(channel, 'testest');
-        console.log(`* Executed ${commandName} command`);
+    if (state.gameRunning){
+        state.game(channel, commandName, userstate);
+    } else{
+        if (commandName === '!guess') {
+            guessTheEmote(channel);
+            console.log(`* Executed ${commandName} command`);
+        } else {
+            console.log(`* Unknown command ${commandName}`);
+        }
+    }
+}
+
+
+function guessTheEmote(channel, message="", user=""){
+    state.gameRunning = true;
+    state.game = guessTheEmote;
+    if (!guess.getGameState()){
+        client.action(channel, 'GUESS THE EMOTE!');
+          let emote = guess.getRandomUrl(channel);
+          braille.processImage(emote)
+            .then((brailleString) => {
+                client.say(channel, brailleString);
+            });  
     } else {
-        console.log(`* Unknown command ${commandName}`);
+        if (message === guess.getGameSolution()){
+            client.action(channel, user['display-name'] + " guessed it right! It's "+ guess.getGameSolution());
+            guess.setGameState(false);
+            state.gameRunning = false;
+        } else {
+            console.log(guess.getGameSolution());
+        }
     }
 }
 
 
 function onConnectedHandler (addr, port) {
+    guess.loadEmotes();
+    for (const channel of opts.channels){
+        client.action(channel, "ALLO ZULUL");
+    }
     console.log(`* Connected to ${addr}:${port}`);
 }
 
