@@ -53,6 +53,13 @@ var sayFunc = function(channel, message){
     client.say(channel, message);
 };
 
+function kill(channel, user){
+    if (user === 'duardo1'){
+        client.action(channel, "bye FeelsBadMan");
+        process.exit();
+    }
+}
+
 function coolDownCheck(seconds){
     let now = Math.round(new Date().getTime() / 1000);
     if (now >= lastCommandTime+seconds){
@@ -81,6 +88,9 @@ function onMessageHandler (channel, userstate, message, self) {
             lastCommandTime = Math.round(new Date().getTime() / 1000);
             guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
             console.log(`* Executed ${command} command`);
+        }
+        else if (command[0] === '!kill'){
+            kill(channel, userstate['display-name']);
         } else {
             console.log(`* Unknown command ${command}`);
         }
