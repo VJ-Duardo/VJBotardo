@@ -1,11 +1,22 @@
 const braille = require('./generatebraille.js');
 var games = {};
 
+var maxRounds = 20;
+var defaultRounds = 1;
+
 
 class Game {
-    constructor(channel, solution){
+    constructor(channel, mode, rounds, playSet){
         this.channel = channel;
-        this.solution = solution;
+        this.solution;
+        this.mode = mode;
+        this.rounds = rounds;
+        this.roundsOverall = rounds;
+        this.playSet = playSet;
+    }
+    
+    setNewSolution(){
+        this.solution = getRandomEmote(this.playSet);
     }
 }
 
@@ -17,33 +28,32 @@ var modes = {
 
 
 module.exports = {
-    guessTheEmote: function(channelObj, sayFunc, mode, message="", user=""){
+    guessTheEmote: function(channelObj, sayFunc, user, command){
+        if (command[0] + command[1] === "!guessstop"){
+            games[channelObj.name].rounds = 1;
+        }
+        
         if (!getGameState(channelObj.name)){
-            let emote = getRandomUrl(channelObj, mode);
-            if (emote === -1){
+            let newGame = createGameObject(channelObj, command[1], command[2]);
+            if (newGame === -1){
                 sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel" or "all"');
                 return;
-            } else if (emote === -2){
+            } else if (newGame === -2){
                 sayFunc(channelObj.name, '/me No such emotes in this channel!');
                 return;
             }
-            braille.processImage(emote)
-                .then((brailleString) => {
-                    if (typeof brailleString === 'undefined'){
-                        endGame(channelObj.name);
-                        this.guessTheEmote(channelObj, sayFunc, mode);
-                    } else {
-                        channelObj.gameRunning = true;
-                        channelObj.game = this.guessTheEmote;
-                        sayFunc(channelObj.name, '/me GUESS THE EMOTE!');
-                        sayFunc(channelObj.name, brailleString);
-                    }
-                });
+            games[channelObj.name] = newGame;
+            startGame(channelObj, newGame, sayFunc);
         } else {
-            if (message === getGameSolution(channelObj.name)){
+            if (new RegExp(getGameSolution(channelObj.name)).test(command[0])){
                 sayFunc(channelObj.name, "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name));
-                endGame(channelObj.name);
-                channelObj.gameRunning = false;
+                games[channelObj.name].rounds--;
+                if (games[channelObj.name].rounds === 0){
+                    sayFunc(channelObj.name, '/me game ended nam');
+                    endGame(channelObj);
+                } else {
+                    setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 2000);
+                }
             } else {
                 console.log(getGameSolution(channelObj.name));
             }
@@ -51,7 +61,28 @@ module.exports = {
     }
 };
 
-function getRandomUrl(channelObj, mode){
+
+function startGame(channelObj, gameObj, sayFunc){
+    gameObj.setNewSolution();
+    braille.processImage(gameObj.solution.url)
+        .then((brailleString) => {
+            if (typeof brailleString === 'undefined'){
+                gameObj.setNewSolution();
+                startGame(channelObj, gameObj, sayFunc);
+            } else {
+                channelObj.gameRunning = true;
+                channelObj.game = module.exports.guessTheEmote;
+                sayFunc(channelObj.name, '/me GUESS THE EMOTE! (' 
+                        + modes[gameObj.mode] + ') [' 
+                        + ((gameObj.roundsOverall-gameObj.rounds)+1) 
+                        + '/' + gameObj.roundsOverall + ']');
+                sayFunc(channelObj.name, brailleString);
+            }
+        });
+}
+
+
+function createGameObject(channelObj, mode, rounds){
     if (!modes.hasOwnProperty(mode)){
         return -1;
     }
@@ -66,24 +97,44 @@ function getRandomUrl(channelObj, mode){
         return -2;
     }
     
-    let randomNumber = Math.floor(Math.random() * emoteSet.length);
-    let emote = emoteSet[randomNumber];
-        
-    let newGame = new Game(channelObj.name, emote.name);
-    games[channelObj.name] = newGame;
-    return emote.url;
+    rounds = setRounds(rounds);
+    let newGame = new Game(channelObj.name, mode, rounds, emoteSet);
+    return newGame;
 }
 
-function endGame(channelName){
-    delete games[channelName];
+
+function getRandomEmote(emoteSet){   
+    let randomNumber = Math.floor(Math.random() * emoteSet.length);
+    let emote = emoteSet[randomNumber];
+      
+    return emote;
 }
+
+
+function setRounds(rounds){
+    if (typeof rounds === 'undefined' || isNaN(parseInt(rounds)) || rounds <= defaultRounds){
+        return defaultRounds;
+    }else if(rounds >= maxRounds){
+        return maxRounds;
+    } else {
+        return rounds;
+    }
+}
+
+
+function endGame(channelObj){
+    delete games[channelObj.name];
+    channelObj.gameRunning = false;
+}
+
 
 function getGameState(channelName){
     return games.hasOwnProperty(channelName);
 }
 
+
 function getGameSolution(channelName){
-    return games[channelName].solution;
+    return games[channelName].solution.name;
 }
 
 

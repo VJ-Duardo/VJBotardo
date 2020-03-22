@@ -72,14 +72,14 @@ function onMessageHandler (channel, userstate, message, self) {
     const command = message.trim().split(" ");
 
     if (channelsObjs[channel].gameRunning){
-        channelsObjs[channel].game(channelsObjs[channel], sayFunc, "", command[0], userstate);
+        channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === '!guess') {
             if (!coolDownCheck(5)){
                 return;
             }
             lastCommandTime = Math.round(new Date().getTime() / 1000);
-            guess.guessTheEmote(channelsObjs[channel], sayFunc, command[1]);
+            guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
             console.log(`* Executed ${command} command`);
         } else {
             console.log(`* Unknown command ${command}`);
