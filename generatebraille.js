@@ -15,7 +15,7 @@ class Pixel {
 }
 
 module.exports = {
-    processImage: function(src, second_try=false){
+    processImage: function(src){
         console.log(src);
         if (typeof src === 'undefined'){
             return;
@@ -23,9 +23,6 @@ module.exports = {
         
         var canvas = createCanvas(height, width);
         var context = canvas.getContext('2d');
-        //let image = new Image();
-        //image.crossOrigin = "Anonymous";
-        //image.src = src;
 
         return loadImage(src)
             .then((image) => {
@@ -34,16 +31,8 @@ module.exports = {
             return iterate_over_pixels(pixel_data, canvas.width);
         })
             .catch((error) => {
-                console.log("errorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerror");
+                console.log("An error occured!");
         });
-
-        /*image.onerror = function(){
-            if (second_try){
-                set_error_state();
-            } else {
-                process_image(corsproxy+cached_url, true);
-            }
-        };*/
     }
 }
 

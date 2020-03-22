@@ -1,6 +1,10 @@
 const fetch = require("node-fetch");
-const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+const pass = require('./password.js');
 const sizes = ['4', '2', '1'];
+
+var twitchGlobalEmotes = [];
+var twitchPicUrl = 'https://static-cdn.jtvnw.net/emoticons/v1/';
+var bttvPicUrl = 'https://cdn.betterttv.net/emote/';
 
 class Emote{
     constructor(name, url){
@@ -16,6 +20,14 @@ module.exports = {
         getFFZGlobal(channelObj);
         getBTTVChannel(channelObj);
         getBTTVGlobal(channelObj);
+        getTwitchChannel(channelObj);
+        
+        if (twitchGlobalEmotes.length > 0){
+            channelObj.twitchGlobal = twitchGlobalEmotes;
+            console.log("twitchglobal in " + channelObj.name + " loaded!!");
+        } else {
+            getTwitchGlobal(channelObj);
+        }
     }
 };
 
@@ -30,6 +42,9 @@ function getJsonProm(url, callback){
             callback(data);
         });
 }
+
+
+
 
 
 function getFFZChannel(channelObj){
@@ -49,11 +64,14 @@ function getFFZGlobal(channelObj){
     let ffzGlobal = 'https://api.frankerfacez.com/v1/set/global';
     
     getJsonProm(ffzGlobal, function(ffzGlObj){
-        let emoteList = ffzGlObj['sets']['3']['emoticons'].concat(ffzGlObj['sets']['4330']['emoticons'])
+        let emoteList = ffzGlObj['sets']['3']['emoticons'].concat(ffzGlObj['sets']['4330']['emoticons']);
         console.log("ffzGlobal in " + channelObj.name + " loaded!");
         channelObj.emotes.ffzGlobal = convertFFZLists(emoteList);
     });
 }
+
+
+
 
 
 function getBTTVChannel(channelObj){
@@ -66,7 +84,7 @@ function getBTTVChannel(channelObj){
         
         let emoteList = bttvChObj['emotes'];
         console.log("bttvchannel in " + channelObj.name + " loaded!");
-        channelObj.emotes.bttvChannel = convertBTTVLists(emoteList);
+        channelObj.emotes.bttvChannel = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
     });
 }
 
@@ -76,18 +94,56 @@ function getBTTVGlobal(channelObj){
     getJsonProm(bttvGlobal, function(bttvGlObj){
         let emoteList = bttvGlObj['emotes'];
         console.log("bttvglobal in " + channelObj.name + " loaded!");
-        channelObj.emotes.bttvGlobal = convertBTTVLists(emoteList);
+        channelObj.emotes.bttvGlobal = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
     });
 }
 
 
 
-function convertBTTVLists(emoteList){
-    let bttvPicUrl = 'https://cdn.betterttv.net/emote/';
+
+
+function getTwitchChannel(channelObj){
+    let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
+    fetch(twitchUserUrl + channelObj.name.substring(1), {
+        headers: {
+            'Client-ID': pass.clientId
+        }
+    })
+    .then((response) => {
+        return response.json();
+    })
+    .then((dataObj) => {
+        let twitchEmotesUrl = 'https://api.twitchemotes.com/api/v4/channels/' + dataObj.data[0].id;
+
+        getJsonProm(twitchEmotesUrl, function(twChObj){
+            if(twChObj.hasOwnProperty("error")){
+                return;
+            }
+            
+            let emoteList = twChObj['emotes'];
+            console.log("twitchchannel in " + channelObj.name + " loaded!");
+            channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        });
+     });
+}
+
+function getTwitchGlobal(channelObj){
+    let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     
+    getJsonProm(twitchGlobalUrl, function(twGlObj){
+        let emoteList = twGlObj['emotes'];
+        console.log("twitchglobal in " + channelObj.name + " loaded!");
+        channelObj.emotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+    });
+}
+
+
+
+
+function convertBTTVAndTwitchLists(emoteList, url, postfix){
     for (i=0; i<emoteList.length; i++){
-        let url = bttvPicUrl + emoteList[i]['id']+'/2x';
-        emoteList[i] = new Emote(emoteList[i]['code'], url);
+        let emoteUrl = url + emoteList[i]['id'] + postfix;
+        emoteList[i] = new Emote(emoteList[i]['code'], emoteUrl);
     }
     return emoteList;
 }
@@ -102,17 +158,4 @@ function convertFFZLists(emoteList){
         }
     }
     return emoteList;
-   
-}
-
-
-function checkImageUrl(url) {
-    var http = new XMLHttpRequest();
-    http.open('HEAD', url, false);
-    http.send();
-    if (http.status !== 404){
-        return true;
-    } else {
-        return false;
-    }
 }
