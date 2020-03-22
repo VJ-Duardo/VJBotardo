@@ -2,7 +2,7 @@ const tmi = require('tmi.js');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const braille = require('./generatebraille.js');
-const channels = require('./channel.js');
+const emotes = require('./emotes.js');
 
 const opts = {
   identity: {
@@ -10,7 +10,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1", "meristic", "dankardo1"
+    "duardo1"
   ]
 };
 
@@ -29,7 +29,18 @@ class Channel {
         this.name = name;
         this.gameRunning = false;
         this.game = null;
-        this.ffzEmotes = [];
+        this.emotes = {
+            ffzChannel: [],
+            ffzGlobal: [],
+            bttvChannel: [],
+            bttvGlobal: [],
+            twitchChannel: [],
+            twitchGlobal: []
+        };
+    }
+    
+    loadEmotes(){
+        emotes.loadEmotes(this);
     }
 }
 
@@ -58,18 +69,23 @@ function onMessageHandler (channel, userstate, message, self) {
 
 
 function guessTheEmote(channel, message="", user=""){
-    if (typeof channelsObjs[channel].ffzEmotes === 'undefined'){
+    if (typeof channelsObjs[channel].emotes.ffzChannel === 'undefined'){
         client.action(channel, 'No ffz emotes in this chat!');
         return;
     }
     channelsObjs[channel].gameRunning = true;
     channelsObjs[channel].game = guessTheEmote;
     if (!guess.getGameState(channel)){
-        client.action(channel, 'GUESS THE EMOTE!');
         let emote = guess.getRandomUrl(channelsObjs[channel]);
         braille.processImage(emote)
             .then((brailleString) => {
-                client.say(channel, brailleString);
+                if (typeof brailleString === 'undefined'){
+                    guess.endGame(channel);
+                    guessTheEmote(channel);
+                } else {
+                    client.action(channel, 'GUESS THE EMOTE!');
+                    client.say(channel, brailleString);
+                }
             });  
     } else {
         if (message === guess.getGameSolution(channel)){
@@ -87,11 +103,8 @@ function onConnectedHandler (addr, port) {
     for (const channelName of opts.channels){
         client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
-        guess.loadEmotes(newChannel)
-                .then((emoteList) => {
-                    newChannel.ffzEmotes = emoteList;
-                    channelsObjs[channelName] = newChannel;
-        });
+        newChannel.loadEmotes();
+        channelsObjs[channelName] = newChannel;
     }
     console.log(`* Connected to ${addr}:${port}`);
 }

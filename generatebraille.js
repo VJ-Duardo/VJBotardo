@@ -27,10 +27,14 @@ module.exports = {
         //image.crossOrigin = "Anonymous";
         //image.src = src;
 
-        return loadImage(src).then((image) => {
+        return loadImage(src)
+            .then((image) => {
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
             let pixel_data = context.getImageData(0, 0, canvas.width, canvas.height).data;
             return iterate_over_pixels(pixel_data, canvas.width);
+        })
+            .catch((error) => {
+                console.log("errorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerror");
         });
 
         /*image.onerror = function(){
