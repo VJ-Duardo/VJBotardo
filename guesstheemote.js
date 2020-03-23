@@ -4,6 +4,13 @@ var games = {};
 var maxRounds = 20;
 var defaultRounds = 1;
 
+var firstHint;
+var firstHintTime = 15000;
+var secondHint;
+var secondHintTime = 30000;
+var resolve;
+var resolveTime = 45000;
+
 
 class Game {
     constructor(channel, mode, rounds, playSet){
@@ -46,14 +53,8 @@ module.exports = {
             startGame(channelObj, newGame, sayFunc);
         } else {
             if (new RegExp(getGameSolution(channelObj.name)).test(command[0])){
-                sayFunc(channelObj.name, "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name));
-                games[channelObj.name].rounds--;
-                if (games[channelObj.name].rounds === 0){
-                    sayFunc(channelObj.name, '/me game ended nam');
-                    endGame(channelObj);
-                } else {
-                    setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 2000);
-                }
+                let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name);
+                resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
             } else {
                 console.log(getGameSolution(channelObj.name));
             }
@@ -63,7 +64,13 @@ module.exports = {
 
 
 function startGame(channelObj, gameObj, sayFunc){
+    firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
+    secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
+    
     gameObj.setNewSolution();
+    let loseString = "/me It was " +gameObj.solution.name+ " . Maybe open your eyes next time :)";
+    resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
+    
     braille.processImage(gameObj.solution.url)
         .then((brailleString) => {
             if (typeof brailleString === 'undefined'){
@@ -79,6 +86,38 @@ function startGame(channelObj, gameObj, sayFunc){
                 sayFunc(channelObj.name, brailleString);
             }
         });
+}
+
+
+
+function giveFirstHint(channelObj, gameObj, sayFunc){
+    sayFunc(channelObj.name, "/me First Hint: It's a " +gameObj.solution.origin+ " emote :)");
+}
+
+function giveSecondHint(channelObj, gameObj, sayFunc){
+    braille.processImage(gameObj.solution.url, 150)
+        .then((brailleString) => {
+            if (typeof brailleString === 'undefined'){
+                return;
+            } else {
+                sayFunc(channelObj.name, '/me Second Hint: ');
+                sayFunc(channelObj.name, brailleString);
+            }
+        });
+}
+
+function resolveRound(channelObj, gameObj, sayFunc, endString){
+    sayFunc(channelObj.name, endString);
+    clearTimeout(firstHint);
+    clearTimeout(secondHint);
+    clearTimeout(resolve);
+    gameObj.rounds--;
+    if (games[channelObj.name].rounds === 0){
+        sayFunc(channelObj.name, '/me game ended nam');
+        endGame(channelObj);
+    } else {
+        setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 3000);
+    }
 }
 
 
@@ -103,10 +142,9 @@ function createGameObject(channelObj, mode, rounds){
 }
 
 
-function getRandomEmote(emoteSet){   
+function getRandomEmote(emoteSet){
     let randomNumber = Math.floor(Math.random() * emoteSet.length);
     let emote = emoteSet[randomNumber];
-      
     return emote;
 }
 

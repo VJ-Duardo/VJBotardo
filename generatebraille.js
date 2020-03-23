@@ -15,20 +15,20 @@ class Pixel {
 }
 
 module.exports = {
-    processImage: function(src){
+    processImage: function(src, treshold=255){
         console.log(src);
         if (typeof src === 'undefined'){
             return;
         }
         
-        var canvas = createCanvas(height, width);
+        var canvas = createCanvas(width, height);
         var context = canvas.getContext('2d');
 
         return loadImage(src)
             .then((image) => {
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
             let pixel_data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            return iterate_over_pixels(pixel_data, canvas.width);
+            return iterate_over_pixels(pixel_data, canvas.width, treshold);
         })
             .catch((error) => {
                 console.log("An error occured!");
@@ -36,8 +36,8 @@ module.exports = {
     }
 }
 
-function iterate_over_pixels(data_array, width){
-    color_treshold = 255;
+function iterate_over_pixels(data_array, width, treshold){
+    color_treshold = treshold;
     let result_array = new Array();
     let pixel_array = new Array();
     for(i=0; i<data_array.length; i+=4){
@@ -47,7 +47,7 @@ function iterate_over_pixels(data_array, width){
     for(i=0; i<pixel_array.length; i+=(width*4)){
         let line = "";
         for(j=0; j<width; j+=2){
-            line += brailleData.braille_descr_dic[get_braille_code(pixel_array, i+j, width)];
+            line += brailleData.braille_descr_dic[get_braille_code(pixel_array, i+j, width, treshold)];
         }
         result_array.push(line);
     }
@@ -56,7 +56,7 @@ function iterate_over_pixels(data_array, width){
 }
 
 
-function get_braille_code(pixel_array, pos, width){
+function get_braille_code(pixel_array, pos, width, treshold){
     let braille_code = "";
     let pixel_pos_to_braille_pos = {
         '00': '1',
@@ -71,7 +71,7 @@ function get_braille_code(pixel_array, pos, width){
     for(k=0; k<2; k++){
         for(l=0; l<4; l++){
             if ((pos + k + (width*l)) < pixel_array.length){
-                if (evaluate_pixel(pixel_array[(pos + k + (width*l))])){
+                if (evaluate_pixel(pixel_array[(pos + k + (width*l))], treshold)){
                     braille_code += pixel_pos_to_braille_pos[(k.toString() + l.toString())];
                 }
             }
@@ -81,8 +81,12 @@ function get_braille_code(pixel_array, pos, width){
 }
 
 
-function evaluate_pixel(pixel){
+function evaluate_pixel(pixel, color_treshold){
     if (pixel.alpha === 0){
+        return true;
+    }
+    
+    if (pixel.red > color_treshold || pixel.green > color_treshold || pixel.blue > color_treshold){
         return true;
     } else {
         return false;

@@ -7,9 +7,10 @@ var twitchPicUrl = 'https://static-cdn.jtvnw.net/emoticons/v1/';
 var bttvPicUrl = 'https://cdn.betterttv.net/emote/';
 
 class Emote{
-    constructor(name, url){
+    constructor(name, url, origin){
         this.name = name;
         this.url = url;
+        this.origin = origin;
     }
 }
 
@@ -143,7 +144,13 @@ function getTwitchGlobal(channelObj){
 function convertBTTVAndTwitchLists(emoteList, url, postfix){
     for (i=0; i<emoteList.length; i++){
         let emoteUrl = url + emoteList[i]['id'] + postfix;
-        emoteList[i] = new Emote(emoteList[i]['code'], emoteUrl);
+        let origin;
+        if (new RegExp(".*betterttv.*").test(url)){
+            origin = 'bttv';
+        } else {
+            origin = 'twitch';
+        }
+        emoteList[i] = new Emote(emoteList[i]['code'], emoteUrl, origin);
     }
     return emoteList;
 }
@@ -152,7 +159,7 @@ function convertFFZLists(emoteList){
     for (i=0; i<emoteList.length; i++){
         for (const size of sizes){
             if (emoteList[i]['urls'].hasOwnProperty(size)){
-                emoteList[i] = new Emote(emoteList[i]['name'], 'https:'+emoteList[i]['urls'][size]);
+                emoteList[i] = new Emote(emoteList[i]['name'], 'https:'+emoteList[i]['urls'][size], 'ffz');
                 break;
             }
         }

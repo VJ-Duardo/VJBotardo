@@ -9,7 +9,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1"
+    "fabzeef"
   ]
 };
 
@@ -54,7 +54,7 @@ var sayFunc = function(channel, message){
 };
 
 function kill(channel, user){
-    if (user === 'duardo1'){
+    if (user === 'Duardo1'){
         client.action(channel, "bye FeelsBadMan");
         process.exit();
     }
