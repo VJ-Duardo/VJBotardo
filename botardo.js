@@ -9,7 +9,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "fabzeef"
+    "fabzeef", "meristic", "duardo1"
   ]
 };
 

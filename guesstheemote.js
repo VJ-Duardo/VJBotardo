@@ -4,11 +4,8 @@ var games = {};
 var maxRounds = 20;
 var defaultRounds = 1;
 
-var firstHint;
 var firstHintTime = 15000;
-var secondHint;
 var secondHintTime = 30000;
-var resolve;
 var resolveTime = 45000;
 
 
@@ -21,6 +18,15 @@ class Game {
         this.roundsOverall = rounds;
         this.playSet = playSet;
         this.roundActive = false;
+        this.firstHint;
+        this.secondHint;
+        this.resolve;
+    }
+    
+    clearHints(){
+        clearTimeout(this.firstHint);
+        clearTimeout(this.secondHint);
+        clearTimeout(this.resolve);
     }
     
     setNewSolution(){
@@ -69,18 +75,18 @@ module.exports = {
 
 function startGame(channelObj, gameObj, sayFunc){
     gameObj.roundActive = true;
-    firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
-    secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
-    
     gameObj.setNewSolution();
+    
+    gameObj.firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
+    gameObj.secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
     let loseString = "/me It was " +gameObj.solution.name+ " . Maybe open your eyes next time :)";
-    resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
+    gameObj.resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
     
     braille.processImage(gameObj.solution.url)
         .then((brailleString) => {
             if (typeof brailleString === 'undefined'){
                 gameObj.setNewSolution();
-                clearTimeouts();
+                gameObj.clearHints();
                 startGame(channelObj, gameObj, sayFunc);
             } else {
                 channelObj.gameRunning = true;
@@ -115,7 +121,7 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
 function resolveRound(channelObj, gameObj, sayFunc, endString){
     gameObj.roundActive = false;
     sayFunc(channelObj.name, endString);
-    clearTimeouts();
+    gameObj.clearHints();
     gameObj.rounds--;
     if (games[channelObj.name].rounds === 0){
         sayFunc(channelObj.name, '/me game ended nam');
@@ -124,13 +130,6 @@ function resolveRound(channelObj, gameObj, sayFunc, endString){
         setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 3000);
     }
 }
-
-function clearTimeouts(){
-    clearTimeout(firstHint);
-    clearTimeout(secondHint);
-    clearTimeout(resolve);
-}
-
 
 function createGameObject(channelObj, mode, rounds){
     if (!modes.hasOwnProperty(mode)){
