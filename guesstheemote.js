@@ -20,6 +20,7 @@ class Game {
         this.rounds = rounds;
         this.roundsOverall = rounds;
         this.playSet = playSet;
+        this.roundActive = false;
     }
     
     setNewSolution(){
@@ -43,7 +44,7 @@ module.exports = {
         if (!getGameState(channelObj.name)){
             let newGame = createGameObject(channelObj, command[1], command[2]);
             if (newGame === -1){
-                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel" or "all"');
+                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel" or "all" (e.g. !guess all)');
                 return;
             } else if (newGame === -2){
                 sayFunc(channelObj.name, '/me No such emotes in this channel!');
@@ -52,6 +53,9 @@ module.exports = {
             games[channelObj.name] = newGame;
             startGame(channelObj, newGame, sayFunc);
         } else {
+            if (!games[channelObj.name].roundActive){
+                return;
+            }
             if (new RegExp(getGameSolution(channelObj.name)).test(command[0])){
                 let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
@@ -64,6 +68,7 @@ module.exports = {
 
 
 function startGame(channelObj, gameObj, sayFunc){
+    gameObj.roundActive = true;
     firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
     secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
     
@@ -75,6 +80,7 @@ function startGame(channelObj, gameObj, sayFunc){
         .then((brailleString) => {
             if (typeof brailleString === 'undefined'){
                 gameObj.setNewSolution();
+                clearTimeouts();
                 startGame(channelObj, gameObj, sayFunc);
             } else {
                 channelObj.gameRunning = true;
@@ -107,10 +113,9 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
 }
 
 function resolveRound(channelObj, gameObj, sayFunc, endString){
+    gameObj.roundActive = false;
     sayFunc(channelObj.name, endString);
-    clearTimeout(firstHint);
-    clearTimeout(secondHint);
-    clearTimeout(resolve);
+    clearTimeouts();
     gameObj.rounds--;
     if (games[channelObj.name].rounds === 0){
         sayFunc(channelObj.name, '/me game ended nam');
@@ -118,6 +123,12 @@ function resolveRound(channelObj, gameObj, sayFunc, endString){
     } else {
         setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 3000);
     }
+}
+
+function clearTimeouts(){
+    clearTimeout(firstHint);
+    clearTimeout(secondHint);
+    clearTimeout(resolve);
 }
 
 
