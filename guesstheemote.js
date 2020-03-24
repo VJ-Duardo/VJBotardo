@@ -7,6 +7,7 @@ var defaultRounds = 1;
 var firstHintTime = 15000;
 var secondHintTime = 30000;
 var resolveTime = 45000;
+var timeBetweenRounds = 4000;
 
 
 class Game {
@@ -127,7 +128,7 @@ function resolveRound(channelObj, gameObj, sayFunc, endString){
         sayFunc(channelObj.name, '/me game ended nam');
         endGame(channelObj);
     } else {
-        setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, 3000);
+        setTimeout(function(){startGame(channelObj, games[channelObj.name], sayFunc);}, timeBetweenRounds);
     }
 }
 
@@ -184,5 +185,3 @@ function getGameState(channelName){
 function getGameSolution(channelName){
     return games[channelName].solution.name;
 }
-
-

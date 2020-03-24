@@ -36,6 +36,7 @@ class Channel {
             twitchChannel: [],
             twitchGlobal: []
         };
+        this.lastCommandTime = 0;
     }
     
     loadEmotes(){
@@ -44,7 +45,6 @@ class Channel {
 }
 
 var channelsObjs = {};
-var lastCommandTime = 0;
 
 
 
@@ -60,14 +60,15 @@ function kill(channel, user){
     }
 }
 
-function coolDownCheck(seconds){
+function coolDownCheck(channel, seconds){
     let now = Math.round(new Date().getTime() / 1000);
-    if (now >= lastCommandTime+seconds){
+    if (now >= channelsObjs[channel].lastCommandTime+seconds){
         return true;
     } else {
         return false;
     }
 }
+
 
 
 
@@ -82,10 +83,10 @@ function onMessageHandler (channel, userstate, message, self) {
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === '!guess') {
-            if (!coolDownCheck(5)){
+            if (!coolDownCheck(channel, 5)){
                 return;
             }
-            lastCommandTime = Math.round(new Date().getTime() / 1000);
+            channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
             guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
             console.log(`* Executed ${command} command`);
         }
