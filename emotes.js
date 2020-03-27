@@ -150,7 +150,7 @@ function convertBTTVAndTwitchLists(emoteList, url, postfix){
         } else {
             origin = 'twitch';
         }
-        emoteList[i] = new Emote(emoteList[i]['code'], emoteUrl, origin);
+        emoteList[i] = new Emote(emoteList[i]['code'].replace('\\&lt', '<').replace('\\&rt', '>'), emoteUrl, origin);
     }
     return emoteList;
 }

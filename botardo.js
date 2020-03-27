@@ -2,6 +2,7 @@ const tmi = require('tmi.js');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const emotes = require('./emotes.js');
+const db = require('./database.js');
 
 const opts = {
   identity: {
@@ -9,7 +10,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "fabzeef", "meristic", "duardo1"
+    "duardo1", "fabzeef"
   ]
 };
 
@@ -55,6 +56,7 @@ var sayFunc = function(channel, message){
 
 function kill(channel, user){
     if (user === 'Duardo1'){
+        db.closeDB();
         client.action(channel, "bye FeelsBadMan");
         process.exit();
     }
@@ -83,18 +85,20 @@ function onMessageHandler (channel, userstate, message, self) {
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === '!guess') {
+            guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
+            console.log(`* Executed ${command} command`);
+        } else if (command[0] === '!stop'){
+            kill(channel, userstate['display-name']);
+        } else if (command[0] === '!top'){
             if (!coolDownCheck(channel, 5)){
                 return;
             }
-            channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
-            guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
-            console.log(`* Executed ${command} command`);
+            db.getTopUsers(5, channel, sayFunc);
+        } else{
+            return;
         }
-        else if (command[0] === '!kill'){
-            kill(channel, userstate['display-name']);
-        } else {
-            console.log(`* Unknown command ${command}`);
-        }
+        
+        channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
     }
 }
 

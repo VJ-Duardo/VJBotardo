@@ -34,10 +34,9 @@ module.exports = {
                 console.log("An error occured!");
         });
     }
-}
+};
 
 function iterate_over_pixels(data_array, width, treshold){
-    color_treshold = treshold;
     let result_array = new Array();
     let pixel_array = new Array();
     for(i=0; i<data_array.length; i+=4){

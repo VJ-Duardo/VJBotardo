@@ -1,5 +1,8 @@
 const braille = require('./generatebraille.js');
+const db = require('./database.js');
 var games = {};
+
+var reward = 10;
 
 var maxRounds = 20;
 var defaultRounds = 1;
@@ -64,7 +67,8 @@ module.exports = {
                 return;
             }
             if (new RegExp(getGameSolution(channelObj.name)).test(command[0])){
-                let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name);
+                let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name) + " (+"+reward+"USh)";
+                db.addUserPoints(user['user-id'], user['display-name'], reward);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
             } else {
                 console.log(getGameSolution(channelObj.name));
