@@ -14,7 +14,12 @@ class Game {
             name: player2,
             character: 'O'
         };
-        this.waitForAccept = false;
+        this.waitForAccept = {
+            status: true,
+            handle: null,
+            waitTime: 30000
+        };
+        this.waitForAcceptHandle;
         this.stake = stake;
         this.sayFunc = sayFunc;
     }
@@ -22,55 +27,61 @@ class Game {
 
 
 module.exports = {
-    tictactoe: async function(channelObj, sayFunc, user, command){
+    tictactoe: function(channelObj, sayFunc, user, command){
         if (!getGameState(channelObj.name)){
-            let newGame = new Game(channelObj.name, sayFunc, user['display-name'], command[1], command[2]);
-            games[channelObj.name] = newGame;
-            
-            await checkInputValues(channelObj, newGame);
-            if (!getGameState(channelObj.name)){
-                console.log("err state");
-                channelObj.gameRunning = false;
+            if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
+                sayFunc(channelObj.name, "Correct syntax is: !ttt <enemy> <points>");
                 return;
             }
-            console.log("all good");
+            let newGame = new Game(channelObj.name, sayFunc, user['display-name'], command[1], command[2]);
+            games[channelObj.name] = newGame;
+            channelObj.gameRunning = true;
+            channelObj.game = module.exports.tictactoe;
+            
+            checkInputValues(channelObj, newGame);
+        } else {
+            if (games[channelObj.name].waitForAccept.status && command[0] === '!accept' && user['display-name'].toLowerCase() === games[channelObj.name].playerTwo.name.toLowerCase()){
+                games[channelObj.name].waitForAccept.status = false;
+                clearTimeout(games[channelObj.name].waitForAccept.handle);
+                console.log("startRound here");
+                //startRound();
+            } else {
+                console.log(games[channelObj.name]);
+                console.log("ffs");
+            }
         }
     }
 };
 
 
 async function checkInputValues(channelObj, gameObj){
-    let userExists = await checkUserExistence(channelObj.name, gameObj.playerTwo.name);
+    let userExists = await checkUserExistence(channelObj, gameObj.playerTwo.name);
     
     if (!userExists){
         return -1;
     }
     
-    for (const name of [gameObj.playerOne.name, gameObj.playerTwo.name]){
-        db.getPoints(channelObj.name, name, checkPoints);
-        if (!getGameState(channelObj.name)){
-            return -2;
-        }
-    }
+    db.getPoints(channelObj, gameObj.playerOne.name, checkPoints);
+    db.getPoints(channelObj, gameObj.playerTwo.name, checkPoints);
     
     return 0;
 }
 
 
-function sendGameRequest(){
-    
+function gameRequestTimeout(channelObj, gameObj, initial){
+    if (initial){
+        gameObj.sayFunc(channelObj.name, gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write !accept to play :)");
+        gameObj.waitForAccept.handle = setTimeout(function(){gameRequestTimeout(channelObj, gameObj, false);}, gameObj.waitForAccept.waitTime);
+    } else {
+        gameObj.sayFunc(channelObj.name, gameObj.playerTwo.name + " did not accept the request in time!");
+        endGame(channelObj);
+    }
 }
 
 
 
-function getGameState(channelName){
-    return games.hasOwnProperty(channelName);
-}
-
-
-
-function checkUserExistence(channel, user){
-    let api = 'https://tmi.twitch.tv/group/user/'+ channel.substring(1) +'/chatters';
+function checkUserExistence(channelObj, user){
+    let api = 'https://tmi.twitch.tv/group/user/'+ channelObj.name.substring(1) +'/chatters';
     return fetch(api)
         .then((response) => {
             return response.json();
@@ -81,8 +92,8 @@ function checkUserExistence(channel, user){
                    return true;
                 }
             }
-            games[channel].sayFunc(channel, user + ' cannot be found in this channel!');
-            endGame(channel);
+            games[channelObj.name].sayFunc(channelObj.name, user + ' cannot be found in this channel!');
+            endGame(channelObj);
             return false;
         })
         .catch((err) => {
@@ -91,16 +102,43 @@ function checkUserExistence(channel, user){
 }
 
 
-function checkPoints(channel, player, points){
-    if (typeof games[channel] === 'undefined'){
-        return;
+function checkPoints(channelObj, player, points){
+    if (typeof this.counter === 'undefined'){
+        this.counter = 1;
+        this.err = false;
+    } else {
+        this.counter++;
     }
-    if (games[channel].stake > points){
-        games[channel].sayFunc(channel, player + ' doesnt have enough points!');
-        endGame(channel);
+    console.log(this.counter);
+    console.log(this.err);
+    
+    if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
+        if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){
+            games[channelObj.name].sayFunc(channelObj.name, player + ' doesnt have enough points!');
+            this.err = true;
+        }
+    }
+        
+    if (this.counter === 2){
+        if (this.err === false){
+            gameRequestTimeout(channelObj, games[channelObj.name], true);
+        } else {
+            endGame(channelObj);
+        }
+        this.counter = 0;
+        this.err = false;
     }
 }
 
-function endGame(channel){
-    delete games[channel];
+
+
+
+function getGameState(channelName){
+    return games.hasOwnProperty(channelName);
+}
+
+
+function endGame(channelObj){
+    delete games[channelObj.name];
+    channelObj.gameRunning = false;
 }
