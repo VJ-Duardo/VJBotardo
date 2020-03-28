@@ -3,6 +3,7 @@ const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
+const ttt = require('./tictactoe.js');
 
 const opts = {
   identity: {
@@ -10,7 +11,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1", "fabzeef"
+    "duardo1"
   ]
 };
 
@@ -94,7 +95,10 @@ function onMessageHandler (channel, userstate, message, self) {
                 return;
             }
             db.getTopUsers(5, channel, sayFunc);
+        } else if (command[0] === '!ttt'){
+            ttt.tictactoe(channelsObjs[channel], sayFunc, userstate, command);
         } else{
+            console.log(`* Unknown command ${command}`);
             return;
         }
         

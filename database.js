@@ -41,6 +41,19 @@ module.exports = {
         
             sayFunc(channel, row.map((user, index) => index+1 + '. ' + user.display_name + ' - ' + user.points).join(', '));
         });
+    },
+    getPoints: function(channel, name, callback){
+        let sql = 'SELECT points FROM USER WHERE LOWER(display_name) = LOWER(?)';
+        db.get(sql, [name], (err, row) => {
+            if (err){
+                reject(err.message);
+            }
+            if (typeof row === 'undefined'){
+                callback(channel, name, 0);
+            } else {
+                callback(channel, name, row.points);
+            }
+        });
     }
 };
 
@@ -69,4 +82,5 @@ function checkIfUserExists(id){
             }
         });  
     });
+    
 }
