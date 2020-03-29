@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const db = require('./database.js');
+const brailleData = require('./brailledata.js');
 
 var games = {};
 
@@ -8,20 +9,52 @@ class Game {
         this.channel = channel;
         this.playerOne = {
             name: player1,
-            character: 'X'
+            character: 'x'
         };
         this.playerTwo = {
             name: player2,
-            character: 'O'
+            character: 'o'
         };
         this.waitForAccept = {
-            status: true,
+            status: false,
             handle: null,
             waitTime: 30000
         };
-        this.waitForAcceptHandle;
+        this.waitForInput = {
+            status: false,
+            handle: null,
+            waitTime: 15000
+        };
         this.stake = stake;
         this.sayFunc = sayFunc;
+        this.turn;
+        this.field = 
+                [["-", "-", "-"],
+                ["-", "-", "-"],
+                ["-", "-", "-"]];
+        this.looks = {};
+    }
+    
+    randomStartTurn(){
+        this.turn = [this.playerOne, this.playerTwo][Math.floor(Math.random() * 2)];
+    }
+    
+    setLooks(){
+        this.looks[this.playerOne.character] = brailleData.ttt[this.playerOne.character].split(" ");
+        this.looks[this.playerTwo.character] = brailleData.ttt[this.playerTwo.character].split(" ");
+        this.looks["-"] = brailleData.ttt["-"].split(" ");
+        this.looks.vertLine = '⠄';
+        this.looks.cellHeight = 5;
+    }
+    
+    turnToString(){
+        let fieldString = "";
+        for (const line of this.field){
+            for (let i=0; i< this.looks.cellHeight; i++){
+                fieldString+= [this.looks[line[0]][i],this.looks[line[1]][i],this.looks[line[2]][i]].join(this.looks.vertLine) + " ";
+            }
+        }
+        return fieldString;
     }
 }
 
@@ -43,6 +76,8 @@ module.exports = {
             if (games[channelObj.name].waitForAccept.status && command[0] === '!accept' && user['display-name'].toLowerCase() === games[channelObj.name].playerTwo.name.toLowerCase()){
                 games[channelObj.name].waitForAccept.status = false;
                 clearTimeout(games[channelObj.name].waitForAccept.handle);
+                games[channelObj.name].setLooks();
+                sayFunc(channelObj.name, games[channelObj.name].turnToString());
                 console.log("startRound here");
                 //startRound();
             } else {
@@ -52,6 +87,12 @@ module.exports = {
         }
     }
 };
+
+
+function startRound(channelObj, gameObj){
+    gameObj.printTurn;
+    gameObj.sayFunc(channelObj.name, "It's " + gameObj.turn.name + "'s turn!");
+}
 
 
 async function checkInputValues(channelObj, gameObj){
@@ -72,6 +113,7 @@ function gameRequestTimeout(channelObj, gameObj, initial){
     if (initial){
         gameObj.sayFunc(channelObj.name, gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write !accept to play :)");
         gameObj.waitForAccept.handle = setTimeout(function(){gameRequestTimeout(channelObj, gameObj, false);}, gameObj.waitForAccept.waitTime);
+        gameObj.waitForAccept.status = true;
     } else {
         gameObj.sayFunc(channelObj.name, gameObj.playerTwo.name + " did not accept the request in time!");
         endGame(channelObj);
