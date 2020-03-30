@@ -11,7 +11,7 @@ const opts = {
     password: pass.password
   },
   channels: [
-    "duardo1"
+    "duardo1", "fabzeef"
   ]
 };
 
