@@ -6,13 +6,20 @@ const db = require('./database.js');
 const ttt = require('./tictactoe.js');
 
 const opts = {
-  identity: {
-    username: "vjbotardo",
-    password: pass.password
-  },
-  channels: [
-    "duardo1", "fabzeef"
-  ]
+    options: {
+        debug: true
+    },
+    connection: {
+        server: 'irc-ws.chat.twitch.tv',
+        port: 80
+    },
+    identity: {
+      username: "vjbotardo",
+      password: pass.password
+    },
+    channels: [
+      "duardo1"
+    ]
 };
 
 const client = new tmi.client(opts);
@@ -63,12 +70,21 @@ function kill(channel, user){
     }
 }
 
-function coolDownCheck(channel, seconds){
+function ping(channel){
+    client.ping()
+        .then((data) => {
+            client.action(channel, "BING! (" + data);
+        })
+        .catch(() => {
+            client.action(channel, "Timed out");
+        });
+}
+
+function coolDownCheck(channel, seconds, callback, params){
     let now = Math.round(new Date().getTime() / 1000);
     if (now >= channelsObjs[channel].lastCommandTime+seconds){
-        return true;
-    } else {
-        return false;
+        channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
+        callback(...params);
     }
 }
 
@@ -81,27 +97,29 @@ function onMessageHandler (channel, userstate, message, self) {
     }
 
     const command = message.trim().split(" ");
+    
+    switch(command[0]){
+        case '!stop':
+            kill(channel, userstate['display-name']);
+            break;
+        case '!top':
+            coolDownCheck(channel, 5, db.getTopUsers, [5, channel, sayFunc]);
+            break;
+        case '!ping':
+            coolDownCheck(channel, 5, ping, [channel]);
+            break;
+    }
 
     if (channelsObjs[channel].gameRunning){
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === '!guess') {
-            guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
-        } else if (command[0] === '!stop'){
-            kill(channel, userstate['display-name']);
-        } else if (command[0] === '!top'){
-            if (!coolDownCheck(channel, 5)){
-                return;
-            }
-            db.getTopUsers(5, channel, sayFunc);
+            coolDownCheck(channel, 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
         } else if (command[0] === '!ttt'){
-            ttt.tictactoe(channelsObjs[channel], sayFunc, userstate, command);
+            coolDownCheck(channel, 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
         } else{
             console.log(`* Unknown command ${command}`);
-            return;
         }
-        
-        channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
     }
 }
 

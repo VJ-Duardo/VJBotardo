@@ -134,6 +134,7 @@ class Game {
         if (checkCharacterLine(character, 0, 4)){
             this.winner = this.getPlayerByCharacter(character);
         }
+        character = fieldArr[2];
         if (checkCharacterLine(character, 2, 2)){
             this.winner = this.getPlayerByCharacter(character);
         }
