@@ -45,6 +45,8 @@ class Game {
         this.looks = {};
         this.winner;
         this.loser;
+        this.fieldTakenCooldown = 0;
+        this.fieldTakenCooldownTime = 2;
     }
     
     randomStartTurn(){
@@ -180,13 +182,14 @@ module.exports = {
                     && user['display-name'].toLowerCase() === gameObj.turn.name.toLowerCase() 
                     && Object.keys(gameObj.field).includes(command[0].toLowerCase())){
                 if (!gameObj.getEmptyCells().includes(command[0])){
-                    sayFunc(channelObj.name, "/me That field is already taken!");
+                    if (Math.round(new Date().getTime() / 1000) > gameObj.fieldTakenCooldown){
+                        sayFunc(channelObj.name, "/me That field is already taken!");
+                        gameObj.fieldTakenCooldown = Math.round(new Date().getTime() / 1000) + gameObj.fieldTakenCooldownTime;
+                    }
                     return;
                 }
                 
                 gameObj.field[command[0]] = gameObj.turn.character;
-                gameObj.waitForInput.status = false;
-                clearTimeout(gameObj.waitForInput.handle);
                 postRoundCheck(channelObj, gameObj);
             }
         }
@@ -218,6 +221,8 @@ function settleGameEnd(channelObj, gameObj, result){
 
 
 function postRoundCheck(channelObj, gameObj){
+    gameObj.waitForInput.status = false;
+    clearTimeout(gameObj.waitForInput.handle);
     gameObj.sayFunc(channelObj.name, gameObj.turnToString());
     let gameOverStatus = gameObj.checkIfGameOver();
     if (gameOverStatus === -1){

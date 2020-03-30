@@ -18,7 +18,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      "duardo1"
+      "duardo1", "fabzeef"
     ]
 };
 
@@ -73,7 +73,7 @@ function kill(channel, user){
 function ping(channel){
     client.ping()
         .then((data) => {
-            client.action(channel, "BING! (" + data);
+            client.action(channel, "BING! (" + data*1000 + "ms)");
         })
         .catch(() => {
             client.action(channel, "Timed out");
@@ -117,8 +117,6 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
         } else if (command[0] === '!ttt'){
             coolDownCheck(channel, 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
-        } else{
-            console.log(`* Unknown command ${command}`);
         }
     }
 }
