@@ -3,7 +3,6 @@ const db = require('./database.js');
 const brailleData = require('./brailledata.js');
 
 var games = {};
-var roundTimeoutTime = 3000;
 
 class Game {
     constructor(channel, sayFunc, player1, player1ID, player2, stake){
@@ -28,6 +27,10 @@ class Game {
             handle: null,
             waitTime: 15000
         };
+        this.nextRoundTimeout = {
+            handle: null,
+            waitTime: 3000
+        };
         this.stake = stake;
         this.sayFunc = sayFunc;
         this.turn;
@@ -45,6 +48,7 @@ class Game {
         this.looks = {};
         this.winner;
         this.loser;
+        this.gameStarted = false;
         this.fieldTakenCooldown = 0;
         this.fieldTakenCooldownTime = 2;
     }
@@ -61,10 +65,10 @@ class Game {
         this.looks.cellHeight = 5;
     }
     
-    getPlayerByCharacter(character){
-        if (this.playerOne.character === character){
+    getPlayerByAttribute(attr, value){
+        if (this.playerOne[attr] === value){
             return this.playerOne;
-        } else if(this.playerTwo.character === character){
+        } else if(this.playerTwo[attr] === value){
             return this.playerTwo;
         } else {
             return;
@@ -123,22 +127,22 @@ class Game {
         for (let i=0; i<fieldArr.length; i+=3){
             character = fieldArr[i];
             if (checkCharacterLine(character, i, 1)){
-                this.winner = this.getPlayerByCharacter(character);
+                this.winner = this.getPlayerByAttribute('character', character);
             }
         }
         for (let j=0; j<3; j++){
             character = fieldArr[j];
             if (checkCharacterLine(character, j, 3)){
-                this.winner = this.getPlayerByCharacter(character);
+                this.winner = this.getPlayerByAttribute('character', character);
             }
         }
         character = fieldArr[0];
         if (checkCharacterLine(character, 0, 4)){
-            this.winner = this.getPlayerByCharacter(character);
+            this.winner = this.getPlayerByAttribute('character', character);
         }
         character = fieldArr[2];
         if (checkCharacterLine(character, 2, 2)){
-            this.winner = this.getPlayerByCharacter(character);
+            this.winner = this.getPlayerByAttribute('character', character);
         }
         
         if (this.getEmptyCells().length === 0 && typeof this.winner === 'undefined'){
@@ -155,6 +159,23 @@ class Game {
 
 module.exports = {
     tictactoe: function(channelObj, sayFunc, user, command){
+        if (getGameState(channelObj.name) && command[0] === '!concede'){
+            let gameObj = games[channelObj.name];
+            if (gameObj.gameStarted){
+                clearTimeout(gameObj.waitForInput.handle);
+                clearTimeout(gameObj.nextRoundTimeout.handle);
+                gameObj.loser = gameObj.getPlayerByAttribute('name', user['display-name']);
+                gameObj.winner = gameObj.getOtherPlayer(gameObj.loser);
+                sayFunc(channelObj.name, "/me " + user['display-name'] + " has given up :/");
+                settleGameEnd(channelObj, gameObj, 1);
+            } else {
+                clearTimeout(gameObj.waitForAccept.handle);
+                sayFunc(channelObj.name, "/me " + user['display-name'] + " Does not want to play :(");
+                endGame(channelObj);
+            }
+            return;
+        }
+        
         if (!getGameState(channelObj.name)){
             if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
                 sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points>");
@@ -177,6 +198,7 @@ module.exports = {
                 gameObj.setLooks();
                 gameObj.randomStartTurn();
                 gameObj.sayFunc(channelObj.name, gameObj.turnToString());
+                gameObj.gameStarted = true;
                 startRound(channelObj, gameObj);
             } else if (gameObj.waitForInput.status 
                     && user['display-name'].toLowerCase() === gameObj.turn.name.toLowerCase() 
@@ -207,9 +229,9 @@ function startRound(channelObj, gameObj){
 
 function settleGameEnd(channelObj, gameObj, result){
     if (result === 0){
-        gameObj.sayFunc(channelObj.name, "/me Tie! No one loses points :)");
+        gameObj.sayFunc(channelObj.name, "/me Tie! No one loses USh :)");
     } else {
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.winner.name + " won! He wins " + gameObj.stake + " points!");
+        gameObj.sayFunc(channelObj.name, "/me " + gameObj.winner.name + " won! He wins " + gameObj.stake + " USh!");
         if (gameObj.stake === 0){
         } else {
             db.addUserPoints(gameObj.winner.id, gameObj.winner.name, gameObj.stake);
@@ -227,14 +249,14 @@ function postRoundCheck(channelObj, gameObj){
     let gameOverStatus = gameObj.checkIfGameOver();
     if (gameOverStatus === -1){
         gameObj.turn = gameObj.getOtherPlayer(gameObj.turn);
-        setTimeout(function(){startRound(channelObj, gameObj);}, roundTimeoutTime);
+        gameObj.nextRoundTimeout.handle = setTimeout(function(){startRound(channelObj, gameObj);}, gameObj.nextRoundTimeout.waitTime);
     } else {
         settleGameEnd(channelObj, gameObj, gameOverStatus);
     }
 }
 
 function gameTurnTimeout(channelObj, gameObj){
-    gameObj.sayFunc(channelObj.name, "/me " + gameObj.turn.name + " didnt complete his turn in time. A random move was done! :Z");
+    gameObj.sayFunc(channelObj.name, "/me " + gameObj.turn.name + " did not complete his turn in time. A random move was done! :Z");
     gameObj.setRandomCell(gameObj.turn.character);
     postRoundCheck(channelObj, gameObj);
 }
@@ -300,7 +322,7 @@ function checkPoints(channelObj, player, points){
     
     if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
         if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){
-            games[channelObj.name].sayFunc(channelObj.name, "/me " + player + ' doesnt have enough points!');
+            games[channelObj.name].sayFunc(channelObj.name, "/me " + player + ' does not have enough USh!');
             this.err = true;
         }
     }
