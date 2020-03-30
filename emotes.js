@@ -17,7 +17,7 @@ class Emote{
 
 module.exports = {
     loadEmotes: function(channelObj){
-        /*getFFZChannel(channelObj);
+        getFFZChannel(channelObj);
         getFFZGlobal(channelObj);
         getBTTVChannel(channelObj);
         getBTTVGlobal(channelObj);
@@ -28,7 +28,7 @@ module.exports = {
             console.log("twitchglobal in " + channelObj.name + " loaded!!");
         } else {
             getTwitchGlobal(channelObj);
-        }*/
+        }
     }
 };
 

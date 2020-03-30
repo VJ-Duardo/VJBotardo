@@ -87,7 +87,6 @@ function onMessageHandler (channel, userstate, message, self) {
     } else{
         if (command[0] === '!guess') {
             guess.guessTheEmote(channelsObjs[channel], sayFunc, userstate, command);
-            console.log(`* Executed ${command} command`);
         } else if (command[0] === '!stop'){
             kill(channel, userstate['display-name']);
         } else if (command[0] === '!top'){

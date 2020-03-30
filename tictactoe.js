@@ -211,8 +211,8 @@ function settleGameEnd(channelObj, gameObj, result){
             db.addUserPoints(gameObj.winner.id, gameObj.winner.name, gameObj.stake);
             db.addUserPoints(gameObj.loser.id, gameObj.loser.name, -gameObj.stake);        
         }
-        endGame(channelObj);
     }
+    endGame(channelObj);
 }
 
 
@@ -268,7 +268,7 @@ function checkUserExistence(channelObj, user){
         })
         .then((data) => {
             for (let elem in data.chatters) {
-                if (data.chatters[elem].includes(user)){
+                if (data.chatters[elem].includes(user.toLowerCase())){
                    return true;
                 }
             }
