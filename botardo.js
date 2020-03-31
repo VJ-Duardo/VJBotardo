@@ -70,6 +70,18 @@ function kill(channel, user){
     }
 }
 
+function showPoints(channel, userName, userId, anotherUser){
+    if (typeof anotherUser !== 'undefined'){
+        db.getPoints(channelsObjs[channel], 'display_name', anotherUser, function(_, name, points){
+           client.say(channel, "/me " + name + " has " + points + " Ugandan shilling!");
+        }); 
+    } else {
+        db.getPoints(channelsObjs[channel], 'id', userId, function(_, _, points){
+            client.say(channel, "/me " + userName + " has " + points + " Ugandan shilling!");
+        });
+    }
+}
+
 function ping(channel){
     client.ping()
         .then((data) => {
@@ -108,6 +120,8 @@ function onMessageHandler (channel, userstate, message, self) {
         case '!ping':
             coolDownCheck(channel, 5, ping, [channel]);
             break;
+        case '!ush':
+            coolDownCheck(channel, 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
     }
 
     if (channelsObjs[channel].gameRunning){

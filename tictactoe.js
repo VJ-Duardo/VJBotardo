@@ -281,8 +281,8 @@ async function checkInputValues(channelObj, gameObj){
         return -1;
     }
     
-    db.getPoints(channelObj, gameObj.playerOne.name, checkPoints);
-    db.getPoints(channelObj, gameObj.playerTwo.name, checkPoints);
+    db.getPoints(channelObj, 'display_name', gameObj.playerOne.name, checkPoints);
+    db.getPoints(channelObj, 'display_name', gameObj.playerTwo.name, checkPoints);
     
     return 0;
 }
@@ -317,8 +317,6 @@ function checkPoints(channelObj, player, points){
     } else {
         this.counter++;
     }
-    console.log(this.counter);
-    console.log(this.err);
     
     if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
         if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){

@@ -42,16 +42,16 @@ module.exports = {
             sayFunc(channel, row.map((user, index) => index+1 + '. ' + user.display_name + ' - ' + user.points).join(', '));
         });
     },
-    getPoints: function(channelObj, name, callback){
-        let sql = 'SELECT points FROM USER WHERE LOWER(display_name) = LOWER(?)';
-        db.get(sql, [name], (err, row) => {
+    getPoints: function(channelObj, attribute, value, callback){
+        let sql = 'SELECT points FROM USER WHERE LOWER('+attribute+') = LOWER(?)';
+        db.get(sql, [value], (err, row) => {
             if (err){
                 reject(err.message);
             }
             if (typeof row === 'undefined'){
-                callback(channelObj, name, 0);
+                callback(channelObj, value, 0);
             } else {
-                callback(channelObj, name, row.points);
+                callback(channelObj, value, row.points);
             }
         });
     }
