@@ -1,9 +1,6 @@
 const { createCanvas, loadImage } = require('canvas');
 const brailleData = require('./brailledata.js');
 
-const height = 60;
-const width = 60;
-
 
 class Pixel {
     constructor(red, green, blue, alpha){
@@ -15,7 +12,7 @@ class Pixel {
 }
 
 module.exports = {
-    processImage: function(src, treshold=255){
+    processImage: function(src, treshold=255, height=60, width=60){
         console.log(src);
         if (typeof src === 'undefined'){
             return;
@@ -51,7 +48,7 @@ function iterate_over_pixels(data_array, width, treshold){
         result_array.push(line);
     }
     
-    return result_array.join(' \n').replace(/[⠀]/g, '⠄');
+    return result_array.join(' ').replace(/[⠀]/g, '⠄');
 }
 
 

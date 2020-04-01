@@ -11,14 +11,15 @@ const opts = {
     },
     connection: {
         server: 'irc-ws.chat.twitch.tv',
-        port: 80
+        port: 80,
+        reconnect: true
     },
     identity: {
       username: "vjbotardo",
       password: pass.password
     },
     channels: [
-      "duardo1", "fabzeef"
+      "duardo1", "fabzeef", "ebbel"
     ]
 };
 
@@ -137,7 +138,7 @@ function onMessageHandler (channel, userstate, message, self) {
 
 function onConnectedHandler (addr, port) {
     for (const channelName of opts.channels){
-        client.action(channelName, "ALLO ZULUL");
+        //client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
         newChannel.loadEmotes();
         channelsObjs[channelName] = newChannel;

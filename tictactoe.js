@@ -1,16 +1,18 @@
 const fetch = require("node-fetch");
 const db = require('./database.js');
 const brailleData = require('./brailledata.js');
+const braille = require('./generatebraille.js');
 
 var games = {};
+var defaultCharacters = ['x', 'o'];
 
 class Game {
-    constructor(channel, sayFunc, player1, player1ID, player2, stake){
+    constructor(channel, sayFunc, player1, player1ID, player1Character, player2, stake){
         this.channel = channel;
         this.playerOne = {
             name: player1,
             id: player1ID,
-            character: 'x'
+            character: player1Character
         };
         this.playerTwo = {
             name: player2,
@@ -45,7 +47,11 @@ class Game {
             b: "-",
             br: "-"
         };
-        this.looks = {};
+        this.looks = {
+            "-": brailleData.ttt["-"].split(" "),
+            vertLine: brailleData.ttt.vertLine,
+            cellHeight: 5
+        }    ;
         this.winner;
         this.loser;
         this.gameStarted = false;
@@ -57,12 +63,9 @@ class Game {
         this.turn = [this.playerOne, this.playerTwo][Math.floor(Math.random() * 2)];
     }
     
-    setLooks(){
-        this.looks[this.playerOne.character] = brailleData.ttt[this.playerOne.character].split(" ");
-        this.looks[this.playerTwo.character] = brailleData.ttt[this.playerTwo.character].split(" ");
-        this.looks["-"] = brailleData.ttt["-"].split(" ");
-        this.looks.vertLine = brailleData.ttt.vertLine;
-        this.looks.cellHeight = 5;
+    setDefaultLooks(player, index){
+        player.character = defaultCharacters[index];
+        this.looks[player.character] = brailleData.ttt[player.character].split(" ");
     }
     
     getPlayerByAttribute(attr, value){
@@ -164,7 +167,7 @@ module.exports = {
             if (gameObj.gameStarted){
                 clearTimeout(gameObj.waitForInput.handle);
                 clearTimeout(gameObj.nextRoundTimeout.handle);
-                gameObj.loser = gameObj.getPlayerByAttribute('name', user['display-name']);
+                gameObj.loser = gameObj.getPlayerByAttribute('name', user['display-name'].toLowerCase());
                 gameObj.winner = gameObj.getOtherPlayer(gameObj.loser);
                 sayFunc(channelObj.name, "/me " + user['display-name'] + " has given up :/");
                 settleGameEnd(channelObj, gameObj, 1);
@@ -178,10 +181,10 @@ module.exports = {
         
         if (!getGameState(channelObj.name)){
             if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
-                sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points>");
+                sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points> [<emote>]");
                 return;
             }
-            let newGame = new Game(channelObj.name, sayFunc, user['display-name'], user['user-id'], command[1], command[2]);
+            let newGame = new Game(channelObj.name, sayFunc, user['display-name'], user['user-id'], command[3], command[1].toLowerCase(), command[2]);
             games[channelObj.name] = newGame;
             channelObj.gameRunning = true;
             channelObj.game = module.exports.tictactoe;
@@ -195,7 +198,8 @@ module.exports = {
                 gameObj.playerTwo.id = user['user-id'];
                 gameObj.waitForAccept.status = false;
                 clearTimeout(gameObj.waitForAccept.handle);
-                gameObj.setLooks();
+                gameObj.playerTwo.character = command[1];
+                checkCharacters(channelObj, gameObj);
                 gameObj.randomStartTurn();
                 gameObj.sayFunc(channelObj.name, gameObj.turnToString());
                 gameObj.gameStarted = true;
@@ -203,7 +207,7 @@ module.exports = {
             } else if (gameObj.waitForInput.status 
                     && user['display-name'].toLowerCase() === gameObj.turn.name.toLowerCase() 
                     && Object.keys(gameObj.field).includes(command[0].toLowerCase())){
-                if (!gameObj.getEmptyCells().includes(command[0])){
+                if (!gameObj.getEmptyCells().includes(command[0].toLowerCase())){
                     if (Math.round(new Date().getTime() / 1000) > gameObj.fieldTakenCooldown){
                         sayFunc(channelObj.name, "/me That field is already taken!");
                         gameObj.fieldTakenCooldown = Math.round(new Date().getTime() / 1000) + gameObj.fieldTakenCooldownTime;
@@ -220,7 +224,7 @@ module.exports = {
 
 
 function startRound(channelObj, gameObj){
-    gameObj.sayFunc(channelObj.name, "/me It's " + gameObj.turn.name + "'s ("+ gameObj.turn.character + ") turn! Options: (" + gameObj.getEmptyCells() + ")");
+    gameObj.sayFunc(channelObj.name, "/me It's " + gameObj.turn.name + "'s ( "+ gameObj.turn.character + " ) turn! Options: (" + gameObj.getEmptyCells() + ")");
     
     gameObj.waitForInput.status = true;
     gameObj.waitForInput.handle = setTimeout(function(){gameTurnTimeout(channelObj, gameObj);}, gameObj.waitForInput.waitTime);
@@ -264,7 +268,7 @@ function gameTurnTimeout(channelObj, gameObj){
 
 function gameRequestTimeout(channelObj, gameObj, initial){
     if (initial){
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write !accept to play :)");
+        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write !accept <emote> to play :)");
         gameObj.waitForAccept.handle = setTimeout(function(){gameRequestTimeout(channelObj, gameObj, false);}, gameObj.waitForAccept.waitTime);
         gameObj.waitForAccept.status = true;
     } else {
@@ -307,6 +311,36 @@ function checkUserExistence(channelObj, user){
         .catch((err) => {
             console.error(err);
         });
+}
+
+
+function checkCharacters(channelObj, gameObj){
+    [gameObj.playerOne, gameObj.playerTwo].forEach(function(player, i){
+        if (typeof player.character === 'undefined'){
+            gameObj.setDefaultLooks(player, i);
+            return;
+        }
+        
+        let found = false;
+        for (const list of Object.values(channelObj.emotes)){
+            let emote = list.find(emote => emote.name === player.character);
+            if (typeof emote !== 'undefined'){
+                found = true;
+                braille.processImage(emote.url, 150, 18, 18)
+                    .then((brailleString) => {
+                        if (typeof brailleString === 'undefined'){
+                            gameObj.setDefaultLooks(player, i);
+                        } else {
+                            console.log(brailleString);
+                            gameObj.looks[player.character] = brailleString.split(" ");
+                            console.log(gameObj.looks[player.character]);
+                        }
+                    });
+            }
+        }
+        if (!found)
+            gameObj.setDefaultLooks(player, i);
+    });
 }
 
 
