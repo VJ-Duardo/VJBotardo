@@ -93,6 +93,10 @@ function ping(channel){
         });
 }
 
+function about(channel){
+    client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md");
+}
+
 function coolDownCheck(channel, seconds, callback, params){
     let now = Math.round(new Date().getTime() / 1000);
     if (now >= channelsObjs[channel].lastCommandTime+seconds){
@@ -123,6 +127,10 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!ush':
             coolDownCheck(channel, 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
+            break;
+        case '!bot':
+            coolDownCheck(channel, 5, about, [channel]);
+            break;   
     }
 
     if (channelsObjs[channel].gameRunning){
@@ -138,7 +146,7 @@ function onMessageHandler (channel, userstate, message, self) {
 
 function onConnectedHandler (addr, port) {
     for (const channelName of opts.channels){
-        //client.action(channelName, "ALLO ZULUL");
+        client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
         newChannel.loadEmotes();
         channelsObjs[channelName] = newChannel;
