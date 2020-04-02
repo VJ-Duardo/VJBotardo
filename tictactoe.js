@@ -316,7 +316,7 @@ function checkUserExistence(channelObj, user){
 
 function checkCharacters(channelObj, gameObj){
     [gameObj.playerOne, gameObj.playerTwo].forEach(function(player, i){
-        if (typeof player.character === 'undefined'){
+        if (typeof player.character === 'undefined' || (i === 1 && player.character === gameObj.playerOne.character)){
             gameObj.setDefaultLooks(player, i);
             return;
         }
