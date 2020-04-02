@@ -4,6 +4,7 @@ const guess = require('./guesstheemote.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const ttt = require('./tictactoe.js');
+const braille = require('./generatebraille.js');
 
 const opts = {
     options: {
@@ -83,6 +84,38 @@ function showPoints(channel, userName, userId, anotherUser){
     }
 }
 
+function ascii(channel, userInput){
+    function callProcessImage(url){
+        braille.processImage(url, -1)
+            .then((brailleString) => {
+                if (typeof brailleString === 'undefined'){
+                    client.action(channel, "That did not work :(");
+                } else {
+                    client.say(channel, brailleString);
+                }
+            });
+    }
+    if (typeof userInput === 'undefined'){
+        client.action(channel, "Correct syntax: !ascii <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        return;
+    }
+    
+    if (/(ftp|http|https):\/\/.+/.test(userInput)){
+        callProcessImage(userInput);
+        return;
+    }
+    
+    for (const list of Object.values(channelsObjs[channel].emotes)){
+        let emote = list.find(emote => emote.name === userInput);
+        if (typeof emote !== 'undefined'){
+            callProcessImage(emote.url);
+        return;
+        }
+    }
+    client.action(channel, "Cant find emote in this channel or invalid link :Z");
+}
+
+
 function ping(channel){
     client.ping()
         .then((data) => {
@@ -130,7 +163,10 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!bot':
             coolDownCheck(channel, 5, about, [channel]);
-            break;   
+            break;
+        case '!ascii':
+            coolDownCheck(channel, 5, ascii, [channel, command[1]]);
+            break;
     }
 
     if (channelsObjs[channel].gameRunning){
@@ -146,7 +182,7 @@ function onMessageHandler (channel, userstate, message, self) {
 
 function onConnectedHandler (addr, port) {
     for (const channelName of opts.channels){
-        client.action(channelName, "ALLO ZULUL");
+        //client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
         newChannel.loadEmotes();
         channelsObjs[channelName] = newChannel;

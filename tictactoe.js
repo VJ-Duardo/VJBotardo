@@ -184,7 +184,7 @@ module.exports = {
                 sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points> [<emote>]");
                 return;
             }
-            let newGame = new Game(channelObj.name, sayFunc, user['display-name'], user['user-id'], command[3], command[1].toLowerCase(), command[2]);
+            let newGame = new Game(channelObj.name, sayFunc, user['display-name'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);
             games[channelObj.name] = newGame;
             channelObj.gameRunning = true;
             channelObj.game = module.exports.tictactoe;

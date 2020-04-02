@@ -87,7 +87,7 @@ function startGame(channelObj, gameObj, sayFunc){
     let loseString = "/me It was " +gameObj.solution.name+ " . Maybe open your eyes next time :)";
     gameObj.resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
     
-    braille.processImage(gameObj.solution.url)
+    braille.processImage(gameObj.solution.url, 255)
         .then((brailleString) => {
             if (typeof brailleString === 'undefined'){
                 gameObj.setNewSolution();
@@ -112,7 +112,7 @@ function giveFirstHint(channelObj, gameObj, sayFunc){
 }
 
 function giveSecondHint(channelObj, gameObj, sayFunc){
-    braille.processImage(gameObj.solution.url, 150)
+    braille.processImage(gameObj.solution.url)
         .then((brailleString) => {
             if (typeof brailleString === 'undefined'){
                 return;

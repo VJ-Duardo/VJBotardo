@@ -9,10 +9,14 @@ class Pixel {
         this.blue = blue;
         this.alpha = alpha;
     }
+    
+    getAvg(){
+        return (this.red + this.green + this.blue)/3;
+    }
 }
 
 module.exports = {
-    processImage: function(src, treshold=255, height=60, width=60){
+    processImage: function(src, treshold=-1, height=60, width=60){
         console.log(src);
         if (typeof src === 'undefined'){
             return;
@@ -24,8 +28,8 @@ module.exports = {
         return loadImage(src)
             .then((image) => {
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            let pixel_data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            return iterate_over_pixels(pixel_data, canvas.width, treshold);
+            let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            return iterateOverPixels(pixelData, canvas.width, treshold);
         })
             .catch((error) => {
                 console.log("An error occured!");
@@ -33,28 +37,33 @@ module.exports = {
     }
 };
 
-function iterate_over_pixels(data_array, width, treshold){
-    let result_array = new Array();
-    let pixel_array = new Array();
-    for(i=0; i<data_array.length; i+=4){
-        pixel_array.push(new Pixel(data_array[i], data_array[i+1], data_array[i+2], data_array[i+3]));
+function iterateOverPixels(dataArray, width, treshold){
+    let resultArray = new Array();
+    let pixelArray = new Array();
+    for(i=0; i<dataArray.length; i+=4){
+        pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
     }
     
-    for(i=0; i<pixel_array.length; i+=(width*4)){
+    if (treshold === -1){
+        treshold = getAverageColor(pixelArray);
+        console.log(treshold);
+    }
+    
+    for(i=0; i<pixelArray.length; i+=(width*4)){
         let line = "";
         for(j=0; j<width; j+=2){
-            line += brailleData.braille_descr_dic[get_braille_code(pixel_array, i+j, width, treshold)];
+            line += brailleData.braille_descr_dic[getBrailleCode(pixelArray, i+j, width, treshold)];
         }
-        result_array.push(line);
+        resultArray.push(line);
     }
     
-    return result_array.join(' ').replace(/[⠀]/g, '⠄');
+    return resultArray.join(' ').replace(/[⠀]/g, '⠄');
 }
 
 
-function get_braille_code(pixel_array, pos, width, treshold){
-    let braille_code = "";
-    let pixel_pos_to_braille_pos = {
+function getBrailleCode(pixelArray, pos, width, treshold){
+    let brailleCode = "";
+    let pixelPosToBraillePos = {
         '00': '1',
         '01': '2',
         '02': '3',
@@ -66,25 +75,38 @@ function get_braille_code(pixel_array, pos, width, treshold){
     };
     for(k=0; k<2; k++){
         for(l=0; l<4; l++){
-            if ((pos + k + (width*l)) < pixel_array.length){
-                if (evaluate_pixel(pixel_array[(pos + k + (width*l))], treshold)){
-                    braille_code += pixel_pos_to_braille_pos[(k.toString() + l.toString())];
+            if ((pos + k + (width*l)) < pixelArray.length){
+                if (evaluatePixel(pixelArray[(pos + k + (width*l))], treshold)){
+                    brailleCode += pixelPosToBraillePos[(k.toString() + l.toString())];
                 }
             }
         }
     }
-    return braille_code.split("").map(Number).sort((a, b) => (a - b)).join('');
+    return brailleCode.split("").map(Number).sort((a, b) => (a - b)).join('');
 }
 
 
-function evaluate_pixel(pixel, color_treshold){
+function evaluatePixel(pixel, treshold){
     if (pixel.alpha === 0){
         return true;
     }
     
-    if (pixel.red > color_treshold || pixel.green > color_treshold || pixel.blue > color_treshold){
+    if (pixel.getAvg() > treshold){
         return true;
     } else {
         return false;
     }
+}
+
+
+function getAverageColor(pixelArray){
+    let avgColor = 0;
+    let pixelAmount = 0;
+    for (const pixel of pixelArray){
+        if (pixel.alpha !== 0){
+            avgColor += pixel.getAvg();
+            pixelAmount++;
+        }
+    }
+    return Math.floor((avgColor/pixelAmount));
 }
