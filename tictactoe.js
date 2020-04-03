@@ -201,9 +201,11 @@ module.exports = {
                 gameObj.playerTwo.character = command[1];
                 checkCharacters(channelObj, gameObj);
                 gameObj.randomStartTurn();
-                gameObj.sayFunc(channelObj.name, gameObj.turnToString());
                 gameObj.gameStarted = true;
-                startRound(channelObj, gameObj);
+                setTimeout(function(){
+                    gameObj.sayFunc(channelObj.name, gameObj.turnToString());
+                    startRound(channelObj, gameObj);
+                }, 500);
             } else if (gameObj.waitForInput.status 
                     && user['display-name'].toLowerCase() === gameObj.turn.name.toLowerCase() 
                     && Object.keys(gameObj.field).includes(command[0].toLowerCase())){
@@ -325,17 +327,16 @@ function checkCharacters(channelObj, gameObj){
         for (const list of Object.values(channelObj.emotes)){
             let emote = list.find(emote => emote.name === player.character);
             if (typeof emote !== 'undefined'){
+                gameObj.setDefaultLooks(player, i);
                 found = true;
                 braille.processImage(emote.url, 150, 18, 18)
                     .then((brailleString) => {
-                        if (typeof brailleString === 'undefined'){
-                            gameObj.setDefaultLooks(player, i);
-                        } else {
-                            console.log(brailleString);
+                        if (typeof brailleString !== 'undefined'){
+                            player.character = emote.name;
                             gameObj.looks[player.character] = brailleString.split(" ");
-                            console.log(gameObj.looks[player.character]);
                         }
                     });
+                break;
             }
         }
         if (!found)
