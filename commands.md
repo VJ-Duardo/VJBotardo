@@ -12,6 +12,9 @@ Shows your own or optionally someone elses amount of USh.
 * __!top__  
 Returns the top 5 users with the most USh.
 
+* __!ascii__ \<emote\>|\<link\>  
+Generates a braille string from the provided emote or link. Emote has to be in the current channel.
+
 <br>
 
 ### Games
