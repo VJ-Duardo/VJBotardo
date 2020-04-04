@@ -116,6 +116,20 @@ function ascii(channel, userInput){
 }
 
 
+function randomAscii(channel){
+    let allEmotes = [];
+    for (const list of Object.values(channelsObjs[channel].emotes)){
+        allEmotes = allEmotes.concat(list);
+    }
+    
+    if (typeof allEmotes !== 'undefined' && allEmotes.length > 1){
+        ascii(channel, allEmotes[Math.floor(Math.random() * allEmotes.length)].url);
+    } else {
+        client.action(channel, "Can't currently find any emotes in this channel!");
+    }
+}
+
+
 function ping(channel){
     client.ping()
         .then((data) => {
@@ -166,6 +180,9 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!ascii':
             coolDownCheck(channel, 5, ascii, [channel, command[1]]);
+            break;
+        case '!ra':
+            coolDownCheck(channel, 5, randomAscii, [channel]);
             break;
     }
 

@@ -91,10 +91,10 @@ function evaluatePixel(pixel, treshold){
         return true;
     }
     
-    if (pixel.getAvg() > treshold){
-        return true;
+    if (treshold === 150){
+        return (pixel.red > treshold || pixel.green > treshold || pixel.blue > treshold);
     } else {
-        return false;
+        return (pixel.getAvg() > treshold);
     }
 }
 
@@ -108,5 +108,5 @@ function getAverageColor(pixelArray){
             pixelAmount++;
         }
     }
-    return Math.floor((avgColor/pixelAmount));
+    return [(avgColor/pixelAmount), 150][Math.floor(Math.random() * 2)];
 }
