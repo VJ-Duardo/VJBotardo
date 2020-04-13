@@ -86,7 +86,7 @@ function showPoints(channel, userName, userId, anotherUser){
 
 function ascii(channel, userInput){
     function callProcessImage(url){
-        braille.processImage(url, -1)
+        braille.processImage(url, -1, 56, 58)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "That did not work :(");
@@ -179,10 +179,10 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, 5, about, [channel]);
             break;
         case '!ascii':
-            coolDownCheck(channel, 5, ascii, [channel, command[1]]);
+            coolDownCheck(channel, 2, ascii, [channel, command[1]]);
             break;
         case '!ra':
-            coolDownCheck(channel, 5, randomAscii, [channel]);
+            coolDownCheck(channel, 2, randomAscii, [channel]);
             break;
     }
 

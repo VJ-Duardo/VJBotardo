@@ -167,13 +167,13 @@ module.exports = {
             if (gameObj.gameStarted){
                 clearTimeout(gameObj.waitForInput.handle);
                 clearTimeout(gameObj.nextRoundTimeout.handle);
-                gameObj.loser = gameObj.getPlayerByAttribute('name', user['display-name'].toLowerCase());
+                gameObj.loser = gameObj.getPlayerByAttribute('name', user['username'].toLowerCase());
                 gameObj.winner = gameObj.getOtherPlayer(gameObj.loser);
-                sayFunc(channelObj.name, "/me " + user['display-name'] + " has given up :/");
+                sayFunc(channelObj.name, "/me " + user['username'] + " has given up :/");
                 settleGameEnd(channelObj, gameObj, 1);
             } else {
                 clearTimeout(gameObj.waitForAccept.handle);
-                sayFunc(channelObj.name, "/me " + user['display-name'] + " Does not want to play :(");
+                sayFunc(channelObj.name, "/me " + user['username'] + " Does not want to play :(");
                 endGame(channelObj);
             }
             return;
@@ -184,7 +184,7 @@ module.exports = {
                 sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points> [<emote>]");
                 return;
             }
-            let newGame = new Game(channelObj.name, sayFunc, user['display-name'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);
+            let newGame = new Game(channelObj.name, sayFunc, user['username'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);
             games[channelObj.name] = newGame;
             channelObj.gameRunning = true;
             channelObj.game = module.exports.tictactoe;
@@ -194,7 +194,7 @@ module.exports = {
             let gameObj = games[channelObj.name];
             if (gameObj.waitForAccept.status 
                     && command[0] === '!accept' 
-                    && user['display-name'].toLowerCase() === gameObj.playerTwo.name.toLowerCase()){
+                    && user['username'].toLowerCase() === gameObj.playerTwo.name.toLowerCase()){
                 gameObj.playerTwo.id = user['user-id'];
                 gameObj.waitForAccept.status = false;
                 clearTimeout(gameObj.waitForAccept.handle);
@@ -207,7 +207,7 @@ module.exports = {
                     startRound(channelObj, gameObj);
                 }, 500);
             } else if (gameObj.waitForInput.status 
-                    && user['display-name'].toLowerCase() === gameObj.turn.name.toLowerCase() 
+                    && user['username'].toLowerCase() === gameObj.turn.name.toLowerCase() 
                     && Object.keys(gameObj.field).includes(command[0].toLowerCase())){
                 if (!gameObj.getEmptyCells().includes(command[0].toLowerCase())){
                     if (Math.round(new Date().getTime() / 1000) > gameObj.fieldTakenCooldown){
