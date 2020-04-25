@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      "duardo1", "fabzeef", "ebbel"
+      "duardo1"
     ]
 };
 
@@ -116,6 +116,52 @@ function ascii(channel, userInput){
 }
 
 
+async function merge(channel, inputLeft, inputRight){
+    let resultArray = new Array(15).fill('');
+    function callProcessImage(url, treshold = -1){
+        return braille.processImage(url, treshold, 56, 28)
+            .then((brailleString) => {
+                if (typeof brailleString === 'undefined'){
+                    client.action(channel, "That did not work :(");
+                    return -1;
+                } else {
+                    brailleString.split(' ').forEach(function(line, i){
+                        resultArray[i] += line;
+                    });
+                    return 0;
+                }
+            });
+    }
+    
+    if (typeof inputLeft === 'undefined' || typeof inputRight === 'undefined'){
+        client.action(channel, "Correct syntax: !merge <emote>|<link> <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        return;
+    }
+    
+    for (let input of [inputLeft, inputRight]){
+        
+        if (/(ftp|http|https):\/\/.+/.test(input)){
+            await callProcessImage(input);
+            continue;
+        }
+        
+        let found = false;
+        for (const list of Object.values(channelsObjs[channel].emotes)){
+            let emote = list.find(emote => emote.name === input);
+            if (typeof emote !== 'undefined'){
+                found = true;
+                await callProcessImage(emote.url);
+            }
+        }
+        if (!found){
+            client.action(channel, "Cant find emote in this channel or invalid link :Z");
+            return;
+        }
+    }
+    client.say(channel, resultArray.join(' '));
+}
+
+
 function randomAscii(channel){
     let allEmotes = [];
     for (const list of Object.values(channelsObjs[channel].emotes)){
@@ -183,6 +229,9 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!ra':
             coolDownCheck(channel, 2, randomAscii, [channel]);
+            break;
+        case '!merge':
+            coolDownCheck(channel, 2, merge, [channel, command[1], command[2]]);
             break;
     }
 
