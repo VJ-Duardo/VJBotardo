@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      "duardo1"
+      "duardo1", "fabzeef"
     ]
 };
 
@@ -89,10 +89,13 @@ function ascii(channel, userInput){
         braille.processImage(url, -1, 56, 58)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
-                    client.action(channel, "That did not work :(");
+                    client.action(channel, "Cant find emote in this channel or invalid link :Z");
                 } else {
                     client.say(channel, brailleString);
                 }
+            })
+            .catch(() => {
+                client.action(channel, "That did not work :(");
             });
     }
     if (typeof userInput === 'undefined'){
@@ -105,14 +108,14 @@ function ascii(channel, userInput){
         return;
     }
     
-    for (const list of Object.values(channelsObjs[channel].emotes)){
-        let emote = list.find(emote => emote.name === userInput);
+    for (const list of Object.values(channelsObjs[channel].emotes).concat([emotes.allExisitingEmotes])){
+        let emote = list.find(searchEmote => searchEmote.name === userInput);
         if (typeof emote !== 'undefined'){
             callProcessImage(emote.url);
-        return;
+            return;
         }
     }
-    client.action(channel, "Cant find emote in this channel or invalid link :Z");
+    callProcessImage(emotes.getEmojiURL(userInput));
 }
 
 
@@ -122,7 +125,7 @@ async function merge(channel, inputLeft, inputRight){
         return braille.processImage(url, treshold, 56, 28)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
-                    client.action(channel, "That did not work :(");
+                    client.action(channel, "Cant find emote in this channel or invalid link :Z");
                     return -1;
                 } else {
                     brailleString.split(' ').forEach(function(line, i){
@@ -130,7 +133,11 @@ async function merge(channel, inputLeft, inputRight){
                     });
                     return 0;
                 }
-            });
+            })
+            .catch(() => {
+                client.action(channel, "That did not work :(");
+                return -1;
+            });;
     }
     
     if (typeof inputLeft === 'undefined' || typeof inputRight === 'undefined'){
@@ -146,15 +153,18 @@ async function merge(channel, inputLeft, inputRight){
         }
         
         let found = false;
-        for (const list of Object.values(channelsObjs[channel].emotes)){
-            let emote = list.find(emote => emote.name === input);
+        for (const list of Object.values(channelsObjs[channel].emotes).concat([emotes.allExisitingEmotes])){
+            let emote = list.find(searchEmote => searchEmote.name === input);
             if (typeof emote !== 'undefined'){
                 found = true;
                 await callProcessImage(emote.url);
+                break;
             }
         }
-        if (!found){
-            client.action(channel, "Cant find emote in this channel or invalid link :Z");
+        if (found)
+            continue;
+            
+        if (await callProcessImage(emotes.getEmojiURL(input)) === -1){
             return;
         }
     }
@@ -163,7 +173,7 @@ async function merge(channel, inputLeft, inputRight){
 
 
 function randomAscii(channel){
-    let allEmotes = [];
+    let allEmotes = emotes.allExisitingEmotes;
     for (const list of Object.values(channelsObjs[channel].emotes)){
         allEmotes = allEmotes.concat(list);
     }
@@ -246,7 +256,9 @@ function onMessageHandler (channel, userstate, message, self) {
     }
 }
 
-function onConnectedHandler (addr, port) {
+async function onConnectedHandler (addr, port) {
+    emotes.loadAllExistingEmotes();
+    await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
         //client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);

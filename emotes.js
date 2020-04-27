@@ -23,19 +23,28 @@ module.exports = {
         getBTTVGlobal(channelObj);
         getTwitchChannel(channelObj);
         
-        if (twitchGlobalEmotes.length > 0){
-            channelObj.twitchGlobal = twitchGlobalEmotes;
-            console.log("twitchglobal in " + channelObj.name + " loaded!!");
-        } else {
-            getTwitchGlobal(channelObj);
-        }
-    }
+        channelObj.emotes.twitchGlobal = twitchGlobalEmotes;
+        console.log("twitchglobal in " + channelObj.name + " loaded!!");
+    },  
+    loadGlobalEmotes: function(){
+        return getTwitchGlobal();
+    },  
+    loadAllExistingEmotes: function(){
+        getTwitchEverything();
+    },
+    getEmojiURL: function(emoji){
+        let emojiUrl = 'https://twemoji.maxcdn.com/v/latest/72x72/';
+        if (emoji.length < 4)
+            return emojiUrl + emoji.codePointAt(0).toString(16) + '.png';
+        return emojiUrl + emoji.codePointAt(0).toString(16) + '-' + emoji.codePointAt(2).toString(16) + '.png';
+    },
+    allExisitingEmotes: []
 };
 
 
 
 function getJsonProm(url, callback){
-    fetch(url)
+    return fetch(url)
         .then((response) => { 
             return response.json();
         })
@@ -128,17 +137,40 @@ function getTwitchChannel(channelObj){
      });
 }
 
-function getTwitchGlobal(channelObj){
+function getTwitchGlobal(){
     let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     
-    getJsonProm(twitchGlobalUrl, function(twGlObj){
+    return getJsonProm(twitchGlobalUrl, function(twGlObj){
         let emoteList = twGlObj['emotes'];
-        console.log("twitchglobal in " + channelObj.name + " loaded!");
-        channelObj.emotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        twitchGlobalEmotes = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
     });
 }
 
-
+function getTwitchEverything(){
+    let twitchEmoteAPI = 'https://api.twitch.tv/kraken/chat/emoticons';
+    
+    fetch(twitchEmoteAPI, {
+        headers: {
+            'Accept': 'application/vnd.twitchtv.v5+json',
+            'Client-ID': pass.clientId
+        }
+    })
+    .then((response) => {
+        return response.json();
+    })
+    .then((dataObj) => {
+        if(dataObj.hasOwnProperty("error")){
+            return;
+        }
+        
+        let emoteList = dataObj['emoticons'];
+        for (i=0; i<emoteList.length; i++){
+            emoteList[i] = new Emote(emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '4.0'), 'twitch');
+        }
+        module.exports.allExisitingEmotes = emoteList;
+        console.log("all emotes loaded!");
+    });
+}
 
 
 function convertBTTVAndTwitchLists(emoteList, url, postfix){
