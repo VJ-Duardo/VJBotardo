@@ -172,6 +172,12 @@ async function merge(channel, inputLeft, inputRight){
 }
 
 
+function reloadChannelEmotes(channel){
+    channelsObjs[channel].loadEmotes();
+    client.action(channel, "Reloaded channel emotes.");
+}
+
+
 function randomAscii(channel){
     let allEmotes = emotes.allExisitingEmotes;
     for (const list of Object.values(channelsObjs[channel].emotes)){
@@ -243,6 +249,8 @@ function onMessageHandler (channel, userstate, message, self) {
         case '!merge':
             coolDownCheck(channel, 2, merge, [channel, command[1], command[2]]);
             break;
+        case '!reload':
+            coolDownCheck(channel, 600, reloadChannelEmotes, [channel]);
     }
 
     if (channelsObjs[channel].gameRunning){

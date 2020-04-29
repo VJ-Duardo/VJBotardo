@@ -2,6 +2,7 @@ const fetch = require("node-fetch");
 const db = require('./database.js');
 const brailleData = require('./brailledata.js');
 const braille = require('./generatebraille.js');
+const emotes = require('./emotes.js');
 
 var games = {};
 var defaultCharacters = ['x', 'o'];
@@ -324,7 +325,8 @@ function checkCharacters(channelObj, gameObj){
         }
         
         let found = false;
-        for (const list of Object.values(channelObj.emotes)){
+        for (const list of Object.values(channelObj.emotes).concat([emotes.allExisitingEmotes,
+                    [emotes.createNewEmote(player.character, emotes.getEmojiURL(player.character), 'emoji')]])){
             let emote = list.find(emote => emote.name === player.character);
             if (typeof emote !== 'undefined'){
                 gameObj.setDefaultLooks(player, i);

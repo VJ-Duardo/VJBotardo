@@ -38,6 +38,9 @@ module.exports = {
             return emojiUrl + emoji.codePointAt(0).toString(16) + '.png';
         return emojiUrl + emoji.codePointAt(0).toString(16) + '-' + emoji.codePointAt(2).toString(16) + '.png';
     },
+    createNewEmote: function(name, url, origin){
+        return new Emote(name, url, origin);
+    },
     allExisitingEmotes: []
 };
 
