@@ -12,8 +12,8 @@ Shows your own or optionally someone elses amount of USh.
 * __!top__  
 Returns the top 5 users with the most USh.
 
-* __!ascii__ \<emote\>|\<link\>  
-Generates a braille string from the provided emote or link. Emote has to be in the current channel.
+* __!reload__  
+Reloads the channel emotes in the channel the command got called from. Does not reload all twitch sub emotes. Cooldown of 10 minutes.
 
 <br>
 
@@ -35,3 +35,16 @@ Accept an invite for a game of ttt. The accepting player can set his appearance 
 
 * __!concede__  
 Give up the current game. Doing this before the game was accepted is not counted as a loss.
+
+<br>
+
+### Braille Art ("ascii")
+
+* __!ascii__ \<emote\>|\<emoji\>|\<link\>  
+Generates a braille string from the provided emote, emoji or link.
+
+* __!ra__   
+Generates a random braille string and prints it to chat. (Excludes emojis)
+
+* __!merge__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
+Creates and prints a single braille string with the two provided pictures next to each other. Fails if one of the two pictures is invalid.
