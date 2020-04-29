@@ -47,7 +47,7 @@ class Channel {
             twitchChannel: [],
             twitchGlobal: []
         };
-        this.lastCommandTime = 0;
+        this.lastCommandTime = {};
     }
     
     loadEmotes(){
@@ -206,10 +206,13 @@ function about(channel){
     client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md");
 }
 
-function coolDownCheck(channel, seconds, callback, params){
+function coolDownCheck(channel, command, seconds, callback, params){
+    if (!channelsObjs[channel].lastCommandTime.hasOwnProperty(command)){
+        channelsObjs[channel].lastCommandTime[command] = 0;
+    }
     let now = Math.round(new Date().getTime() / 1000);
-    if (now >= channelsObjs[channel].lastCommandTime+seconds){
-        channelsObjs[channel].lastCommandTime = Math.round(new Date().getTime() / 1000);
+    if (now >= channelsObjs[channel].lastCommandTime[command]+seconds){
+        channelsObjs[channel].lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
         callback(...params);
     }
 }
@@ -229,37 +232,37 @@ function onMessageHandler (channel, userstate, message, self) {
             kill(channel, userstate['display-name']);
             break;
         case '!top':
-            coolDownCheck(channel, 5, db.getTopUsers, [5, channel, sayFunc]);
+            coolDownCheck(channel, command[0], 5, db.getTopUsers, [5, channel, sayFunc]);
             break;
         case '!ping':
-            coolDownCheck(channel, 5, ping, [channel]);
+            coolDownCheck(channel, command[0], 5, ping, [channel]);
             break;
         case '!ush':
-            coolDownCheck(channel, 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
+            coolDownCheck(channel, command[0], 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
             break;
         case '!bot':
-            coolDownCheck(channel, 5, about, [channel]);
+            coolDownCheck(channel, command[0], 5, about, [channel]);
             break;
         case '!ascii':
-            coolDownCheck(channel, 2, ascii, [channel, command[1]]);
+            coolDownCheck(channel, command[0], 2, ascii, [channel, command[1]]);
             break;
         case '!ra':
-            coolDownCheck(channel, 2, randomAscii, [channel]);
+            coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
             break;
         case '!merge':
-            coolDownCheck(channel, 2, merge, [channel, command[1], command[2]]);
+            coolDownCheck(channel, command[0], 2, merge, [channel, command[1], command[2]]);
             break;
         case '!reload':
-            coolDownCheck(channel, 600, reloadChannelEmotes, [channel]);
+            coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
     }
 
     if (channelsObjs[channel].gameRunning){
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === '!guess') {
-            coolDownCheck(channel, 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
+            coolDownCheck(channel, command[0], 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
         } else if (command[0] === '!ttt'){
-            coolDownCheck(channel, 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
+            coolDownCheck(channel, command[0], 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
         }
     }
 }
