@@ -146,7 +146,6 @@ async function merge(channel, inputLeft, inputRight){
     }
     
     for (let input of [inputLeft, inputRight]){
-        
         if (/(ftp|http|https):\/\/.+/.test(input)){
             await callProcessImage(input);
             continue;
@@ -164,17 +163,12 @@ async function merge(channel, inputLeft, inputRight){
         if (found)
             continue;
             
-        if (await callProcessImage(emotes.getEmojiURL(input)) === -1){
+        let processImageResult = await callProcessImage(emotes.getEmojiURL(input));
+        if (processImageResult === -1){
             return;
         }
     }
     client.say(channel, resultArray.join(' '));
-}
-
-
-function reloadChannelEmotes(channel){
-    channelsObjs[channel].loadEmotes();
-    client.action(channel, "Reloaded channel emotes.");
 }
 
 
@@ -189,6 +183,12 @@ function randomAscii(channel){
     } else {
         client.action(channel, "Can't currently find any emotes in this channel!");
     }
+}
+
+
+function reloadChannelEmotes(channel){
+    channelsObjs[channel].loadEmotes();
+    client.action(channel, "Reloaded channel emotes.");
 }
 
 

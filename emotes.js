@@ -168,7 +168,7 @@ function getTwitchEverything(){
         
         let emoteList = dataObj['emoticons'];
         for (i=0; i<emoteList.length; i++){
-            emoteList[i] = new Emote(emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '4.0'), 'twitch');
+            emoteList[i] = new Emote(emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '2.0'), 'twitch');
         }
         module.exports.allExisitingEmotes = emoteList;
         console.log("all emotes loaded!");
