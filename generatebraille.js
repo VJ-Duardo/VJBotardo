@@ -1,5 +1,8 @@
 const { createCanvas, loadImage } = require('canvas');
 const brailleData = require('./brailledata.js');
+const fetch = require("node-fetch");
+var gifFrames = require('gif-frames');
+var fs = require('fs');
 
 
 class Pixel {
@@ -15,8 +18,7 @@ class Pixel {
     }
 }
 
-module.exports = {
-    processImage: function(src, treshold=-1, height=60, width=60){
+/*processImage: function(src, treshold=-1, height=60, width=60){
         console.log(src);
         if (typeof src === 'undefined'){
             return;
@@ -24,16 +26,133 @@ module.exports = {
         
         var canvas = createCanvas(width, height);
         var context = canvas.getContext('2d');
+        
+        function createStringFromImage(){
+            return loadImage(src)
+                .then((image) => {
+                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                    return iterateOverPixels(pixelData, canvas.width, treshold);
+                })
+                .catch(() => {
+                    console.log("An error occured! (image)");
+                });
+        }
+        
+        async function createStringFromGif(){
+            return gifFrames({ url: './abc.gif', frames: 2, outputType: 'canvas' })
+                .then(function (frameData) {
+                    console.log(frameData);
+                    let stringsArr = [];
+                    //frameData.forEach(function(frame){
+                        console.log(frameData[0].frameInfo);
+                        let gifCanvas = frame.getImage();
+                        console.log("gifCanvas");
+                        gifCanvas.width = width;
+                        gifCanvas.height = height;
+                        console.log(gifCanvas);
+                        let gifContext = gifCanvas.getContext('2d');
+                        let gifPixelData = gifContext.getImageData(0, 0, gifCanvas.width, gifCanvas.height).data;
+                        stringsArr.push(iterateOverPixels(gifPixelData, gifCanvas.width, treshold));
+                    //});
+                    return stringsArr;
+                })
+                .catch((error) => {
+                    console.log(error+" An error occured! (gif)");
+                });
+        }
+        
+        
+        if ((src.length - src.lastIndexOf('.')+1) <= 4){
+            if (src.slice(src.length - 4) === '.gif'){
+                return createStringFromGif();
+            } else {
+                return createStringFromImage();
+            }
+        } else {
+            return fetch(src, {method:"HEAD"})
+                .then(response => response.headers.get("Content-Type"))
+                .then((type) => {
+                    if (type === 'image/gif'){
+                        return createStringFromGif();
+                    } else {
+                        return createStringFromImage();
+                    }
+            });
+        }
+    }
+};*/
 
-        return loadImage(src)
-            .then((image) => {
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            return iterateOverPixels(pixelData, canvas.width, treshold);
-        })
-            .catch((error) => {
-                console.log("An error occured!");
-        });
+module.exports = {
+    processImage: function(src, treshold=-1, height=60, width=60, playGifs=false){
+        console.log(src);
+        if (typeof src === 'undefined'){
+            return;
+        }
+        
+        var canvas = createCanvas(width, height);
+        var context = canvas.getContext('2d');
+        
+        
+        if (!playGifs){
+            return createStringFromImage(src);
+        }
+        
+        function createStringFromImage(url){
+            console.log(url);
+            return loadImage(url)
+                .then((image) => {
+                    context.clearRect(0, 0, width, height);
+                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                    let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                    return iterateOverPixels(pixelData, canvas.width, treshold);
+                })
+                .catch((error) => {
+                    console.log(error+"An error occured! (image)");
+                });
+        }
+        
+        function createStringFromGif(){
+            return gifFrames({ url: src, frames: 'all', outputType: 'png'})
+                .then(async function (frameData) {
+                    let stringsArr = [];
+                    let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
+                    for (let i=0; i<frameData.length; i+=frameJump){
+                        let prom = new Promise(function(resolve){
+                            let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
+                            stream.on('finish', async function(){
+                                let brailleString = await createStringFromImage('./frames/frame'+i+'.png');
+                                stringsArr.push(brailleString);
+                                resolve();
+                            });
+                        });
+                        await prom;
+                    }
+                    return stringsArr;
+                })
+                .catch((error) => {
+                    console.log(error+" An error occured! (gif)");
+                });
+        }
+        
+        
+        if ((src.length - src.lastIndexOf('.')+1) <= 4){
+            if (src.slice(src.length - 4) === '.gif'){
+                return createStringFromGif();
+            } else {
+                return createStringFromImage(src);
+            }
+        } else {
+            return fetch(src, {method:"HEAD"})
+                .then(response => response.headers.get("Content-Type"))
+                .then((type) => {
+                    if (type === 'image/gif'){
+                        return createStringFromGif();
+                    } else {
+                        return createStringFromImage(src);
+                    }
+            });
+        }
     }
 };
 

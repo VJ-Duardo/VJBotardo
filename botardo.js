@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      "duardo1", "fabzeef"
+      "duardo1", "fabzeef", "chachnaq"
     ]
 };
 
@@ -86,12 +86,18 @@ function showPoints(channel, userName, userId, anotherUser){
 
 function ascii(channel, userInput){
     function callProcessImage(url){
-        braille.processImage(url, -1, 56, 58)
+        braille.processImage(url, -1, 56, 58, true)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "Cant find emote in this channel or invalid link :Z");
                 } else {
-                    client.say(channel, brailleString);
+                    if (Array.isArray(brailleString)){
+                        brailleString.forEach(function(brailleFrame){
+                            client.say(channel, brailleFrame);
+                        });
+                    } else {
+                        client.say(channel, brailleString);
+                    }
                 }
             })
             .catch(() => {
@@ -244,7 +250,7 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, command[0], 5, about, [channel]);
             break;
         case '!ascii':
-            coolDownCheck(channel, command[0], 2, ascii, [channel, command[1]]);
+            coolDownCheck(channel, command[0], 10, ascii, [channel, command[1]]);
             break;
         case '!ra':
             coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
@@ -268,7 +274,7 @@ function onMessageHandler (channel, userstate, message, self) {
 }
 
 async function onConnectedHandler (addr, port) {
-    emotes.loadAllExistingEmotes();
+    //emotes.loadAllExistingEmotes();
     await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
         //client.action(channelName, "ALLO ZULUL");
