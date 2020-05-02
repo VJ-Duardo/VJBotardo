@@ -3,6 +3,7 @@ const brailleData = require('./brailledata.js');
 const fetch = require("node-fetch");
 var gifFrames = require('gif-frames');
 var fs = require('fs');
+const extractFrames = require('gif-extract-frames')
 
 
 class Pixel {
@@ -112,8 +113,13 @@ module.exports = {
                 });
         }
         
-        function createStringFromGif(){
-            return gifFrames({ url: src, frames: 'all', outputType: 'png'})
+        async function createStringFromGif(){
+            const results = await extractFrames({
+                input: src,
+                output: './frames/frame-%d.png'
+            });
+            
+            return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: true})
                 .then(async function (frameData) {
                     let stringsArr = [];
                     let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
