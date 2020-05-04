@@ -3,7 +3,6 @@ const brailleData = require('./brailledata.js');
 const fetch = require("node-fetch");
 var gifFrames = require('gif-frames');
 var fs = require('fs');
-const extractFrames = require('gif-extract-frames')
 
 
 class Pixel {
@@ -18,71 +17,6 @@ class Pixel {
         return (this.red + this.green + this.blue + this.alpha)/4;
     }
 }
-
-/*processImage: function(src, treshold=-1, height=60, width=60){
-        console.log(src);
-        if (typeof src === 'undefined'){
-            return;
-        }
-        
-        var canvas = createCanvas(width, height);
-        var context = canvas.getContext('2d');
-        
-        function createStringFromImage(){
-            return loadImage(src)
-                .then((image) => {
-                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-                    let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                    return iterateOverPixels(pixelData, canvas.width, treshold);
-                })
-                .catch(() => {
-                    console.log("An error occured! (image)");
-                });
-        }
-        
-        async function createStringFromGif(){
-            return gifFrames({ url: './abc.gif', frames: 2, outputType: 'canvas' })
-                .then(function (frameData) {
-                    console.log(frameData);
-                    let stringsArr = [];
-                    //frameData.forEach(function(frame){
-                        console.log(frameData[0].frameInfo);
-                        let gifCanvas = frame.getImage();
-                        console.log("gifCanvas");
-                        gifCanvas.width = width;
-                        gifCanvas.height = height;
-                        console.log(gifCanvas);
-                        let gifContext = gifCanvas.getContext('2d');
-                        let gifPixelData = gifContext.getImageData(0, 0, gifCanvas.width, gifCanvas.height).data;
-                        stringsArr.push(iterateOverPixels(gifPixelData, gifCanvas.width, treshold));
-                    //});
-                    return stringsArr;
-                })
-                .catch((error) => {
-                    console.log(error+" An error occured! (gif)");
-                });
-        }
-        
-        
-        if ((src.length - src.lastIndexOf('.')+1) <= 4){
-            if (src.slice(src.length - 4) === '.gif'){
-                return createStringFromGif();
-            } else {
-                return createStringFromImage();
-            }
-        } else {
-            return fetch(src, {method:"HEAD"})
-                .then(response => response.headers.get("Content-Type"))
-                .then((type) => {
-                    if (type === 'image/gif'){
-                        return createStringFromGif();
-                    } else {
-                        return createStringFromImage();
-                    }
-            });
-        }
-    }
-};*/
 
 module.exports = {
     processImage: function(src, treshold=-1, height=60, width=60, playGifs=false){
@@ -99,14 +33,14 @@ module.exports = {
             return createStringFromImage(src);
         }
         
-        function createStringFromImage(url){
+        function createStringFromImage(url, onlyReturnTransparencyData=false){
             console.log(url);
             return loadImage(url)
                 .then((image) => {
                     context.clearRect(0, 0, width, height);
                     context.drawImage(image, 0, 0, canvas.width, canvas.height);
                     let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                    return iterateOverPixels(pixelData, canvas.width, treshold);
+                    return iterateOverPixels(pixelData, canvas.width, treshold, onlyReturnTransparencyData);
                 })
                 .catch((error) => {
                     console.log(error+"An error occured! (image)");
@@ -114,12 +48,11 @@ module.exports = {
         }
         
         async function createStringFromGif(){
-            const results = await extractFrames({
-                input: src,
-                output: './frames/frame-%d.png'
-            });
-            
-            return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: true})
+            let cumulativeVal = false;
+            let transparencyPercent = await createStringFromImage(src, true);
+            if (transparencyPercent < 10)
+                cumulativeVal = true;
+            return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
                 .then(async function (frameData) {
                     let stringsArr = [];
                     let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
@@ -162,11 +95,15 @@ module.exports = {
     }
 };
 
-function iterateOverPixels(dataArray, width, treshold){
+function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData){
     let resultArray = new Array();
     let pixelArray = new Array();
     for(i=0; i<dataArray.length; i+=4){
         pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
+    }
+    
+    if (onlyReturnTransparencyData){
+        return getTransparencyPercent(pixelArray);
     }
     
     if (treshold === -1){
@@ -217,6 +154,17 @@ function evaluatePixel(pixel, treshold){
     }
     
     return (pixel.getAvg() > treshold);
+}
+
+
+function getTransparencyPercent(pixelArray){
+    let transCount = 0;
+    for (const pixel of pixelArray){
+        if (pixel.alpha === 0){
+            transCount++;
+        }
+    }
+    return (transCount/pixelArray.length)*100;
 }
 
 

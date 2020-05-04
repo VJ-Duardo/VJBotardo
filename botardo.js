@@ -274,7 +274,7 @@ function onMessageHandler (channel, userstate, message, self) {
 }
 
 async function onConnectedHandler (addr, port) {
-    //emotes.loadAllExistingEmotes();
+    emotes.loadAllExistingEmotes();
     await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
         //client.action(channelName, "ALLO ZULUL");

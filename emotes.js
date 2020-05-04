@@ -119,6 +119,7 @@ function getTwitchChannel(channelObj){
     let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
     fetch(twitchUserUrl + channelObj.name.substring(1), {
         headers: {
+            'Authorization': 'Bearer ' + pass.authToken,
             'Client-ID': pass.clientId
         }
     })
