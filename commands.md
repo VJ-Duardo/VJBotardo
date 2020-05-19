@@ -2,6 +2,9 @@
 
 * __!bot__  
   Information about the bot.
+  
+* __!commands__  
+Links to the command list.
 
 * __!ping__  
 Pings the server and returns the response time.
