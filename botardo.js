@@ -125,18 +125,44 @@ function ascii(channel, userInput){
 }
 
 
-async function merge(channel, inputLeft, inputRight){
-    let resultArray = new Array(15).fill('');
+async function merge(channel, mode, inputLeft, inputRight){
+    let resultArray = [];
     function callProcessImage(url, treshold = -1){
-        return braille.processImage(url, treshold, 56, 28)
+        let width = mode === 'merge' ? 28 : 58;
+        let height = mode === 'stack' ? 28 : 56;
+        return braille.processImage(url, treshold, height, width)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "Cant find emote in this channel or invalid link :Z");
                     return -1;
                 } else {
-                    brailleString.split(' ').forEach(function(line, i){
-                        resultArray[i] += line;
-                    });
+                    switch(mode){
+                        case 'merge':
+                            if (resultArray.length <= 1){
+                                resultArray = new Array(15).fill('')
+                            }
+                            brailleString.split(' ').forEach(function(line, i){
+                               resultArray[i] += line;
+                            });
+                            break;
+                        case 'stack':
+                            brailleString.split(' ').forEach(function(line){
+                                resultArray.push(line);
+                            });
+                            break;
+                        case 'mix':
+                            let brailleLinesArray = brailleString.split(' ');
+                            if (resultArray.length <= 1){
+                                brailleLinesArray = brailleLinesArray.slice(0, Math.floor((height/4)/2));
+                            } else {
+                                brailleLinesArray = brailleLinesArray.slice(Math.floor((height/4)/2));
+                            }
+                            
+                            brailleLinesArray.forEach(function(line){
+                                resultArray.push(line);
+                            });
+                            break;
+                    }
                     return 0;
                 }
             })
@@ -147,7 +173,7 @@ async function merge(channel, inputLeft, inputRight){
     }
     
     if (typeof inputLeft === 'undefined' || typeof inputRight === 'undefined'){
-        client.action(channel, "Correct syntax: !merge <emote>|<link> <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        client.action(channel, "Correct syntax: !merge/!stack/!mix <emote>|<link> <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
         return;
     }
     
@@ -256,10 +282,17 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
             break;
         case '!merge':
-            coolDownCheck(channel, command[0], 2, merge, [channel, command[1], command[2]]);
+            coolDownCheck(channel, command[0], 2, merge, [channel, "merge", command[1], command[2]]);
+            break;
+        case '!stack':
+            coolDownCheck(channel, command[0], 2, merge, [channel, "stack", command[1], command[2]]);
+            break;
+        case '!mix':
+            coolDownCheck(channel, command[0], 2, merge, [channel, "mix", command[1], command[2]]);
             break;
         case '!reload':
             coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
+            break;
     }
 
     if (channelsObjs[channel].gameRunning){
