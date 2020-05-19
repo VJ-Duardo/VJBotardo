@@ -2,6 +2,11 @@
 
 A twitch.tv chat bot
 
+<br>
+
+[__View current commands__](https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md)
+  
+ <br>
 
 __Used API's and services:__
 * [Twitch Emotes](https://twitchemotes.com/apidocs)
