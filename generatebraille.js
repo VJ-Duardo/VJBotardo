@@ -16,6 +16,10 @@ class Pixel {
     getAvg(){
         return (this.red + this.green + this.blue + this.alpha)/4;
     }
+    
+    getAvgRGB(){
+        return (this.red + this.green + this.blue)/3;
+    }
 }
 
 module.exports = {
@@ -107,8 +111,7 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     }
     
     if (treshold === -1){
-        treshold = getAverageColor(pixelArray);
-        console.log(treshold);
+        treshold = getAverageColor(pixelArray, width);
     }
     
     for(i=0; i<pixelArray.length; i+=(width*4)){
@@ -138,7 +141,7 @@ function getBrailleCode(pixelArray, pos, width, treshold){
     for(k=0; k<2; k++){
         for(l=0; l<4; l++){
             if ((pos + k + (width*l)) < pixelArray.length){
-                if (evaluatePixel(pixelArray[(pos + k + (width*l))], treshold)){
+                if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold)){
                     brailleCode += pixelPosToBraillePos[(k.toString() + l.toString())];
                 }
             }
@@ -148,12 +151,13 @@ function getBrailleCode(pixelArray, pos, width, treshold){
 }
 
 
-function evaluatePixel(pixel, treshold){
-    if (pixel.alpha === 0){
+function evaluatePixel(pixel, pos, treshold){
+    if (pixel.alpha === 0 
+            || pixel.getAvg() > 245){
         return true;
     }
     
-    return (pixel.getAvg() > treshold);
+    return (pixel.getAvg() > treshold[pos]);
 }
 
 
@@ -168,14 +172,47 @@ function getTransparencyPercent(pixelArray){
 }
 
 
-function getAverageColor(pixelArray){
-    let avgColor = 0;
-    let pixelAmount = 0;
-    for (const pixel of pixelArray){
-        if (pixel.alpha !== 0){
-            avgColor += pixel.getAvg();
-            pixelAmount++;
+function getAverageColor(pixelArray, width){
+    let tresholdsObj = {};
+    let maskWidth = width;
+    maskWidth = maskWidth > width ? width : maskWidth;
+    maskWidth = maskWidth < 1 ? 1 : maskWidth;
+    let maskHeight = Math.round((pixelArray.length/width)/3);
+    maskHeight = maskHeight > Math.ceil(pixelArray.length/width) ? Math.ceil(pixelArray.length/width) : maskHeight;
+    maskHeight = maskHeight < 1 ? 1 : maskHeight;
+    
+    let x = 0;
+    let y = 0;
+    while (y < Math.ceil(pixelArray.length/width)){
+        let avgColor = 0;
+        let pixelAmount = 0;
+        let indexes = [];
+        for (let j = y; j < (y+(maskHeight)); j++){
+            for (let k = x; k < (x+maskWidth); k++){
+                let index = (k + (width*j));
+                if (index < pixelArray.length && pixelCheck(pixelArray[index])){
+                    avgColor += pixelArray[index].getAvg();
+                    tresholdsObj[index] = 128;
+                    pixelAmount++;
+                    indexes.push(index);
+                }
+            }
+        }
+        avgColor = avgColor/pixelAmount;
+        for (const index of indexes){
+            tresholdsObj[index] = avgColor;
+        }
+        
+        if ((x + maskWidth) >= width){
+            x = 0;
+            y += maskHeight;
+        } else {
+            x += maskWidth;
         }
     }
-    return (avgColor/pixelAmount);
+    return tresholdsObj;
+}
+
+function pixelCheck(pixel){
+    return (pixel.alpha !== 0) && (pixel.getAvg() < 240);
 }

@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      "duardo1", "fabzeef", "chachnaq"
+      
     ]
 };
 
@@ -250,7 +250,7 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, command[0], 5, about, [channel]);
             break;
         case '!ascii':
-            coolDownCheck(channel, command[0], 10, ascii, [channel, command[1]]);
+            coolDownCheck(channel, command[0], 6, ascii, [channel, command[1]]);
             break;
         case '!ra':
             coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
