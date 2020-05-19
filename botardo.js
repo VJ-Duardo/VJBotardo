@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-      
+        
     ]
 };
 
@@ -238,6 +238,10 @@ function about(channel){
     client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md");
 }
 
+function commands(channel){
+   client.action(channel, "A command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md"); 
+}
+
 function coolDownCheck(channel, command, seconds, callback, params){
     if (!channelsObjs[channel].lastCommandTime.hasOwnProperty(command)){
         channelsObjs[channel].lastCommandTime[command] = 0;
@@ -274,6 +278,9 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!bot':
             coolDownCheck(channel, command[0], 5, about, [channel]);
+            break;
+        case '!commands':
+            coolDownCheck(channel, command[0], 5, commands, [channel]);
             break;
         case '!ascii':
             coolDownCheck(channel, command[0], 6, ascii, [channel, command[1]]);
