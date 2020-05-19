@@ -48,3 +48,9 @@ Generates a random braille string and prints it to chat. (Excludes emojis)
 
 * __!merge__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
 Creates and prints a single braille string with the two provided pictures next to each other. Fails if one of the two pictures is invalid.
+
+* __!stack__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
+Creates and prints a single braille string with the two provided pictures on top of each other.
+
+* __!mix__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
+Takes the upper half of the first and the lower half of the second image and puts them together into one braille string.
