@@ -86,7 +86,8 @@ function showPoints(channel, userName, userId, anotherUser){
 
 function singleEmoteAsciis(channel, mode, userInput){
     function callProcessImage(url){
-        braille.processImage(url, -1, 56, 58, mode === 'ascii')
+        let width = mode === 'ascii' ? 58 : 56;
+        braille.processImage(url, -1, 56, width, mode === 'ascii')
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "Cant find emote in this channel or invalid link :Z");
@@ -102,9 +103,9 @@ function singleEmoteAsciis(channel, mode, userInput){
                     } else {
                         let brailleLines = brailleString.split(" ");
                         
-                        brailleLines = brailleLines.map(function(line, _, braArr){
-                            let halfLine = mode === 'mirror' ? line.slice(0, Math.floor(line.length/2)) : line.slice(Math.floor(line.length/2), line.length-1).split('').reverse().join('');
-                            return halfLine + halfLine.split('').reverse().join('');
+                        brailleLines = brailleLines.map(function(line){
+                            let halfLine = mode === 'mirror' ? line.slice(0, Math.floor(line.length/2)) : braille.mirror(line.slice(Math.floor(line.length/2)));
+                            return halfLine + braille.mirror(halfLine);
                         });
                         
                         client.say(channel, brailleLines.join(' '));
@@ -116,7 +117,7 @@ function singleEmoteAsciis(channel, mode, userInput){
             });
     }
     if (typeof userInput === 'undefined'){
-        client.action(channel, "Correct syntax: !ascii <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        client.action(channel, "Correct syntax: !ascii/!mirror/!antimirror <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
         return;
     }
     
