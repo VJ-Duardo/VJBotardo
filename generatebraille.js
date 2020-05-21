@@ -20,6 +20,12 @@ class Pixel {
     getAvgRGB(){
         return (this.red + this.green + this.blue)/3;
     }
+    
+    setRGB(r, g, b) {
+        this.red = r;
+        this.green = g;
+        this.blue = b;
+    }
 }
 
 module.exports = {
@@ -106,12 +112,17 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
         pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
     }
     
+    //treshold = 128;
+    //pixelArray = floydSteinberg(pixelArray, width);
+    
     if (onlyReturnTransparencyData){
         return getTransparencyPercent(pixelArray);
     }
     
     if (treshold === -1){
         treshold = getAverageColor(pixelArray, width);
+    } else {
+        treshold = new Array(pixelArray.length).fill(treshold);
     }
     
     for(i=0; i<pixelArray.length; i+=(width*4)){
@@ -123,6 +134,31 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     }
     
     return resultArray.join(' ').replace(/[⠀]/g, '⠄');
+}
+
+
+function floydSteinberg(pixelArray, width){
+   for (i=0; i<pixelArray.length; i++){      
+        quantError = [pixelArray[i].red, pixelArray[i].green, pixelArray[i].blue];
+        
+        if ((0.8*pixelArray[i].red + 0.1*pixelArray[i].green + 0.1*pixelArray[i].blue) > 128){
+           quantError.forEach((elem, index, array) => array[index] -= 255);
+           pixelArray[i].setRGB(255, 255, 255);
+        } else {
+           pixelArray[i].setRGB(0, 0, 0);
+        }
+       
+        let neighbours = [[1,0,7], [-1,1,3], [0,1,5], [1,1,1]];
+        for (const n of neighbours){
+            if ((i+(n[1]*width))+n[0] < pixelArray.length && (i % width)+n[0] >= 0 && (i % width)+n[0] < width){
+                let pixelIndex = i+(n[1]*width)+n[0];
+                let newColors = new Array(3);
+                quantError.forEach((elem, index) => newColors[index] = Object.values(pixelArray[pixelIndex])[index] + elem * n[2] /16);
+                pixelArray[pixelIndex].setRGB(newColors[0], newColors[1], newColors[2]);
+            }
+        }
+   }
+   return pixelArray;
 }
 
 
@@ -214,5 +250,5 @@ function getAverageColor(pixelArray, width){
 }
 
 function pixelCheck(pixel){
-    return (pixel.alpha !== 0) && (pixel.getAvg() < 240);
+    return (pixel.alpha !== 0) && (pixel.getAvg() < 245);
 }

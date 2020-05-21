@@ -84,23 +84,34 @@ function showPoints(channel, userName, userId, anotherUser){
     }
 }
 
-function ascii(channel, userInput){
+function singleEmoteAsciis(channel, mode, userInput){
     function callProcessImage(url){
-        braille.processImage(url, -1, 56, 58, true)
+        braille.processImage(url, -1, 56, 58, mode === 'ascii')
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "Cant find emote in this channel or invalid link :Z");
                 } else {
-                    if (Array.isArray(brailleString)){
-                        brailleString.forEach(function(brailleFrame){
-                            client.say(channel, brailleFrame);
-                        });
+                    if (mode === 'ascii'){
+                        if (Array.isArray(brailleString)){
+                            brailleString.forEach(function(brailleFrame){
+                                client.say(channel, brailleFrame);
+                            });
+                        } else {
+                            client.say(channel, brailleString);
+                        }
                     } else {
-                        client.say(channel, brailleString);
+                        let brailleLines = brailleString.split(" ");
+                        
+                        brailleLines = brailleLines.map(function(line, _, braArr){
+                            let halfLine = mode === 'mirror' ? line.slice(0, Math.floor(line.length/2)) : line.slice(Math.floor(line.length/2), line.length-1).split('').reverse().join('');
+                            return halfLine + halfLine.split('').reverse().join('');
+                        });
+                        
+                        client.say(channel, brailleLines.join(' '));
                     }
                 }
             })
-            .catch(() => {
+            .catch((error) => {
                 client.action(channel, "That did not work :(");
             });
     }
@@ -125,7 +136,7 @@ function ascii(channel, userInput){
 }
 
 
-async function merge(channel, mode, inputLeft, inputRight){
+async function twoEmoteAsciis(channel, mode, inputLeft, inputRight){
     let resultArray = [];
     function callProcessImage(url, treshold = -1){
         let width = mode === 'merge' ? 28 : 58;
@@ -211,7 +222,7 @@ function randomAscii(channel){
     }
     
     if (typeof allEmotes !== 'undefined' && allEmotes.length > 1){
-        ascii(channel, allEmotes[Math.floor(Math.random() * allEmotes.length)].url);
+        singleEmoteAsciis(channel, 'ascii', allEmotes[Math.floor(Math.random() * allEmotes.length)].url);
     } else {
         client.action(channel, "Can't currently find any emotes in this channel!");
     }
@@ -283,19 +294,25 @@ function onMessageHandler (channel, userstate, message, self) {
             coolDownCheck(channel, command[0], 5, commands, [channel]);
             break;
         case '!ascii':
-            coolDownCheck(channel, command[0], 6, ascii, [channel, command[1]]);
+            coolDownCheck(channel, command[0], 6, singleEmoteAsciis, [channel, "ascii", command[1]]);
+            break;
+        case '!mirror':
+            coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "mirror", command[1]]);
+            break;
+        case '!antimirror':
+            coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "antimirror", command[1]]);
             break;
         case '!ra':
             coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
             break;
         case '!merge':
-            coolDownCheck(channel, command[0], 2, merge, [channel, "merge", command[1], command[2]]);
+            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "merge", command[1], command[2]]);
             break;
         case '!stack':
-            coolDownCheck(channel, command[0], 2, merge, [channel, "stack", command[1], command[2]]);
+            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "stack", command[1], command[2]]);
             break;
         case '!mix':
-            coolDownCheck(channel, command[0], 2, merge, [channel, "mix", command[1], command[2]]);
+            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "mix", command[1], command[2]]);
             break;
         case '!reload':
             coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
