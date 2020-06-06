@@ -97,7 +97,7 @@ function getBTTVChannel(channelObj){
         
         let emoteList = bttvChObj['emotes'];
         console.log("bttvchannel in " + channelObj.name + " loaded!");
-        channelObj.emotes.bttvChannel = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
+        channelObj.emotes.bttvChannel = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/3x');
     });
 }
 

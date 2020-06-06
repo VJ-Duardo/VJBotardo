@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-        
+        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13"
     ]
 };
 
@@ -230,8 +230,9 @@ function randomAscii(channel){
 }
 
 
-function reloadChannelEmotes(channel){
+async function reloadChannelEmotes(channel){
     channelsObjs[channel].loadEmotes();
+    await emotes.loadGlobalEmotes();
     client.action(channel, "Reloaded channel emotes.");
 }
 
@@ -335,7 +336,7 @@ async function onConnectedHandler (addr, port) {
     emotes.loadAllExistingEmotes();
     await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
-        //client.action(channelName, "ALLO ZULUL");
+        client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
         newChannel.loadEmotes();
         channelsObjs[channelName] = newChannel;
