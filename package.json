@@ -7,15 +7,9 @@
     "canvas": "^2.6.1",
     "fs": "^0.0.1-security",
     "gif-frames": "^1.0.1",
-    "gif-extract-frames": "^1.0.2",
-    "htmlimage": "^1.1.0",
-    "jsdom": "^16.2.2",
     "node-fetch": "^2.6.0",
     "sqlite3": "^4.1.1",
-    "tmi.js": "^1.5.0",
-    "twitch-chatlog": "^6.1.0",
-    "utf8": "^3.0.0",
-    "xmlhttprequest": "^1.8.0"
+    "tmi.js": "^1.5.0"
   },
   "devDependencies": {},
   "scripts": {
