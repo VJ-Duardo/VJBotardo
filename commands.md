@@ -57,3 +57,9 @@ Creates and prints a single braille string with the two provided pictures on top
 
 * __!mix__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
 Takes the upper half of the first and the lower half of the second image and puts them together into one braille string.
+
+* __!mirror__ \<emote\>|\<emoji\>|\<link\>    
+Puts the first half next to its mirrored version.
+
+* __!antimirror__ \<emote\>|\<emoji\>|\<link\>    
+Puts the mirrored second half next to its mirrored version.
