@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil"
+        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil", "SrLuuL"
     ]
 };
 //in the future channels will be managed in the db
@@ -337,7 +337,7 @@ async function onConnectedHandler (addr, port) {
     emotes.loadAllExistingEmotes();
     await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
-        client.action(channelName, "ALLO ZULUL");
+        //client.action(channelName, "ALLO ZULUL");
         let newChannel = new Channel(channelName);
         newChannel.loadEmotes();
         channelsObjs[channelName] = newChannel;
