@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil", "SrLuuL", "NaMaca"
+        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil", "SrLuuL", "NaMaca", "Hawichii"
     ]
 };
 //in the future channels will be managed in the db
@@ -91,7 +91,7 @@ function singleEmoteAsciis(channel, mode, userInput){
         braille.processImage(url, -1, 56, width, mode === 'ascii')
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
-                    client.action(channel, "Cant find emote in this channel or invalid link :Z");
+                    client.action(channel, "Cant find emote in this channel or invalid link :Z If you added a new emote, do !reload");
                 } else {
                     if (mode === 'ascii'){
                         if (Array.isArray(brailleString)){
