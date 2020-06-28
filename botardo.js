@@ -20,7 +20,7 @@ const opts = {
       password: pass.password
     },
     channels: [
-        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil", "SrLuuL", "NaMaca", "Hawichii", "phzeera", "tuimeep"
+        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "ALazyMeme", "xjoselito101", "okabar", "vashiiq", "unlukky13", "Feyzintil", "SrLuuL", "NaMaca", "Hawichii", "phzeera", "tuimeep", "flashskynews"
     ]
 };
 //in the future channels will be managed in the db
