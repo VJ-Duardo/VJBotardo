@@ -87,8 +87,8 @@ function showPoints(channel, userName, userId, anotherUser){
 
 function singleEmoteAsciis(channel, mode, userInput){
     function callProcessImage(url){
-        let width = mode === 'ascii' ? 58 : 56;
-        braille.processImage(url, -1, 56, width, mode === 'ascii')
+        let width = mode === 'ascii' ? 60 : 60;
+        braille.processImage(url, -1, 60, width, mode === 'ascii')
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     client.action(channel, "Cant find emote in this channel or invalid link :Z If you added a new emote, do !reload");
@@ -141,8 +141,8 @@ function singleEmoteAsciis(channel, mode, userInput){
 async function twoEmoteAsciis(channel, mode, inputLeft, inputRight){
     let resultArray = [];
     function callProcessImage(url, treshold = -1){
-        let width = mode === 'merge' ? 28 : 58;
-        let height = mode === 'stack' ? 28 : 56;
+        let width = mode === 'merge' ? 30 : 60;
+        let height = mode === 'stack' ? 30 : 60;
         return braille.processImage(url, treshold, height, width)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
