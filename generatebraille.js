@@ -202,12 +202,7 @@ function getBrailleCode(pixelArray, pos, width, treshold){
 
 
 function evaluatePixel(pixel, pos, treshold){
-    if (pixel.alpha === 0 
-            || pixel.getAvg() > 245){
-        return true;
-    }
-    
-    return (pixel.getAvg() > treshold[pos]);
+    return ((pixel.alpha === 0) || (pixel.getAvg() > treshold[pos]));
 }
 
 
@@ -240,7 +235,11 @@ function getAverageColor(pixelArray, width){
         for (let j = y; j < (y+(maskHeight)); j++){
             for (let k = x; k < (x+maskWidth); k++){
                 let index = (k + (width*j));
-                if (index < pixelArray.length && pixelCheck(pixelArray[index])){
+                if (index < pixelArray.length){
+                    if (setPixelCheck(pixelArray[index])) {
+                        tresholdsObj[index] = 255;
+                        continue;
+                    }
                     avgColor += pixelArray[index].getAvg();
                     tresholdsObj[index] = 128;
                     pixelAmount++;
@@ -263,6 +262,6 @@ function getAverageColor(pixelArray, width){
     return tresholdsObj;
 }
 
-function pixelCheck(pixel){
-    return (pixel.alpha !== 0) && (pixel.getAvg() < 245);
+function setPixelCheck(pixel){
+    return (pixel.alpha === 0) || (pixel.getAvg() > 245);
 }
