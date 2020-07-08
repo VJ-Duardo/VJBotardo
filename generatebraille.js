@@ -237,7 +237,7 @@ function getAverageColor(pixelArray, width){
                 let index = (k + (width*j));
                 if (index < pixelArray.length){
                     if (setPixelCheck(pixelArray[index])) {
-                        tresholdsObj[index] = 255;
+                        tresholdsObj[index] = 245;
                         continue;
                     }
                     avgColor += pixelArray[index].getAvg();
