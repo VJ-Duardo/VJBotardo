@@ -30,7 +30,7 @@ module.exports = {
         return getTwitchGlobal();
     },  
     loadAllExistingEmotes: function(){
-        getTwitchEverything();
+        return getTwitchEverything();
     },
     getEmojiURL: function(emoji){
         let emojiUrl = 'https://twemoji.maxcdn.com/v/latest/72x72/';
@@ -153,7 +153,7 @@ function getTwitchGlobal(){
 function getTwitchEverything(){
     let twitchEmoteAPI = 'https://api.twitch.tv/kraken/chat/emoticons';
     
-    fetch(twitchEmoteAPI, {
+    return fetch(twitchEmoteAPI, {
         headers: {
             'Accept': 'application/vnd.twitchtv.v5+json',
             'Client-ID': pass.clientId
@@ -173,6 +173,7 @@ function getTwitchEverything(){
         }
         module.exports.allExisitingEmotes = emoteList;
         console.log("all emotes loaded!");
+        return "done";
     });
 }
 

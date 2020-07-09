@@ -66,7 +66,7 @@ var sayFunc = function(channel, message){
 };
 
 function kill(channel, user){
-    if (user === 'Duardo1'){
+    if (user['user-id'] === 84800191){
         db.closeDB();
         client.action(channel, "bye FeelsBadMan");
         process.exit();
@@ -267,6 +267,16 @@ function coolDownCheck(channel, command, seconds, callback, params){
     }
 }
 
+async function devEval(channel, user, input){
+    if (user['user-id'] === '84800191') {
+        try{
+            let output =  await eval(input);
+            client.say(channel, String(output));
+        } catch(e) {
+            console.error(e);
+        }
+    }
+}
 
 
 
@@ -279,7 +289,7 @@ function onMessageHandler (channel, userstate, message, self) {
     
     switch(command[0]){
         case '!stop':
-            kill(channel, userstate['display-name']);
+            kill(channel, userstate);
             break;
         case '!top':
             coolDownCheck(channel, command[0], 5, db.getTopUsers, [5, channel, sayFunc]);
@@ -320,6 +330,9 @@ function onMessageHandler (channel, userstate, message, self) {
         case '!reload':
             coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
             break;
+        case '!eval':
+            devEval(channel, userstate, command.slice(1).join(" "));
+            break;
     }
 
     if (channelsObjs[channel].gameRunning){
@@ -334,7 +347,7 @@ function onMessageHandler (channel, userstate, message, self) {
 }
 
 async function onConnectedHandler (addr, port) {
-    emotes.loadAllExistingEmotes();
+    //emotes.loadAllExistingEmotes();
     await emotes.loadGlobalEmotes();
     for (const channelName of opts.channels){
         //client.action(channelName, "ALLO ZULUL");
