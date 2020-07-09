@@ -7,6 +7,18 @@ var db = new sqlite.Database('./database.db', (err) => {
 
 
 module.exports = {
+    sendQuery: function(sqlQuery, showError=true){
+        return new Promise(function(resolve){
+            db.run(sqlQuery, [], function(err){
+                if (err && showError){
+                    console.error(err.message);
+                    resolve(err.message);
+                } else {
+                    resolve("success");
+                }
+            });
+        });
+    },
     addUserPoints: function(id, name, points){
         checkIfUserExists(id)
             .then((result) => {
