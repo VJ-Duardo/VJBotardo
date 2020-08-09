@@ -10,9 +10,13 @@ module.exports = {
     sendQuery: function(sqlQuery, showError=true){
         return new Promise(function(resolve){
             db.run(sqlQuery, [], function(err){
-                if (err && showError){
-                    console.error(err.message);
-                    resolve(err.message);
+                if (err){
+                    if (showError){
+                        console.error(err.message);
+                        resolve(err.message);
+                    } else {
+                        resolve("error");
+                    }
                 } else {
                     resolve("success");
                 }
@@ -64,6 +68,27 @@ module.exports = {
                 callback(channelObj, value, 0);
             } else {
                 callback(channelObj, value, row.points);
+            }
+        });
+    },
+    getChannels: function(callback){
+        return new Promise(function(resolve){
+            let sql = "SELECT * FROM CHANNEL";
+            db.each(sql, [], (err, row) => {
+                if (err){
+                    console.error(err.message);
+                    return;
+                }
+                callback(...Object.values(row));
+            });
+            resolve();
+        });
+    },
+    insertNewChannel: function(id, name){
+        let sql = 'INSERT INTO CHANNEL(channel_id, channel_name) VALUES(?, ?)';
+        db.run(sql, [id, name], function(err){
+            if (err){
+                console.error(err.message);
             }
         });
     }

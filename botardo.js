@@ -6,7 +6,7 @@ const db = require('./database.js');
 const ttt = require('./tictactoe.js');
 const braille = require('./generatebraille.js');
 
-const opts = {
+opts = {
     options: {
         debug: true
     },
@@ -19,24 +19,17 @@ const opts = {
       username: "vjbotardo",
       password: pass.password
     },
-    channels: [
-        "duardo1", "fabzeef", "chachnaq", "griphthefrog", "dieziege", "kiansly", "teischEnte", "college_boi", "xjoselito101", "okabar", "vashiiq", "unlukky13", "rFey", "SrLuuL", "NaMaca", "Hawichii", "phzeera", "tuimeep", "flashskynews", "tomSHBZT", "EmergencyCurse", "5crome", "LUKICKK", "Der_Echte_43", "nurPrinz", "znicuuu", "sparler"
-    ]
+    channels: []
 };
-//in the future channels will be managed in the db
-
-const client = new tmi.client(opts);
-
-client.on('message', onMessageHandler);
-client.on('connected', onConnectedHandler);
-client.on('disconnected', onDisconnectHandler);
-
-client.connect();
 
 
 
 class Channel {
-    constructor(name){
+    constructor(id, name, prefix, modsCanEdit, whileLive){
+        this.id = id;
+        this.prefix = prefix;
+        this.modsCanEdit = modsCanEdit;
+        this.whileLive = whileLive;
         this.name = name;
         this.gameRunning = false;
         this.game = null;
@@ -55,8 +48,39 @@ class Channel {
         emotes.loadEmotes(this);
     }
 }
-
 var channelsObjs = {};
+
+
+
+const client = new tmi.client(opts);
+
+function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
+    if (!id || !name){
+        return -1;
+    }
+    try {
+        opts.channels.push(name);
+        name = '#' + name;
+        channelsObjs[name] = new Channel(id, name, prefix, modsCanEdit, whileLive);
+        channelsObjs[name].loadEmotes();
+        return 1;
+    } catch (e) {
+        console.error(e);
+        return -1;
+    }
+}
+
+(async function(){
+    await emotes.loadGlobalEmotes();
+    emotes.loadAllExistingEmotes();
+    await db.getChannels(loadChannel);
+    client.connect();
+})();
+
+
+client.on('message', onMessageHandler);
+client.on('connected', onConnectedHandler);
+client.on('disconnected', onDisconnectHandler);
 
 
 
@@ -278,6 +302,18 @@ async function devEval(channel, user, input){
     }
 }
 
+function addChannel(channel, user, id, channelName){
+    if (user['user-id'] === '84800191') {
+        let status = loadChannel(id, channelName);
+        if (status === -1){
+            client.say(channel, "An Error occured!");
+            return;
+        }
+        client.join('#' + channelName);
+        db.insertNewChannel(id, channelName);
+    }
+}
+
 
 
 function onMessageHandler (channel, userstate, message, self) {
@@ -333,6 +369,9 @@ function onMessageHandler (channel, userstate, message, self) {
         case '!eval':
             devEval(channel, userstate, command.slice(1).join(" "));
             break;
+        case '!addChannel':
+            addChannel(channel, userstate, command[1], command[2]);
+            break;
     }
 
     if (channelsObjs[channel].gameRunning){
@@ -346,15 +385,7 @@ function onMessageHandler (channel, userstate, message, self) {
     }
 }
 
-async function onConnectedHandler (addr, port) {
-    emotes.loadAllExistingEmotes();
-    await emotes.loadGlobalEmotes();
-    for (const channelName of opts.channels){
-        //client.action(channelName, "ALLO ZULUL");
-        let newChannel = new Channel(channelName);
-        newChannel.loadEmotes();
-        channelsObjs[channelName] = newChannel;
-    }
+function onConnectedHandler (addr, port) {
     console.log(`* Connected to ${addr}:${port}`);
 }
 
