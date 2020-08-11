@@ -71,9 +71,9 @@ module.exports = {
             }
         });
     },
-    getChannels: function(callback){
+    getAllData: function(callback, table){
         return new Promise(function(resolve){
-            let sql = "SELECT * FROM CHANNEL";
+            let sql = 'SELECT * FROM ' +table;
             db.each(sql, [], (err, row) => {
                 if (err){
                     console.error(err.message);

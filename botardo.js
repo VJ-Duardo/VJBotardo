@@ -22,6 +22,8 @@ opts = {
     channels: []
 };
 
+const client = new tmi.client(opts);
+
 
 
 class Channel {
@@ -52,7 +54,20 @@ var channelsObjs = {};
 
 
 
-const client = new tmi.client(opts);
+
+class Command {
+    constructor (name, cooldown, minCooldown, devOnly){
+        this.name = name;
+        this.cooldown = cooldown;
+        this.minCooldown = minCooldown;
+        this.devOnly = devOnly;
+    }
+}
+var commandObjs = {};
+
+
+
+
 
 function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     if (!id || !name){
@@ -70,10 +85,18 @@ function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     }
 }
 
+function loadCommand(name, cooldown, minCooldown, devOnly){
+    commandObjs[name] = new Command(name, cooldown, minCooldown, Boolean(devOnly));
+}
+
+
+
+
 (async function(){
+    await db.getAllData(loadCommand, "COMMAND");
     await emotes.loadGlobalEmotes();
     emotes.loadAllExistingEmotes();
-    await db.getChannels(loadChannel);
+    await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
 
@@ -311,6 +334,7 @@ function addChannel(channel, user, id, channelName){
         }
         client.join('#' + channelName);
         db.insertNewChannel(id, channelName);
+        client.say(channel, "Success!");
     }
 }
 
