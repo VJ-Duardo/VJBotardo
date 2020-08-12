@@ -5,6 +5,7 @@ const emotes = require('./emotes.js');
 const db = require('./database.js');
 const ttt = require('./tictactoe.js');
 const braille = require('./generatebraille.js');
+const fetch = require("node-fetch");
 
 opts = {
     options: {
@@ -76,7 +77,7 @@ function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     try {
         opts.channels.push(name);
         name = '#' + name;
-        channelsObjs[name] = new Channel(id, name, prefix, modsCanEdit, whileLive);
+        channelsObjs[name] = new Channel(String(id), name, prefix, Boolean(modsCanEdit), Boolean(whileLive));
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
@@ -288,7 +289,7 @@ async function reloadChannelEmotes(channel){
 function ping(channel){
     client.ping()
         .then((data) => {
-            client.action(channel, "BING! (" + data*1000 + "ms)");
+            client.action(channel, "BING! (" + data*1000 + "ms). Used prefix in this channel: " +channelsObjs[channel].prefix);
         })
         .catch(() => {
             client.action(channel, "Timed out");
@@ -296,20 +297,46 @@ function ping(channel){
 }
 
 function about(channel){
-    client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md");
+    client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md Used prefix in this channel: " +channelsObjs[channel].prefix);
 }
 
 function commands(channel){
    client.action(channel, "A command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md"); 
 }
 
-function coolDownCheck(channel, command, seconds, callback, params){
-    if (!channelsObjs[channel].lastCommandTime.hasOwnProperty(command)){
-        channelsObjs[channel].lastCommandTime[command] = 0;
+
+function getLiveStatus(channel_id){
+    let getStreamsUrl = 'https://api.twitch.tv/helix/streams?user_id='+channel_id;
+    return fetch(getStreamsUrl, {
+        headers: {
+            'Authorization': 'Bearer ' + pass.authToken,
+            'Client-ID': pass.clientId
+        }
+    })
+    .then((response) => {
+         return response.json();
+    })
+    .then((dataObj) => {
+        return dataObj.data.length > 0;
+    });
+}
+
+
+async function coolDownCheck(channel, command, seconds, callback, params){
+    let channelObj = channelsObjs[channel];
+    
+    if (!channelObj.whileLive){
+        if (await getLiveStatus(channelObj.id))
+            return;
+    }
+    
+    
+    if (!channelObj.lastCommandTime.hasOwnProperty(command)){
+        channelObj.lastCommandTime[command] = 0;
     }
     let now = Math.round(new Date().getTime() / 1000);
-    if (now >= channelsObjs[channel].lastCommandTime[command]+seconds){
-        channelsObjs[channel].lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
+    if (now >= channelObj.lastCommandTime[command]+seconds){
+        channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
         callback(...params);
     }
 }
@@ -339,6 +366,51 @@ function addChannel(channel, user, id, channelName){
 }
 
 
+function optionCheck(channel, value, options){
+    if (options.includes(value)){
+        return true;
+    } else {
+        client.say(channel, 'Value must be ' + options.join('/'));
+        return false;
+    }
+}
+
+function setBot(channel, user, option, value){
+    let channelObj = channelsObjs[channel];
+    
+    if ((!channelObj.modsCanEdit && user['user-id'] != channelObj.id) 
+            || (!user['mod'] && user['user-id'] != channelObj.id)){
+        return;
+    }
+    
+    switch(option){
+        case 'prefix':
+            channelObj.prefix = value.trim();
+            db.setChannelValue(channelObj.id, 'prefix', value);
+            break;
+        case 'modsCanEdit':
+        case 'whileLive':
+            let columnName = option === 'modsCanEdit' ? 'mods_can_edit' : 'while_live';
+            if (optionCheck(channel, value, ['true', 'false'])){
+                channelObj.whileLive = value === 'true';
+                let boolInteger = value === 'true' ? 1 : 0;
+                db.setChannelValue(channelObj.id, columnName, boolInteger);
+            } else { return }
+            break;
+        default:
+            return;
+    }
+    client.action(channel, 'Changed option ' + option + ' to ' + value);
+}
+
+function checkBot(channel){
+    let channelObj = channelsObjs[channel];
+    client.action(channel, "Settings in this channel: prefix: " + channelObj.prefix 
+            + ", modsCanEdit: " + channelObj.modsCanEdit 
+            + ", whileLive: " + channelObj.whileLive);
+}
+
+
 
 function onMessageHandler (channel, userstate, message, self) {
     if (self) {
@@ -346,64 +418,72 @@ function onMessageHandler (channel, userstate, message, self) {
     }
 
     const command = message.trim().split(" ");
+    const prefix = channelsObjs[channel].prefix;
     
     switch(command[0]){
-        case '!stop':
+        case prefix+'stop':
             kill(channel, userstate);
             break;
-        case '!top':
+        case prefix+'top':
             coolDownCheck(channel, command[0], 5, db.getTopUsers, [5, channel, sayFunc]);
             break;
         case '!ping':
+        case prefix+'ping':
             coolDownCheck(channel, command[0], 5, ping, [channel]);
             break;
-        case '!ush':
+        case prefix+'ush':
             coolDownCheck(channel, command[0], 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
             break;
         case '!bot':
+        case prefix+'bot':
             coolDownCheck(channel, command[0], 5, about, [channel]);
             break;
-        case '!commands':
+        case prefix+'commands':
             coolDownCheck(channel, command[0], 5, commands, [channel]);
             break;
-        case '!ascii':
+        case prefix+'ascii':
             coolDownCheck(channel, command[0], 6, singleEmoteAsciis, [channel, "ascii", command[1]]);
             break;
-        case '!mirror':
+        case prefix+'mirror':
             coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "mirror", command[1]]);
             break;
-        case '!antimirror':
+        case prefix+'antimirror':
             coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "antimirror", command[1]]);
             break;
-        case '!ra':
+        case prefix+'ra':
             coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
             break;
-        case '!merge':
+        case prefix+'merge':
             coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "merge", command[1], command[2]]);
             break;
-        case '!stack':
+        case prefix+'stack':
             coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "stack", command[1], command[2]]);
             break;
-        case '!mix':
+        case prefix+'mix':
             coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "mix", command[1], command[2]]);
             break;
-        case '!reload':
+        case prefix+'reload':
             coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
             break;
-        case '!eval':
+        case prefix+'eval':
             devEval(channel, userstate, command.slice(1).join(" "));
             break;
-        case '!addChannel':
+        case prefix+'addChannel':
             addChannel(channel, userstate, command[1], command[2]);
             break;
+        case prefix+'setBot':
+            setBot(channel, userstate, command[1], command[2]);
+            break;
+        case prefix+'checkBot':
+            checkBot(channel);
     }
 
     if (channelsObjs[channel].gameRunning){
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
-        if (command[0] === '!guess') {
+        if (command[0] === prefix+'guess') {
             coolDownCheck(channel, command[0], 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
-        } else if (command[0] === '!ttt'){
+        } else if (command[0] === prefix+'ttt'){
             coolDownCheck(channel, command[0], 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
         }
     }

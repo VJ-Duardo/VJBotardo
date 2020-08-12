@@ -91,6 +91,14 @@ module.exports = {
                 console.error(err.message);
             }
         });
+    },
+    setChannelValue: function(id, option, value){
+        let sql = 'UPDATE CHANNEL SET ' +option+ ' = ? WHERE channel_id = ?';
+        db.run(sql, [value, id], function(err){
+            if (err){
+                console.error(err.message);
+            }
+        });
     }
 };
 
