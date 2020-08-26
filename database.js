@@ -3,6 +3,7 @@ var db = new sqlite.Database('./database.db', (err) => {
   if (err) {
     console.error(err.message);
   }
+  module.exports.sendQuery("pragma foreign_keys = ON;"); 
 });
 
 
@@ -20,6 +21,15 @@ module.exports = {
                 } else {
                     resolve("success");
                 }
+            });
+        });
+    },
+    showRows: function(sqlQuery){
+        return new Promise(function(resolve){
+            db.all(sqlQuery, [], function(err, rows){
+                if (err)
+                    resolve(err.message);
+                resolve(rows);
             });
         });
     },
@@ -73,6 +83,7 @@ module.exports = {
     },
     getAllData: function(callback, table){
         return new Promise(function(resolve){
+            table = table.toLowerCase() === 'channel' ? table : 'command';
             let sql = 'SELECT * FROM ' +table;
             db.each(sql, [], (err, row) => {
                 if (err){
@@ -85,19 +96,96 @@ module.exports = {
         });
     },
     insertNewChannel: function(id, name){
-        let sql = 'INSERT INTO CHANNEL(channel_id, channel_name) VALUES(?, ?)';
-        db.run(sql, [id, name], function(err){
-            if (err){
-                console.error(err.message);
-            }
+        return new Promise(function(resolve){
+            let sql = 'INSERT INTO CHANNEL(channel_id, channel_name) VALUES(?, ?)';
+            db.run(sql, [id, name], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(err.message);
+                }
+                resolve(1);
+            });
+        });
+    },
+    insertNewCommand: function(name, cooldown, minCooldown, maxCooldown, devOnly){
+        return new Promise(function(resolve){
+            let sql = 'INSERT INTO COMMAND(command_name, cooldown, min_cooldown, max_cooldown, dev_only) VALUES(?, ?, ?, ?, ?)';
+            db.run(sql, [name, cooldown, minCooldown, maxCooldown, devOnly], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(err.message);
+                }
+                resolve(1);
+            });
         });
     },
     setChannelValue: function(id, option, value){
-        let sql = 'UPDATE CHANNEL SET ' +option+ ' = ? WHERE channel_id = ?';
-        db.run(sql, [value, id], function(err){
-            if (err){
-                console.error(err.message);
+        return new Promise(function(resolve){
+            let column;
+            switch (option){
+                case 'modsCanEdit': column = 'mods_can_edit'; break;
+                case 'prefix': column = 'prefix'; break;
+                case 'whileLive': column = 'while_live'; break;
             }
+            let sql = 'UPDATE CHANNEL SET ' +column+ ' = ? WHERE channel_id = ?';
+            db.run(sql, [value, id], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(-1);
+                }
+                resolve(1);
+            });
+        });
+    },
+    setChannelCommandValue: function(id, command, option, value){
+        return new Promise(function(resolve){
+            let column;
+            switch (option){
+                case 'enabled': column = 'enabled'; break;
+                case 'cooldown': column = 'cooldown'; break;
+            }
+            let sql = 'UPDATE CHANNEL_COMMAND SET ' +column+ ' = ? WHERE channel_id = ? AND command_name = ?';
+            db.run(sql, [value, id, command], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(-1);
+                }
+                resolve(1);
+            });
+        });
+    },
+    getChannelCommandValue: function(id, command, option){
+        return new Promise(function(resolve){
+            let column;
+            switch (option){
+                case 'enabled': column = 'enabled'; break;
+                case 'cooldown': column = 'cooldown'; break;
+            }
+            let sql = 'SELECT ' +column+ ' FROM CHANNEL_COMMAND WHERE channel_id = ? AND command_name = ?';
+            db.get(sql, [id, command], (err, row) => {
+                if (err){
+                    console.error(err.message);
+                    return;
+                }
+                resolve(Object.values(row)[0]);
+            });
+        });
+    },
+    insertIntoChannelCommand: function(cause, addition){
+        return new Promise(function(resolve){
+            let column;
+            switch (cause){
+                case 'channel': column = 'channel_id'; break;
+                case 'command': column = 'command_name'; break;
+            }
+            let sql = 'INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ' +column+ ' = ?';
+            db.run(sql, [addition], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(err.message);
+                }
+                resolve(1);
+            });
         });
     }
 };
@@ -105,9 +193,8 @@ module.exports = {
 function insertNewUser(id, name, points){
     let sql = 'INSERT INTO USER(id, display_name, points) VALUES (?, ?, ?)';
     db.run(sql, [id, name, points], function(err){
-        if (err) {
+        if (err) 
             return console.error(err.message);
-        }
         console.log('New user inserted: ' + name);
     });
 }

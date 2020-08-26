@@ -7,6 +7,8 @@ const ttt = require('./tictactoe.js');
 const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
 
+const botardoFunctions = {};
+
 opts = {
     options: {
         debug: true
@@ -22,7 +24,7 @@ opts = {
     },
     channels: []
 };
-
+const devID = '84800191';
 const client = new tmi.client(opts);
 
 
@@ -57,11 +59,32 @@ var channelsObjs = {};
 
 
 class Command {
-    constructor (name, cooldown, minCooldown, devOnly){
+    constructor (name, cooldown, minCooldown, maxCooldown, devOnly){
         this.name = name;
-        this.cooldown = cooldown;
-        this.minCooldown = minCooldown;
+        this.cooldown = parseInt(cooldown);
+        this.minCooldown = parseInt(minCooldown);
+        this.maxCooldown = parseInt(maxCooldown);
         this.devOnly = devOnly;
+    }
+    
+    getChannelCooldown(channelID){
+        const command = this.name;
+        const defaultCooldown = this.cooldown;
+        return new Promise(async function(resolve){
+            let cooldown = await db.getChannelCommandValue(channelID, command, "cooldown");
+            if (typeof cooldown === 'undefined' || cooldown === null){
+                resolve(defaultCooldown);
+            } else {
+                resolve(parseInt(cooldown));
+            }
+        });
+    }
+    
+    getEnabledStatus(channelID){
+        const command = this.name;
+        return new Promise(async function(resolve){
+            resolve(Boolean(parseInt(await db.getChannelCommandValue(channelID, command, "enabled"))));
+        });
     }
 }
 var commandObjs = {};
@@ -77,8 +100,8 @@ function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     try {
         opts.channels.push(name);
         name = '#' + name;
-        channelsObjs[name] = new Channel(String(id), name, prefix, Boolean(modsCanEdit), Boolean(whileLive));
-        channelsObjs[name].loadEmotes();
+        channelsObjs[name] = new Channel(String(id), name, prefix, Boolean(parseInt(modsCanEdit)), Boolean(parseInt(whileLive)));
+        //channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
         console.error(e);
@@ -86,8 +109,14 @@ function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     }
 }
 
-function loadCommand(name, cooldown, minCooldown, devOnly){
-    commandObjs[name] = new Command(name, cooldown, minCooldown, Boolean(devOnly));
+function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown){
+    const params = [name, cooldown, minCooldown, maxCooldown, devOnly];
+    for (let prm of params){ 
+        if (typeof prm === 'undefined')
+            return -1;
+    }
+    commandObjs[name] = new Command(name, cooldown, minCooldown, maxCooldown, Boolean(parseInt(devOnly)));
+    return 1;
 }
 
 
@@ -95,8 +124,8 @@ function loadCommand(name, cooldown, minCooldown, devOnly){
 
 (async function(){
     await db.getAllData(loadCommand, "COMMAND");
-    await emotes.loadGlobalEmotes();
-    emotes.loadAllExistingEmotes();
+    //await emotes.loadGlobalEmotes();
+    //emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
@@ -113,12 +142,10 @@ var sayFunc = function(channel, message){
     client.say(channel, message);
 };
 
-function kill(channel, user){
-    if (user['user-id'] === 84800191){
-        db.closeDB();
-        client.action(channel, "bye FeelsBadMan");
-        process.exit();
-    }
+function kill(channel){
+    db.closeDB();
+    client.action(channel, "bye FeelsBadMan");
+    process.exit();
 }
 
 function showPoints(channel, userName, userId, anotherUser){
@@ -305,6 +332,7 @@ function commands(channel){
 }
 
 
+
 function getLiveStatus(channel_id){
     let getStreamsUrl = 'https://api.twitch.tv/helix/streams?user_id='+channel_id;
     return fetch(getStreamsUrl, {
@@ -321,25 +349,34 @@ function getLiveStatus(channel_id){
     });
 }
 
-
-async function coolDownCheck(channel, command, seconds, callback, params){
+async function allowanceCheck(channel, user, command, callback, params){
     let channelObj = channelsObjs[channel];
+    let commandObj = commandObjs[command];
     
-    if (!channelObj.whileLive){
-        if (await getLiveStatus(channelObj.id))
+    if (user['user-id'] !== devID){
+        if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && user['user-id'] !== devID)
             return;
+
+        if (!(await commandObj.getEnabledStatus(channelObj.id)))
+            return;
+
+        if (!channelObj.whileLive){
+            if (await getLiveStatus(channelObj.id))
+                return;
+        }
     }
     
-    
+    let cooldown = await commandObj.getChannelCooldown(channelObj.id);
     if (!channelObj.lastCommandTime.hasOwnProperty(command)){
         channelObj.lastCommandTime[command] = 0;
     }
     let now = Math.round(new Date().getTime() / 1000);
-    if (now >= channelObj.lastCommandTime[command]+seconds){
+    if (now >= channelObj.lastCommandTime[command]+cooldown){
         channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
         callback(...params);
     }
 }
+
 
 async function devEval(channel, user, input){
     if (user['user-id'] === '84800191') {
@@ -352,56 +389,151 @@ async function devEval(channel, user, input){
     }
 }
 
-function addChannel(channel, user, id, channelName){
-    if (user['user-id'] === '84800191') {
-        let status = loadChannel(id, channelName);
-        if (status === -1){
-            client.say(channel, "An Error occured!");
-            return;
+
+
+
+async function addChannel(channel, user, id, channelName){
+    channelName = channelName.toLowerCase();
+    let status = loadChannel(id, channelName);
+    if (status === -1){
+        client.say(channel, "An Error occured!");
+        return;
+    }
+    client.join('#' + channelName);
+    let insertStatus = await db.insertNewChannel(id, channelName);
+    if (insertStatus === 1){
+        let insertCCStatus = await db.insertIntoChannelCommand("channel", id);
+        if (insertCCStatus === 1){
+            client.say(channel, "Success!");
+        } else {
+            client.say(channel, String(insertCCStatus));
         }
-        client.join('#' + channelName);
-        db.insertNewChannel(id, channelName);
-        client.say(channel, "Success!");
+    } else {
+        client.say(channel, String(insertStatus));
     }
 }
+
+async function addCommand(channel, name, cooldown, minCooldown, maxCooldown, devOnly){
+    if (loadCommand(name, cooldown, minCooldown, maxCooldown, devOnly) === -1){
+        client.say(channel, "An Error occured!");
+        return;
+    }
+    let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, maxCooldown, devOnly);
+    if (insertStatus === 1){
+        let insertCCStatus = await db.insertIntoChannelCommand("command", name);
+        if (insertCCStatus === 1){
+            client.say(channel, "Success!");
+        } else {
+            client.say(channel, String(insertCCStatus));
+        }
+    } else {
+        client.say(channel, String(insertStatus));
+    }
+}
+
+
+
 
 
 function optionCheck(channel, value, options){
-    if (options.includes(value)){
-        return true;
-    } else {
-        client.say(channel, 'Value must be ' + options.join('/'));
-        return false;
+    if (!options.some(isNaN) && options.length === 2 && !isNaN(value)){
+        if (value >= options[0] && value <= options[1])
+            return true;
     }
+    
+    if (options.includes(value))
+        return true;
+    
+    client.say(channel, 'Value must be ' + options.join('-'));
+    return false;
 }
 
-function setBot(channel, user, option, value){
-    let channelObj = channelsObjs[channel];
-    
-    if ((!channelObj.modsCanEdit && user['user-id'] != channelObj.id) 
-            || (!user['mod'] && user['user-id'] != channelObj.id)){
+
+function modsCanEditCheck(channelObj, user){
+    return (!channelObj.modsCanEdit && user['user-id'] != channelObj.id) 
+            || (!user['mod'] && user['user-id'] != channelObj.id)
+            || (user['user-id'] !== devID);
+}
+
+async function setBot(channel, user, option, value){
+    if ([user, option, value].includes(undefined)){
+        client.action(channel, "Some parameters are missing!");
         return;
     }
+    let channelObj = channelsObjs[channel];
     
+    if (modsCanEditCheck(channelObj, user))
+        return;
+    
+    let dbStatus;
     switch(option){
         case 'prefix':
             channelObj.prefix = value.trim();
-            db.setChannelValue(channelObj.id, 'prefix', value);
+            dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
             break;
         case 'modsCanEdit':
         case 'whileLive':
-            let columnName = option === 'modsCanEdit' ? 'mods_can_edit' : 'while_live';
             if (optionCheck(channel, value, ['true', 'false'])){
-                channelObj.whileLive = value === 'true';
+                channelObj[option] = value === 'true';
                 let boolInteger = value === 'true' ? 1 : 0;
-                db.setChannelValue(channelObj.id, columnName, boolInteger);
+                dbStatus = await db.setChannelValue(channelObj.id, option, boolInteger);
             } else { return }
             break;
         default:
+            client.action(channel, 'That option cannot be found.');
             return;
     }
-    client.action(channel, 'Changed option ' + option + ' to ' + value);
+    if (dbStatus === 1)
+        client.action(channel, 'Changed option ' + option + ' to ' + value);
+    else
+        client.action(channel, 'Something went wrong in the db.');
 }
+
+
+async function setCommand(channel, user, command, option, value){
+    if ([user, command, option, value].includes(undefined)){
+        client.action(channel, "Some parameters are missing!");
+        return;
+    }
+    let channelObj = channelsObjs[channel];
+    
+    if (modsCanEditCheck(channelObj, user))
+        return;
+    
+    if (!Object.keys(commandObjs).includes(command)){
+        client.action(channel, "This command cannot be found!");
+        return;
+    }
+    let commandObj = commandObjs[command];
+    
+    let dbStatus;
+    switch(option){
+        case 'cooldown':
+            if (optionCheck(channel, parseInt(value), [commandObj.minCooldown, commandObj.maxCooldown])){
+                dbStatus = await db.setChannelCommandValue(channelObj.id, command, option, value);
+            } else { return; }
+            break;
+        case 'enabled':
+            if (optionCheck(channel, value, ['true', 'false'])){
+                let boolInteger = value === 'true' ? 1 : 0;
+               dbStatus = await db.setChannelCommandValue(channelObj.id, command, option, boolInteger);
+            } else { return; };
+            break;
+        default:
+            client.action(channel, 'That option cannot be found.');
+            return;
+    }
+    if (dbStatus === 1)
+        client.action(channel, 'Changed option ' + option + ' of ' + command + ' to ' + value);
+    else
+        client.action(channel, 'Something went wrong in the db.');
+        
+}
+
+
+
+
+
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
@@ -409,6 +541,21 @@ function checkBot(channel){
             + ", modsCanEdit: " + channelObj.modsCanEdit 
             + ", whileLive: " + channelObj.whileLive);
 }
+
+async function checkCommand(channel, command){
+    let commandObj = commandObjs[command];
+    if (commandObj.devOnly)
+        return;
+    let channelObj = channelsObjs[channel];
+    
+    let cooldown = await commandObj.getChannelCooldown(channelObj.id);
+    let enabled = await commandObj.getEnabledStatus(channelObj.id);
+    client.action(channel, "Settings for command " +command + ": " + "cooldown: " + cooldown 
+            + " sec, enabled: " + enabled);
+}
+
+
+
 
 
 
@@ -419,63 +566,74 @@ function onMessageHandler (channel, userstate, message, self) {
 
     const command = message.trim().split(" ");
     const prefix = channelsObjs[channel].prefix;
+    const identParams = [channel, userstate, command[0].replace(prefix, '')];
     
     switch(command[0]){
         case prefix+'stop':
-            kill(channel, userstate);
+            allowanceCheck(...identParams, kill, [channel]);
             break;
         case prefix+'top':
-            coolDownCheck(channel, command[0], 5, db.getTopUsers, [5, channel, sayFunc]);
+            allowanceCheck(...identParams, db.getTopUsers, [5, channel, sayFunc]);
             break;
         case '!ping':
         case prefix+'ping':
-            coolDownCheck(channel, command[0], 5, ping, [channel]);
+            allowanceCheck(...identParams, ping, [channel]);
             break;
         case prefix+'ush':
-            coolDownCheck(channel, command[0], 5, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
+            allowanceCheck(...identParams, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
             break;
         case '!bot':
         case prefix+'bot':
-            coolDownCheck(channel, command[0], 5, about, [channel]);
+            allowanceCheck(...identParams, about, [channel]);
             break;
         case prefix+'commands':
-            coolDownCheck(channel, command[0], 5, commands, [channel]);
+            allowanceCheck(...identParams, commands, [channel]);
             break;
         case prefix+'ascii':
-            coolDownCheck(channel, command[0], 6, singleEmoteAsciis, [channel, "ascii", command[1]]);
+            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "ascii", command[1]]);
             break;
         case prefix+'mirror':
-            coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "mirror", command[1]]);
+            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "mirror", command[1]]);
             break;
         case prefix+'antimirror':
-            coolDownCheck(channel, command[0], 2, singleEmoteAsciis, [channel, "antimirror", command[1]]);
+            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "antimirror", command[1]]);
             break;
         case prefix+'ra':
-            coolDownCheck(channel, command[0], 2, randomAscii, [channel]);
+            allowanceCheck(...identParams, randomAscii, [channel]);
             break;
         case prefix+'merge':
-            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "merge", command[1], command[2]]);
+            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "merge", command[1], command[2]]);
             break;
         case prefix+'stack':
-            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "stack", command[1], command[2]]);
+            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "stack", command[1], command[2]]);
             break;
         case prefix+'mix':
-            coolDownCheck(channel, command[0], 2, twoEmoteAsciis, [channel, "mix", command[1], command[2]]);
+            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "mix", command[1], command[2]]);
             break;
         case prefix+'reload':
-            coolDownCheck(channel, command[0], 600, reloadChannelEmotes, [channel]);
+            allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
             break;
         case prefix+'eval':
-            devEval(channel, userstate, command.slice(1).join(" "));
+            allowanceCheck(...identParams, devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
         case prefix+'addChannel':
-            addChannel(channel, userstate, command[1], command[2]);
+            allowanceCheck(...identParams, addChannel, [channel, userstate, command[1], command[2]]);
+            break;
+        case prefix+'addCommand':
+            allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5]]);
             break;
         case prefix+'setBot':
-            setBot(channel, userstate, command[1], command[2]);
+            allowanceCheck(...identParams, setBot, [channel, userstate, command[1], command[2]]);         
             break;
         case prefix+'checkBot':
-            checkBot(channel);
+            allowanceCheck(...identParams, checkBot, [channel]);
+            break;
+        case prefix+'setCommand':
+            allowanceCheck(...identParams, setCommand, [channel, userstate, command[1], command[2], command[3]]);
+            break;
+        case prefix+'checkCommand':
+            allowanceCheck(...identParams, checkCommand, [channel, command[1]]);
+            break;
     }
 
     if (channelsObjs[channel].gameRunning){
