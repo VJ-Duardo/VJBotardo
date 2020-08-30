@@ -1,5 +1,8 @@
 const sqlite = require('sqlite3');
-var db = new sqlite.Database('./database.db', (err) => {
+
+const dbPath = typeof global.it === 'function' ? './testdatabase.db' : './database.db';
+//i know bad practice but best way for me to do it
+var db = new sqlite.Database(dbPath, (err) => {
   if (err) {
     console.error(err.message);
   }
@@ -27,9 +30,12 @@ module.exports = {
     showRows: function(sqlQuery){
         return new Promise(function(resolve){
             db.all(sqlQuery, [], function(err, rows){
-                if (err)
+                if (err) 
                     resolve(err.message);
-                resolve(rows);
+                if (typeof rows !== 'undefined')
+                    resolve(rows.map(function(row){return JSON.stringify(row) + '\n\r';}));
+                else
+                    resolve('Something went wrong.');
             });
         });
     },
@@ -102,6 +108,7 @@ module.exports = {
                 if (err){
                     console.error(err.message);
                     resolve(err.message);
+                    return;
                 }
                 resolve(1);
             });
@@ -114,6 +121,7 @@ module.exports = {
                 if (err){
                     console.error(err.message);
                     resolve(err.message);
+                    return;
                 }
                 resolve(1);
             });
@@ -132,6 +140,7 @@ module.exports = {
                 if (err){
                     console.error(err.message);
                     resolve(-1);
+                    return;
                 }
                 resolve(1);
             });
@@ -149,6 +158,7 @@ module.exports = {
                 if (err){
                     console.error(err.message);
                     resolve(-1);
+                    return;
                 }
                 resolve(1);
             });
@@ -165,6 +175,12 @@ module.exports = {
             db.get(sql, [id, command], (err, row) => {
                 if (err){
                     console.error(err.message);
+                    resolve(-1);
+                    return;
+                }
+                
+                if (typeof row === 'undefined' || row === null){
+                    resolve(-1);
                     return;
                 }
                 resolve(Object.values(row)[0]);
@@ -183,11 +199,12 @@ module.exports = {
                 if (err){
                     console.error(err.message);
                     resolve(err.message);
+                    return;
                 }
                 resolve(1);
             });
         });
-    }
+    },
 };
 
 function insertNewUser(id, name, points){

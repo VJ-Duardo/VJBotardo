@@ -6,8 +6,7 @@ const db = require('./database.js');
 const ttt = require('./tictactoe.js');
 const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
-
-const botardoFunctions = {};
+const ascii = require('./ascii.js');
 
 opts = {
     options: {
@@ -33,6 +32,8 @@ class Channel {
     constructor(id, name, prefix, modsCanEdit, whileLive){
         this.id = id;
         this.prefix = prefix;
+        this.minPrefix = 1;
+        this.maxPrefix = 20;
         this.modsCanEdit = modsCanEdit;
         this.whileLive = whileLive;
         this.name = name;
@@ -61,9 +62,9 @@ var channelsObjs = {};
 class Command {
     constructor (name, cooldown, minCooldown, maxCooldown, devOnly){
         this.name = name;
-        this.cooldown = parseInt(cooldown);
-        this.minCooldown = parseInt(minCooldown);
-        this.maxCooldown = parseInt(maxCooldown);
+        this.cooldown = cooldown;
+        this.minCooldown = minCooldown;
+        this.maxCooldown = maxCooldown;
         this.devOnly = devOnly;
     }
     
@@ -72,7 +73,7 @@ class Command {
         const defaultCooldown = this.cooldown;
         return new Promise(async function(resolve){
             let cooldown = await db.getChannelCommandValue(channelID, command, "cooldown");
-            if (typeof cooldown === 'undefined' || cooldown === null){
+            if (cooldown === -1 || typeof cooldown === 'undefined' || cooldown === null){
                 resolve(defaultCooldown);
             } else {
                 resolve(parseInt(cooldown));
@@ -83,7 +84,7 @@ class Command {
     getEnabledStatus(channelID){
         const command = this.name;
         return new Promise(async function(resolve){
-            resolve(Boolean(parseInt(await db.getChannelCommandValue(channelID, command, "enabled"))));
+            resolve(booleanCheck(await db.getChannelCommandValue(channelID, command, "enabled"), false));
         });
     }
 }
@@ -92,15 +93,25 @@ var commandObjs = {};
 
 
 
+function booleanCheck(bool, defaultBool){
+    if (typeof bool === 'undefined' || parseInt(bool) === 0 || parseInt(bool) === 1)
+        return Boolean(parseInt(bool));
+    else 
+        return defaultBool;
+}
 
-function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
-    if (!id || !name){
+function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
+    if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty('#'+name)){
         return -1;
     }
+    
+    prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
+    name = name.toLowerCase();
+    
     try {
         opts.channels.push(name);
         name = '#' + name;
-        channelsObjs[name] = new Channel(String(id), name, prefix, Boolean(parseInt(modsCanEdit)), Boolean(parseInt(whileLive)));
+        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true));
         //channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
@@ -109,13 +120,16 @@ function loadChannel(id, name, prefix='!', modsCanEdit=true, whileLive=true){
     }
 }
 
-function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown){
-    const params = [name, cooldown, minCooldown, maxCooldown, devOnly];
-    for (let prm of params){ 
-        if (typeof prm === 'undefined')
-            return -1;
-    }
-    commandObjs[name] = new Command(name, cooldown, minCooldown, maxCooldown, Boolean(parseInt(devOnly)));
+function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000){
+    if ([name, cooldown, minCooldown, devOnly].includes(undefined) || commandObjs.hasOwnProperty(name))
+        return -1;
+    
+    if (isNaN(parseInt(cooldown)) || isNaN(parseInt(minCooldown)))
+        return -1;
+    
+    maxCooldown = (typeof maxCooldown === 'undefined' || isNaN(parseInt(maxCooldown)) ? 600000 : parseInt(maxCooldown));
+        
+    commandObjs[name] = new Command(name, parseInt(cooldown), parseInt(minCooldown), maxCooldown, booleanCheck(devOnly, false));
     return 1;
 }
 
@@ -138,9 +152,10 @@ client.on('disconnected', onDisconnectHandler);
 
 
 
-var sayFunc = function(channel, message){
+const sayFunc = function(channel, message){
     client.say(channel, message);
 };
+
 
 function kill(channel){
     db.closeDB();
@@ -157,151 +172,6 @@ function showPoints(channel, userName, userId, anotherUser){
         db.getPoints(channelsObjs[channel], 'id', userId, function(_, _, points){
             client.say(channel, "/me " + userName + " has " + points + " Ugandan shilling!");
         });
-    }
-}
-
-function singleEmoteAsciis(channel, mode, userInput){
-    function callProcessImage(url){
-        let width = mode === 'ascii' ? 58 : 56;
-        braille.processImage(url, -1, 56, width, mode === 'ascii')
-            .then((brailleString) => {
-                if (typeof brailleString === 'undefined'){
-                    client.action(channel, "Cant find emote in this channel or invalid link :Z If you added a new emote, do !reload");
-                } else {
-                    if (mode === 'ascii'){
-                        if (Array.isArray(brailleString)){
-                            brailleString.forEach(function(brailleFrame){
-                                client.say(channel, brailleFrame);
-                            });
-                        } else {
-                            client.say(channel, brailleString);
-                        }
-                    } else {
-                        let brailleLines = brailleString.split(" ");
-                        
-                        brailleLines = brailleLines.map(function(line){
-                            let halfLine = mode === 'mirror' ? line.slice(0, Math.floor(line.length/2)) : braille.mirror(line.slice(Math.floor(line.length/2)));
-                            return halfLine + braille.mirror(halfLine);
-                        });
-                        
-                        client.say(channel, brailleLines.join(' '));
-                    }
-                }
-            })
-            .catch((error) => {
-                client.action(channel, "That did not work :(");
-            });
-    }
-    if (typeof userInput === 'undefined'){
-        client.action(channel, "Correct syntax: !ascii/!mirror/!antimirror <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
-        return;
-    }
-    
-    if (/(ftp|http|https):\/\/.+/.test(userInput)){
-        callProcessImage(userInput);
-        return;
-    }
-    
-    for (const list of Object.values(channelsObjs[channel].emotes).concat([emotes.allExisitingEmotes])){
-        let emote = list.find(searchEmote => searchEmote.name === userInput);
-        if (typeof emote !== 'undefined'){
-            callProcessImage(emote.url);
-            return;
-        }
-    }
-    callProcessImage(emotes.getEmojiURL(userInput));
-}
-
-
-async function twoEmoteAsciis(channel, mode, inputLeft, inputRight){
-    let resultArray = [];
-    function callProcessImage(url, treshold = -1){
-        let width = mode === 'merge' ? 28 : 58;
-        let height = mode === 'stack' ? 28 : 56;
-        return braille.processImage(url, treshold, height, width)
-            .then((brailleString) => {
-                if (typeof brailleString === 'undefined'){
-                    client.action(channel, "Cant find emote in this channel or invalid link :Z");
-                    return -1;
-                } else {
-                    switch(mode){
-                        case 'merge':
-                            if (resultArray.length <= 1){
-                                resultArray = new Array(15).fill('')
-                            }
-                            brailleString.split(' ').forEach(function(line, i){
-                               resultArray[i] += line;
-                            });
-                            break;
-                        case 'stack':
-                            brailleString.split(' ').forEach(function(line){
-                                resultArray.push(line);
-                            });
-                            break;
-                        case 'mix':
-                            let brailleLinesArray = brailleString.split(' ');
-                            if (resultArray.length <= 1){
-                                brailleLinesArray = brailleLinesArray.slice(0, Math.floor((height/4)/2));
-                            } else {
-                                brailleLinesArray = brailleLinesArray.slice(Math.floor((height/4)/2));
-                            }
-                            
-                            brailleLinesArray.forEach(function(line){
-                                resultArray.push(line);
-                            });
-                            break;
-                    }
-                    return 0;
-                }
-            })
-            .catch(() => {
-                client.action(channel, "That did not work :(");
-                return -1;
-            });;
-    }
-    
-    if (typeof inputLeft === 'undefined' || typeof inputRight === 'undefined'){
-        client.action(channel, "Correct syntax: !merge/!stack/!mix <emote>|<link> <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
-        return;
-    }
-    
-    for (let input of [inputLeft, inputRight]){
-        if (/(ftp|http|https):\/\/.+/.test(input)){
-            await callProcessImage(input);
-            continue;
-        }
-        
-        let found = false;
-        for (const list of Object.values(channelsObjs[channel].emotes).concat([emotes.allExisitingEmotes])){
-            let emote = list.find(searchEmote => searchEmote.name === input);
-            if (typeof emote !== 'undefined'){
-                found = true;
-                await callProcessImage(emote.url);
-                break;
-            }
-        }
-        if (found)
-            continue;
-            
-        let processImageResult = await callProcessImage(emotes.getEmojiURL(input));
-        if (processImageResult === -1){
-            return;
-        }
-    }
-    client.say(channel, resultArray.join(' '));
-}
-
-
-function randomAscii(channel){
-    let allEmotes = emotes.allExisitingEmotes;
-    for (const list of Object.values(channelsObjs[channel].emotes)){
-        allEmotes = allEmotes.concat(list);
-    }
-    
-    if (typeof allEmotes !== 'undefined' && allEmotes.length > 1){
-        singleEmoteAsciis(channel, 'ascii', allEmotes[Math.floor(Math.random() * allEmotes.length)].url);
-    } else {
-        client.action(channel, "Can't currently find any emotes in this channel!");
     }
 }
 
@@ -342,27 +212,32 @@ function getLiveStatus(channel_id){
         }
     })
     .then((response) => {
-         return response.json();
+        return response.json();
     })
     .then((dataObj) => {
         return dataObj.data.length > 0;
+    })
+    .catch(() => {
+        return true;
     });
 }
 
 async function allowanceCheck(channel, user, command, callback, params){
     let channelObj = channelsObjs[channel];
     let commandObj = commandObjs[command];
+    if (!channelObj || !commandObj)
+        return -1;
     
     if (user['user-id'] !== devID){
         if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && user['user-id'] !== devID)
-            return;
+            return -1;
 
         if (!(await commandObj.getEnabledStatus(channelObj.id)))
-            return;
+            return -1;
 
         if (!channelObj.whileLive){
             if (await getLiveStatus(channelObj.id))
-                return;
+                return -1;
         }
     }
     
@@ -374,30 +249,28 @@ async function allowanceCheck(channel, user, command, callback, params){
     if (now >= channelObj.lastCommandTime[command]+cooldown){
         channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
         callback(...params);
+        return 1;
     }
 }
 
 
 async function devEval(channel, user, input){
-    if (user['user-id'] === '84800191') {
-        try{
-            let output =  await eval(input);
-            client.say(channel, String(output));
-        } catch(e) {
-            console.error(e);
-        }
+    try{
+        let output =  await eval(input);
+        client.say(channel, String(output));
+    } catch(e) {
+        console.error(e);
     }
 }
 
 
 
 
-async function addChannel(channel, user, id, channelName){
-    channelName = channelName.toLowerCase();
-    let status = loadChannel(id, channelName);
+async function addChannel(channel, id, channelName, prefix, modsCanEdit, whileLive){
+    let status = loadChannel(id, channelName, prefix, modsCanEdit, whileLive);
     if (status === -1){
         client.say(channel, "An Error occured!");
-        return;
+        return -1;
     }
     client.join('#' + channelName);
     let insertStatus = await db.insertNewChannel(id, channelName);
@@ -405,29 +278,35 @@ async function addChannel(channel, user, id, channelName){
         let insertCCStatus = await db.insertIntoChannelCommand("channel", id);
         if (insertCCStatus === 1){
             client.say(channel, "Success!");
+            return 1;
         } else {
             client.say(channel, String(insertCCStatus));
+            return -1;
         }
     } else {
         client.say(channel, String(insertStatus));
+        return -1;
     }
 }
 
-async function addCommand(channel, name, cooldown, minCooldown, maxCooldown, devOnly){
-    if (loadCommand(name, cooldown, minCooldown, maxCooldown, devOnly) === -1){
+async function addCommand(channel, name, cooldown, minCooldown, devOnly, maxCooldown){
+    if (loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown) === -1){
         client.say(channel, "An Error occured!");
-        return;
+        return -1;
     }
-    let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, maxCooldown, devOnly);
+    let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, commandObjs[name].maxCooldown, devOnly);
     if (insertStatus === 1){
         let insertCCStatus = await db.insertIntoChannelCommand("command", name);
         if (insertCCStatus === 1){
             client.say(channel, "Success!");
+            return 1;
         } else {
             client.say(channel, String(insertCCStatus));
+            return -1;
         }
     } else {
         client.say(channel, String(insertStatus));
+        return -1;
     }
 }
 
@@ -450,26 +329,29 @@ function optionCheck(channel, value, options){
 
 
 function modsCanEditCheck(channelObj, user){
-    return (!channelObj.modsCanEdit && user['user-id'] != channelObj.id) 
-            || (!user['mod'] && user['user-id'] != channelObj.id)
-            || (user['user-id'] !== devID);
+    return (channelObj.modsCanEdit && user['mod'])
+            || (user['user-id'] == channelObj.id)
+            || (user['user-id'] == devID);
 }
+
 
 async function setBot(channel, user, option, value){
     if ([user, option, value].includes(undefined)){
         client.action(channel, "Some parameters are missing!");
-        return;
+        return -1;
     }
     let channelObj = channelsObjs[channel];
     
-    if (modsCanEditCheck(channelObj, user))
-        return;
+    if (!modsCanEditCheck(channelObj, user))
+        return -1;
     
     let dbStatus;
     switch(option){
         case 'prefix':
-            channelObj.prefix = value.trim();
-            dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
+            if (optionCheck(channel, value.length, [channelObj.minPrefix, channelObj.maxPrefix])){
+                channelObj.prefix = value.trim();
+                dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
+            } else { return -1;}
             break;
         case 'modsCanEdit':
         case 'whileLive':
@@ -477,56 +359,67 @@ async function setBot(channel, user, option, value){
                 channelObj[option] = value === 'true';
                 let boolInteger = value === 'true' ? 1 : 0;
                 dbStatus = await db.setChannelValue(channelObj.id, option, boolInteger);
-            } else { return }
+            } else { return -1;}
             break;
         default:
             client.action(channel, 'That option cannot be found.');
-            return;
+            return -1;
     }
     if (dbStatus === 1)
         client.action(channel, 'Changed option ' + option + ' to ' + value);
     else
         client.action(channel, 'Something went wrong in the db.');
+    return 1;
 }
 
 
 async function setCommand(channel, user, command, option, value){
     if ([user, command, option, value].includes(undefined)){
         client.action(channel, "Some parameters are missing!");
-        return;
+        return -1;
     }
-    let channelObj = channelsObjs[channel];
     
-    if (modsCanEditCheck(channelObj, user))
-        return;
+    let notChangeable = ['ping', 'bot', 'commands', 'setBot', 'setCommand'];
+    if (notChangeable.includes(command)){
+        client.action(channel, 'Don\'t change this command please. :/');
+        return -1;
+    }
+    
+    let channelObj = channelsObjs[channel];  
+    if (!modsCanEditCheck(channelObj, user))
+        return -1;
     
     if (!Object.keys(commandObjs).includes(command)){
         client.action(channel, "This command cannot be found!");
-        return;
+        return -1;
     }
     let commandObj = commandObjs[command];
+    if (commandObj.devOnly)
+        return -1;
     
     let dbStatus;
     switch(option){
         case 'cooldown':
             if (optionCheck(channel, parseInt(value), [commandObj.minCooldown, commandObj.maxCooldown])){
+                value = parseInt(value);
                 dbStatus = await db.setChannelCommandValue(channelObj.id, command, option, value);
-            } else { return; }
+            } else { return -1; }
             break;
         case 'enabled':
             if (optionCheck(channel, value, ['true', 'false'])){
                 let boolInteger = value === 'true' ? 1 : 0;
-               dbStatus = await db.setChannelCommandValue(channelObj.id, command, option, boolInteger);
-            } else { return; };
+                dbStatus = await db.setChannelCommandValue(channelObj.id, command, option, boolInteger);
+            } else { return -1; };
             break;
         default:
             client.action(channel, 'That option cannot be found.');
-            return;
+            return -1;
     }
     if (dbStatus === 1)
         client.action(channel, 'Changed option ' + option + ' of ' + command + ' to ' + value);
     else
         client.action(channel, 'Something went wrong in the db.');
+    return 1;
         
 }
 
@@ -545,7 +438,7 @@ function checkBot(channel){
 async function checkCommand(channel, command){
     let commandObj = commandObjs[command];
     if (commandObj.devOnly)
-        return;
+        return -1;
     let channelObj = channelsObjs[channel];
     
     let cooldown = await commandObj.getChannelCooldown(channelObj.id);
@@ -590,25 +483,25 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, commands, [channel]);
             break;
         case prefix+'ascii':
-            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "ascii", command[1]]);
+            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "ascii", command[1]]);
             break;
         case prefix+'mirror':
-            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "mirror", command[1]]);
+            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "mirror", command[1]]);
             break;
         case prefix+'antimirror':
-            allowanceCheck(...identParams, singleEmoteAsciis, [channel, "antimirror", command[1]]);
+            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "antimirror", command[1]]);
             break;
         case prefix+'ra':
-            allowanceCheck(...identParams, randomAscii, [channel]);
+            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc]);
             break;
         case prefix+'merge':
-            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "merge", command[1], command[2]]);
+            allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "merge", command[1], command[2]]);
             break;
         case prefix+'stack':
-            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "stack", command[1], command[2]]);
+            allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "stack", command[1], command[2]]);
             break;
         case prefix+'mix':
-            allowanceCheck(...identParams, twoEmoteAsciis, [channel, "mix", command[1], command[2]]);
+            allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "mix", command[1], command[2]]);
             break;
         case prefix+'reload':
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
@@ -617,7 +510,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
         case prefix+'addChannel':
-            allowanceCheck(...identParams, addChannel, [channel, userstate, command[1], command[2]]);
+            allowanceCheck(...identParams, addChannel, [channel, command[1], command[2]]);
             break;
         case prefix+'addCommand':
             allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5]]);
@@ -640,9 +533,9 @@ function onMessageHandler (channel, userstate, message, self) {
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         if (command[0] === prefix+'guess') {
-            coolDownCheck(channel, command[0], 5, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
+            allowanceCheck(...identParams, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
         } else if (command[0] === prefix+'ttt'){
-            coolDownCheck(channel, command[0], 5, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
+            allowanceCheck(...identParams, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
         }
     }
 }
