@@ -112,7 +112,7 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
         opts.channels.push(name);
         name = '#' + name;
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true));
-        //channelsObjs[name].loadEmotes();
+        channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
         console.error(e);
@@ -138,8 +138,8 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000){
 
 (async function(){
     await db.getAllData(loadCommand, "COMMAND");
-    //await emotes.loadGlobalEmotes();
-    //emotes.loadAllExistingEmotes();
+    await emotes.loadGlobalEmotes();
+    emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();

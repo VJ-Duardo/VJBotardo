@@ -163,7 +163,7 @@ class Game {
 
 module.exports = {
     tictactoe: function(channelObj, sayFunc, user, command){
-        if (getGameState(channelObj.name) && command[0] === '!concede'){
+        if (getGameState(channelObj.name) && command[0] === channelObj.prefix+'concede'){
             let gameObj = games[channelObj.name];
             if (gameObj.gameStarted){
                 clearTimeout(gameObj.waitForInput.handle);
@@ -357,7 +357,7 @@ function checkPoints(channelObj, player, points){
     
     if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
         if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){
-            games[channelObj.name].sayFunc(channelObj.name, "/me " + player + ' does not have enough USh!');
+            games[channelObj.name].sayFunc(channelObj.name, "/me " + player + ' does not have enough USh! You can use 0 to play for nothing :)');
             this.err = true;
         }
     }

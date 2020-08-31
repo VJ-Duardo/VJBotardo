@@ -47,7 +47,7 @@ var modes = {
 
 module.exports = {
     guessTheEmote: function(channelObj, sayFunc, user, command){
-        if (command[0] + command[1] === "!guessstop" && games.hasOwnProperty(channelObj)){
+        if (command[0] + command[1] === channelObj.prefix+"guessstop" && games.hasOwnProperty(channelObj.name)){
             games[channelObj.name].rounds = 1;
         }
         
