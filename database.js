@@ -33,7 +33,7 @@ module.exports = {
                 if (err) 
                     resolve(err.message);
                 if (typeof rows !== 'undefined')
-                    resolve(rows.map(function(row){return JSON.stringify(row) + '\n\r';}));
+                    resolve(rows.map(function(row){return JSON.stringify(row);}));
                 else
                     resolve('Something went wrong.');
             });
@@ -134,7 +134,8 @@ module.exports = {
                 case 'modsCanEdit': column = 'mods_can_edit'; break;
                 case 'prefix': column = 'prefix'; break;
                 case 'whileLive': column = 'while_live'; break;
-            }
+                default: resolve(-1); return;
+            } 
             let sql = 'UPDATE CHANNEL SET ' +column+ ' = ? WHERE channel_id = ?';
             db.run(sql, [value, id], function(err){
                 if (err){
@@ -152,6 +153,7 @@ module.exports = {
             switch (option){
                 case 'enabled': column = 'enabled'; break;
                 case 'cooldown': column = 'cooldown'; break;
+                default: resolve(-1); return;
             }
             let sql = 'UPDATE CHANNEL_COMMAND SET ' +column+ ' = ? WHERE channel_id = ? AND command_name = ?';
             db.run(sql, [value, id, command], function(err){
@@ -193,6 +195,7 @@ module.exports = {
             switch (cause){
                 case 'channel': column = 'channel_id'; break;
                 case 'command': column = 'command_name'; break;
+                default: resolve(-1); return;
             }
             let sql = 'INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ' +column+ ' = ?';
             db.run(sql, [addition], function(err){
@@ -204,7 +207,7 @@ module.exports = {
                 resolve(1);
             });
         });
-    },
+    }
 };
 
 function insertNewUser(id, name, points){

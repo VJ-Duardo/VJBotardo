@@ -506,8 +506,8 @@ function onMessageHandler (channel, userstate, message, self) {
         case prefix+'reload':
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
             break;
-        case prefix+'eval':
-            allowanceCheck(...identParams, devEval, [channel, userstate, command.slice(1).join(" ")]);
+        case prefix+'eval2':
+            allowanceCheck(channel, userstate, 'eval', devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
         case prefix+'addChannel':
             allowanceCheck(...identParams, addChannel, [channel, command[1], command[2]]);
