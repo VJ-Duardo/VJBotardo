@@ -272,7 +272,15 @@ async function addChannel(channel, id, channelName, prefix, modsCanEdit, whileLi
         client.say(channel, "An Error occured!");
         return -1;
     }
-    client.join('#' + channelName);
+    
+    try {
+        await client.join('#' + channelName);;
+    } catch(e){
+        client.say(channel, e);
+        delete channelsObjs['#' + channelName];
+        return -2;
+    }
+    
     let insertStatus = await db.insertNewChannel(id, channelName);
     if (insertStatus === 1){
         let insertCCStatus = await db.insertIntoChannelCommand("channel", id);
@@ -288,6 +296,33 @@ async function addChannel(channel, id, channelName, prefix, modsCanEdit, whileLi
         return -1;
     }
 }
+
+async function removeChannel(channel, id){
+    channelObj = Object.values(channelsObjs).find(obj => obj.id === id);
+    if (typeof channelObj === 'undefined' || !channelsObjs.hasOwnProperty(channelObj.name)){
+        client.say(channel, "Cant find that channel.");
+        return -1;
+    }
+    
+    try {
+        await client.part(channelObj.name);
+    } catch(e){
+        client.say(channel, e);
+    }
+    
+    delete channelsObjs[channelObj.name];
+    
+    let deleteStatus = await db.deleteChannel(id);
+    if (deleteStatus === 1){
+        client.say(channel, "Successfully removed channel.");
+        return 1;
+    } else {
+        client.say(channel, String(deleteStatus));
+        return -1;
+    }
+}
+
+
 
 async function addCommand(channel, name, cooldown, minCooldown, devOnly, maxCooldown){
     if (loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown) === -1){
@@ -506,11 +541,14 @@ function onMessageHandler (channel, userstate, message, self) {
         case prefix+'reload':
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
             break;
-        case prefix+'eval2':
-            allowanceCheck(channel, userstate, 'eval', devEval, [channel, userstate, command.slice(1).join(" ")]);
+        case prefix+'eval':
+            allowanceCheck(...identParams, devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
         case prefix+'addChannel':
             allowanceCheck(...identParams, addChannel, [channel, command[1], command[2]]);
+            break;
+        case prefix+'removeChannel':
+            allowanceCheck(...identParams, removeChannel, [channel, command[1]]);
             break;
         case prefix+'addCommand':
             allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5]]);

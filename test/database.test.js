@@ -36,6 +36,17 @@ describe('database.js tests', () => {
     });
     
     
+    describe('db.deleteChannel()', () => {
+       it ('should return 1 and not exist on correct params', async () => {
+           await db.insertNewChannel('999', 'deletechanneltest');
+           let existStatement = 'select exists (select * from channel where channel_id = 999);';
+           assert.equal(Object.values(JSON.parse(await db.showRows(existStatement)))[0], '1');
+           assert.equal(await db.deleteChannel('999'), 1);
+           assert.equal(Object.values(JSON.parse(await db.showRows(existStatement)))[0], '0');
+       }); 
+    });
+    
+    
     describe('db.insertNewCommand()', () => {
         it ('should resolve 1 and exist on correct params', async () => {
             assert.equal(await db.insertNewCommand('cmdName', 5, 1, 20, 0), 1);

@@ -114,6 +114,19 @@ module.exports = {
             });
         });
     },
+    deleteChannel: function(id){
+        return new Promise(function(resolve){
+            let sql = 'DELETE FROM CHANNEL WHERE channel_id = ?';
+            db.run(sql, [id], function(err){
+                if (err){
+                    console.error(err.message);
+                    resolve(err.message);
+                    return;
+                }
+                resolve(1);
+            });
+        });
+    },
     insertNewCommand: function(name, cooldown, minCooldown, maxCooldown, devOnly){
         return new Promise(function(resolve){
             let sql = 'INSERT INTO COMMAND(command_name, cooldown, min_cooldown, max_cooldown, dev_only) VALUES(?, ?, ?, ?, ?)';

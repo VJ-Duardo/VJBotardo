@@ -132,11 +132,23 @@ describe('botardo.js tests', () => {
         it ('should return -1 on duplicate channel', async () => {
             assert.equal(await addChannel('#duardo1', '123', 'duardo1'), -1);
         });
-        it ('should return 1 with only id and channelName', async () => {
-            db.sendQuery('BEGIN TRANSACTION;');
-            assert.equal(await addChannel('#duardo1', '123', 'testchannel'), 1);
-            delete channelsObjs['#testchannel'];
-            db.sendQuery('ROLLBACK;');
+        it ('should return -2 with only id and channelName (not connected to server)', async () => {
+            assert.equal(await addChannel('#duardo1', '123', 'testchannel'), -2);
+        });
+    });
+    
+    
+    describe('botardo.removeChannel()', () => {
+        removeChannel = botardo.__get__('removeChannel');
+        it ('should return -1 if the channel object doesnt exist', async () => {
+            assert.equal(await removeChannel('#duardo1', '199'), -1);
+            assert.equal(await removeChannel('#duardo1'), -1);
+        });
+        it ('should return 1 with correct params and not exist (not connected to server)', async () => {
+            channelsObjs['#testchannel'] = {id: '123', name: '#testchannel'};
+            assert.equal(channelsObjs.hasOwnProperty('#testchannel'), true);
+            assert.equal(await removeChannel('#duardo1', '123'), 1);
+            assert.equal(channelsObjs.hasOwnProperty('#testchannel'), false);
         });
     });
     
