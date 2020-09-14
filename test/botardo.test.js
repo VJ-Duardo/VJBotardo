@@ -180,7 +180,7 @@ describe('botardo.js tests', () => {
         it ('should return -1 on empty params', async () => {
             assert.equal(await setBot(), -1);
         });
-        describe('modsCanEdit tests', () => {
+        describe('user privilege tests', () => {
             it ('should return -1 if modsCanEdit and normal user', async () => {
                 assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': false}, 'prefix', '!'), -1);
             });
@@ -198,6 +198,11 @@ describe('botardo.js tests', () => {
             });
             it ('should return 1 if !modsCanEdit and dev', async () => {
                 assert.equal(await setBot('#fabzeef', {'user-id': '84800191', 'mod': false}, 'prefix', '!'), 1);
+                assert.equal(await setBot('#fabzeef', {'user-id': '84800191', 'mod': false}, 'modsCanEdit', 'false'), 1);
+            });
+            it ('should return -1 if not owner/dev and trying to change modsCanEdit', async () => {
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'modsCanEdit', 'true'), -1);
+                assert.equal(await setBot('#duardo1', {'user-id': '84800191', 'mod': false}, 'modsCanEdit', 'true'), 1);
             });
         });
         describe('parameter checks', () => {

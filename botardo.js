@@ -390,6 +390,8 @@ async function setBot(channel, user, option, value){
             } else { return -1;}
             break;
         case 'modsCanEdit':
+            if (!(user['user-id'] == channelObj.id) && !(user['user-id'] == devID))
+                return -1;
         case 'whileLive':
             if (optionCheck(channel, value, ['true', 'false'])){
                 channelObj[option] = value === 'true';
@@ -506,14 +508,14 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case '!ping':
         case prefix+'ping':
-            allowanceCheck(...identParams, ping, [channel]);
+            allowanceCheck(channel, userstate, 'ping', ping, [channel]);
             break;
         case prefix+'ush':
             allowanceCheck(...identParams, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
             break;
         case '!bot':
         case prefix+'bot':
-            allowanceCheck(...identParams, about, [channel]);
+            allowanceCheck(channel, userstate, 'bot', about, [channel]);
             break;
         case prefix+'commands':
             allowanceCheck(...identParams, commands, [channel]);
@@ -542,8 +544,9 @@ function onMessageHandler (channel, userstate, message, self) {
         case prefix+'reload':
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
             break;
+        case '!eval':
         case prefix+'eval':
-            allowanceCheck(...identParams, devEval, [channel, userstate, command.slice(1).join(" ")]);
+            allowanceCheck(channel, userstate, 'eval', devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
         case prefix+'addChannel':
             allowanceCheck(...identParams, addChannel, [channel, command[1], command[2]]);
