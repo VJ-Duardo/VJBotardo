@@ -26,6 +26,7 @@ Reloads the channel emotes in the channel the command got called from. Does not 
 Starts a game of "*Guess the emote!*". The mode determines the emotes in the play set. Possible modes are *channel*, *global* and *all*.  The default and minimum amount of rounds is one, the maximum being 20. 
 
 * __!guess stop__  
+__CURRENTLY BROKEN DOESNT WORK__
 Ends a "*Guess the emote!*" game after the current round has finished.
 
 <br>
