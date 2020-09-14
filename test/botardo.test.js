@@ -61,7 +61,7 @@ describe('botardo.js tests', () => {
             assert.equal(cmdObj.minCooldown, 1);
             assert.equal(cmdObj.maxCooldown, 600000);
             assert.equal(cmdObj.devOnly, false);
-            assert.equal(cmdObj.changeable, true);
+            assert.equal(cmdObj.changeable, false);
         });
         describe('botardo.loadCommand()', () => {
             loadCommand = botardo.__get__('loadCommand');
@@ -209,12 +209,22 @@ describe('botardo.js tests', () => {
             it ('should return -1 on unknown option', async () => {
                 assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'unknown', '!'), -1);
             });
-            it ('should return on wrong boolean value', async () => {
+            it ('should return -1 on wrong boolean value', async () => {
                 assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'modsCanEdit', 'wrong'), -1);
                 assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'whileLive', 'wrong'), -1);
             });
-            it ('should return on wrong prefix size', async () => {
-                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'whileLive', 'thisprefixiswaytoolong'), -1);
+            it ('should return -1 on wrong prefix size', async () => {
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', 'thisprefixiswaytoolong'), -1);
+            });
+            it ('should return -1 on forbidden characters', async () => {
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', '.'), -1);
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', './/'), -1);
+            });
+            it ('should return 1 on correct prefix', async () => {
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', '#'), 1);
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', '#testabc'), 1);
+                assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', '([]{})'), 1);
+                setBot('#duardo1', {'user-id': '123', 'mod': true}, 'prefix', '!');
             });
         });
     });
@@ -238,7 +248,6 @@ describe('botardo.js tests', () => {
             it ('should return -1 if command not changeable', async () => {
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'setCommand', 'enabled', 'true'), -1);
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ping', 'enabled', 'true'), -1);
-                assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ush', 'enabled', 'true'), 1);
             });
             it ('should return -1 on wrong cooldown value', async () => {
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra', 'cooldown', '0'), -1);

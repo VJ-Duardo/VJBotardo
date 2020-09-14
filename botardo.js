@@ -260,7 +260,7 @@ async function devEval(channel, user, input){
         let output =  await eval(input);
         client.say(channel, String(output));
     } catch(e) {
-        console.error(e);
+        client.say(channel, e);
     }
 }
 
@@ -384,10 +384,14 @@ async function setBot(channel, user, option, value){
     let dbStatus;
     switch(option){
         case 'prefix':
-            if (optionCheck(channel, value.length, [channelObj.minPrefix, channelObj.maxPrefix])){
-                channelObj.prefix = value.trim();
+            const prefixRegex = '^[a-zA-Z0-9^!?\"\'#$%&\\(\\)\\[\\]{}=+*~\\-_,;@<>°]{'+channelObj.minPrefix+','+channelObj.maxPrefix+'}$';
+            value = value.trim();
+            if (new RegExp(prefixRegex).test(value)){
+                channelObj.prefix = value;
                 dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
-            } else { return -1;}
+            } else { 
+                client.action(channel, 'Allowed characters: a-zA-Z0-9^!?"\'#$%&()[]{}=+*~\\-_,;@<>° Min length: '+channelObj.minPrefix+', Max length: '+channelObj.maxPrefix);
+                return -1;}
             break;
         case 'modsCanEdit':
             if (!(user['user-id'] == channelObj.id) && !(user['user-id'] == devID))
@@ -469,7 +473,7 @@ async function setCommand(channel, user, command, option, value){
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
     client.action(channel, "Settings in this channel: prefix: " + channelObj.prefix 
-            + ", modsCanEdit: " + channelObj.modsCanEdit 
+            + " , modsCanEdit: " + channelObj.modsCanEdit 
             + ", whileLive: " + channelObj.whileLive);
 }
 
