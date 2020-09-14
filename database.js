@@ -127,10 +127,10 @@ module.exports = {
             });
         });
     },
-    insertNewCommand: function(name, cooldown, minCooldown, maxCooldown, devOnly){
+    insertNewCommand: function(name, cooldown, minCooldown, maxCooldown, devOnly, changeable){
         return new Promise(function(resolve){
-            let sql = 'INSERT INTO COMMAND(command_name, cooldown, min_cooldown, max_cooldown, dev_only) VALUES(?, ?, ?, ?, ?)';
-            db.run(sql, [name, cooldown, minCooldown, maxCooldown, devOnly], function(err){
+            let sql = 'INSERT INTO COMMAND(command_name, cooldown, min_cooldown, max_cooldown, dev_only, changeable) VALUES(?, ?, ?, ?, ?, ?)';
+            db.run(sql, [name, cooldown, minCooldown, maxCooldown, devOnly, changeable], function(err){
                 if (err){
                     console.error(err.message);
                     resolve(err.message);

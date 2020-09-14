@@ -60,12 +60,13 @@ var channelsObjs = {};
 
 
 class Command {
-    constructor (name, cooldown, minCooldown, maxCooldown, devOnly){
+    constructor (name, cooldown, minCooldown, maxCooldown, devOnly, changeable){
         this.name = name;
         this.cooldown = cooldown;
         this.minCooldown = minCooldown;
         this.maxCooldown = maxCooldown;
         this.devOnly = devOnly;
+        this.changeable = changeable;
     }
     
     getChannelCooldown(channelID){
@@ -94,7 +95,7 @@ var commandObjs = {};
 
 
 function booleanCheck(bool, defaultBool){
-    if (typeof bool === 'undefined' || parseInt(bool) === 0 || parseInt(bool) === 1)
+    if (typeof bool !== 'undefined' && (parseInt(bool) === 0 || parseInt(bool) === 1))
         return Boolean(parseInt(bool));
     else 
         return defaultBool;
@@ -112,7 +113,7 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
         opts.channels.push(name);
         name = '#' + name;
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true));
-        channelsObjs[name].loadEmotes();
+        //channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
         console.error(e);
@@ -120,7 +121,7 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
     }
 }
 
-function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000){
+function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, changeable=1){
     if ([name, cooldown, minCooldown, devOnly].includes(undefined) || commandObjs.hasOwnProperty(name))
         return -1;
     
@@ -129,7 +130,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000){
     
     maxCooldown = (typeof maxCooldown === 'undefined' || isNaN(parseInt(maxCooldown)) ? 600000 : parseInt(maxCooldown));
         
-    commandObjs[name] = new Command(name, parseInt(cooldown), parseInt(minCooldown), maxCooldown, booleanCheck(devOnly, false));
+    commandObjs[name] = new Command(name, parseInt(cooldown), parseInt(minCooldown), maxCooldown, booleanCheck(devOnly, false), booleanCheck(changeable, true));
     return 1;
 }
 
@@ -138,8 +139,8 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000){
 
 (async function(){
     await db.getAllData(loadCommand, "COMMAND");
-    await emotes.loadGlobalEmotes();
-    emotes.loadAllExistingEmotes();
+    //await emotes.loadGlobalEmotes();
+    //emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
@@ -324,12 +325,12 @@ async function removeChannel(channel, id){
 
 
 
-async function addCommand(channel, name, cooldown, minCooldown, devOnly, maxCooldown){
-    if (loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown) === -1){
+async function addCommand(channel, name, cooldown, minCooldown, devOnly, changeable, maxCooldown){
+    if (loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown, changeable) === -1){
         client.say(channel, "An Error occured!");
         return -1;
     }
-    let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, commandObjs[name].maxCooldown, devOnly);
+    let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, commandObjs[name].maxCooldown, devOnly, changeable);
     if (insertStatus === 1){
         let insertCCStatus = await db.insertIntoChannelCommand("command", name);
         if (insertCCStatus === 1){
@@ -414,12 +415,6 @@ async function setCommand(channel, user, command, option, value){
         return -1;
     }
     
-    let notChangeable = ['ping', 'bot', 'commands', 'setBot', 'setCommand'];
-    if (notChangeable.includes(command)){
-        client.action(channel, 'Don\'t change this command please. :/');
-        return -1;
-    }
-    
     let channelObj = channelsObjs[channel];  
     if (!modsCanEditCheck(channelObj, user))
         return -1;
@@ -431,6 +426,12 @@ async function setCommand(channel, user, command, option, value){
     let commandObj = commandObjs[command];
     if (commandObj.devOnly)
         return -1;
+    
+    if (!commandObj.changeable){
+        client.action(channel, 'Don\'t change this command please. :/');
+        return -1;
+    }
+        
     
     let dbStatus;
     switch(option){
@@ -551,7 +552,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, removeChannel, [channel, command[1]]);
             break;
         case prefix+'addCommand':
-            allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5]]);
+            allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5], command[6]]);
             break;
         case prefix+'setBot':
             allowanceCheck(...identParams, setBot, [channel, userstate, command[1], command[2]]);         

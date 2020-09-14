@@ -61,10 +61,11 @@ describe('botardo.js tests', () => {
             assert.equal(cmdObj.minCooldown, 1);
             assert.equal(cmdObj.maxCooldown, 600000);
             assert.equal(cmdObj.devOnly, false);
+            assert.equal(cmdObj.changeable, true);
         });
         describe('botardo.loadCommand()', () => {
             loadCommand = botardo.__get__('loadCommand');
-            it ('should return -1 if four params are missing', () => {
+            it ('should return -1 if five params are missing', () => {
                 assert.equal(loadCommand(), -1);
             });
             it ('should return -1 if cooldown, minCooldown arent numbers', () => {
@@ -74,6 +75,7 @@ describe('botardo.js tests', () => {
             it ('should return 1 with wrong maxCooldown', () => {
                 assert.equal(loadCommand('abc', 3, 1, true, 'c'), 1);
                 assert.equal(loadCommand('abc2', 3, 1, true), 1);
+                assert.equal(commandObjs.hasOwnProperty('abc'), true);
                 assert.equal(commandObjs.hasOwnProperty('abc2'), true);
                 delete commandObjs['abc'];
                 delete commandObjs['abc2'];
@@ -160,13 +162,13 @@ describe('botardo.js tests', () => {
         });
         it('should return 1 with maxCooldown missing', async () => {
             db.sendQuery('BEGIN TRANSACTION;');
-            assert.equal(await addCommand('#duardo1', 'testCMD', '3', '1', '0'), 1);
+            assert.equal(await addCommand('#duardo1', 'testCMD', '3', '1', '0', '1'), 1);
             delete commandObjs['testCMD'];
             db.sendQuery('ROLLBACK;');
         });
         it('should return 1 with all correct params', async () => {
             db.sendQuery('BEGIN TRANSACTION;');
-            assert.equal(await addCommand('#duardo1', 'testCMD', '3', '1', '0', '600000'), 1);
+            assert.equal(await addCommand('#duardo1', 'testCMD', '3', '1', '0', '1', '600000'), 1);
             delete commandObjs['testCMD'];
             db.sendQuery('ROLLBACK;');
         });
@@ -231,6 +233,7 @@ describe('botardo.js tests', () => {
             it ('should return -1 if command not changeable', async () => {
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'setCommand', 'enabled', 'true'), -1);
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ping', 'enabled', 'true'), -1);
+                assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ush', 'enabled', 'true'), 1);
             });
             it ('should return -1 on wrong cooldown value', async () => {
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra', 'cooldown', '0'), -1);

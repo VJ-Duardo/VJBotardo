@@ -21,7 +21,7 @@ module.exports = {
         getFFZGlobal(channelObj);
         getBTTVChannel(channelObj);
         getBTTVGlobal(channelObj);
-        getTwitchChannel(channelObj);
+        //getTwitchChannel(channelObj);
         
         channelObj.emotes.twitchGlobal = twitchGlobalEmotes;
         console.log("twitchglobal in " + channelObj.name + " loaded!!");

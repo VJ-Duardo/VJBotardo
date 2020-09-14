@@ -49,12 +49,12 @@ describe('database.js tests', () => {
     
     describe('db.insertNewCommand()', () => {
         it ('should resolve 1 and exist on correct params', async () => {
-            assert.equal(await db.insertNewCommand('cmdName', 5, 1, 20, 0), 1);
+            assert.equal(await db.insertNewCommand('cmdName', 5, 1, 20, 0, 1), 1);
             assert.equal(await db.showRows('select * from command where command_name = "cmdName";'),
-            '{"command_name":"cmdName","cooldown":5,"min_cooldown":1,"dev_only":0,"max_cooldown":20}');
+            '{"command_name":"cmdName","cooldown":5,"min_cooldown":1,"dev_only":0,"max_cooldown":20,"changeable":1}');
         });
         it ('should resolve an error message on unique constraint failure', async () => {
-            assert.notEqual(await db.insertNewCommand('cmdName', 5, 1, 20, 0), 1);
+            assert.notEqual(await db.insertNewCommand('cmdName', 5, 1, 20, 0, 1), 1);
         });
         it ('should resolve an error message on null params', async () => {
             assert.notEqual(await db.insertNewCommand(), 1);
