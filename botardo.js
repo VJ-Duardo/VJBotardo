@@ -333,6 +333,10 @@ async function addCommand(channel, name, cooldown, minCooldown, devOnly, changea
     }
     let insertStatus = await db.insertNewCommand(name, cooldown, minCooldown, commandObjs[name].maxCooldown, devOnly, changeable);
     if (insertStatus === 1){
+        if (commandObjs[name].devOnly){
+            client.say(channel, "Success!");
+            return 2;
+        }
         let insertCCStatus = await db.insertIntoChannelCommand("command", name);
         if (insertCCStatus === 1){
             client.say(channel, "Success!");
@@ -435,7 +439,7 @@ async function setCommand(channel, user, command, option, value){
     if (commandObj.devOnly)
         return -1;
     
-    if (!commandObj.changeable){
+    if (!commandObj.changeable && user['user-id'] !== devID){
         client.action(channel, 'Don\'t change this command please. :/');
         return -1;
     }

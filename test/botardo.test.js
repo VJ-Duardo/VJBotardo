@@ -173,6 +173,12 @@ describe('botardo.js tests', () => {
             delete commandObjs['testCMD'];
             db.sendQuery('ROLLBACK;');
         });
+        it('should return 2 if the command is devOnly', async () => {
+            db.sendQuery('BEGIN TRANSACTION;');
+            assert.equal(await addCommand('#duardo1', 'testCMD', '3', '1', '1', '1', '600000'), 2);
+            delete commandObjs['testCMD'];
+            db.sendQuery('ROLLBACK;');
+        });
     });
     
     
@@ -265,6 +271,9 @@ describe('botardo.js tests', () => {
             it ('should return 1 with correct parameters', async () => {
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra', 'cooldown', '2'), 1);
                 assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra', 'enabled', 'true'), 1);
+            });
+            it ('should return 1 if not changeable but dev user', async () => {
+                assert.equal(await setCommand('#duardo1', {'user-id': '84800191', 'mod': false}, 'ping', 'enabled', 'true'), 1);
             });
         });
     });
