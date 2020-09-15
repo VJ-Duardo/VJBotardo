@@ -21,6 +21,7 @@ describe('botardo.js tests', () => {
             assert.equal(obj.prefix, '!');
             assert.equal(obj.modsCanEdit, true);
             assert.equal(obj.whileLive, true);
+            assert.equal(obj.gifSpam, true);
             assert.equal(obj.gameRunning, false);
         });
         describe ('botardo.loadChannel()', () => {

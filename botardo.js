@@ -29,13 +29,14 @@ const client = new tmi.client(opts);
 
 
 class Channel {
-    constructor(id, name, prefix, modsCanEdit, whileLive){
+    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam){
         this.id = id;
         this.prefix = prefix;
         this.minPrefix = 1;
         this.maxPrefix = 20;
         this.modsCanEdit = modsCanEdit;
         this.whileLive = whileLive;
+        this.gifSpam = gifSpam;
         this.name = name;
         this.gameRunning = false;
         this.game = null;
@@ -101,7 +102,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
+function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty('#'+name)){
         return -1;
     }
@@ -112,8 +113,8 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1){
     try {
         opts.channels.push(name);
         name = '#' + name;
-        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true));
-        //channelsObjs[name].loadEmotes();
+        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
+        channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
         console.error(e);
@@ -139,8 +140,8 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 
 (async function(){
     await db.getAllData(loadCommand, "COMMAND");
-    //await emotes.loadGlobalEmotes();
-    //emotes.loadAllExistingEmotes();
+    await emotes.loadGlobalEmotes();
+    emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
@@ -267,8 +268,8 @@ async function devEval(channel, user, input){
 
 
 
-async function addChannel(channel, id, channelName, prefix, modsCanEdit, whileLive){
-    let status = loadChannel(id, channelName, prefix, modsCanEdit, whileLive);
+async function addChannel(channel, id, channelName){
+    let status = loadChannel(id, channelName);
     if (status === -1){
         client.say(channel, "An Error occured!");
         return -1;
@@ -396,6 +397,7 @@ async function setBot(channel, user, option, value){
         case 'modsCanEdit':
             if (!(user['user-id'] == channelObj.id) && !(user['user-id'] == devID))
                 return -1;
+        case 'gifSpam':
         case 'whileLive':
             if (optionCheck(channel, value, ['true', 'false'])){
                 channelObj[option] = value === 'true';
@@ -472,9 +474,8 @@ async function setCommand(channel, user, command, option, value){
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
-    client.action(channel, "Settings in this channel: prefix: " + channelObj.prefix 
-            + " , modsCanEdit: " + channelObj.modsCanEdit 
-            + ", whileLive: " + channelObj.whileLive);
+    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return attr+': '+channelObj[attr];}).join(', ');
+    client.action(channel, "Settings in this channel: "+ channelAttributes);
 }
 
 async function checkCommand(channel, command){
@@ -525,7 +526,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, commands, [channel]);
             break;
         case prefix+'ascii':
-            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "ascii", command[1]]);
+            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "ascii", command[1], channelsObjs[channel].gifSpam]);
             break;
         case prefix+'mirror':
             allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "mirror", command[1]]);

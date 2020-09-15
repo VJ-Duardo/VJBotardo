@@ -22,7 +22,7 @@ describe('database.js tests', () => {
         it ('should resolve 1 and exist on correct params', async () => {
             assert.equal(await db.insertNewChannel('123', 'testname'), 1);
             assert.equal(await db.showRows('select * from channel where channel_id = 123;'), 
-            '{"channel_id":123,"channel_name":"testname","prefix":"!","mods_can_edit":1,"while_live":1}');
+            '{"channel_id":123,"channel_name":"testname","prefix":"!","mods_can_edit":1,"while_live":1,"gif_spam":1}');
         });
         it ('should resolve an error message on unique constraint failure', async () => {
             assert.notEqual(await db.insertNewChannel('123', 'testname'), 1);
@@ -69,7 +69,7 @@ describe('database.js tests', () => {
             assert.equal(await db.insertNewChannel('124', 'testname2'), 1);
             assert.equal(await db.setChannelValue('124', 'prefix', 'coolprefix'), 1);
             assert.equal(await db.showRows('select * from channel where channel_id = 124;'), 
-            '{"channel_id":124,"channel_name":"testname2","prefix":"coolprefix","mods_can_edit":1,"while_live":1}');
+            '{"channel_id":124,"channel_name":"testname2","prefix":"coolprefix","mods_can_edit":1,"while_live":1,"gif_spam":1}');
         });
         it ('should resolve -1 on null params', async () => {
             assert.equal(await db.setChannelValue('124', 'prefix'), -1);

@@ -147,6 +147,7 @@ module.exports = {
                 case 'modsCanEdit': column = 'mods_can_edit'; break;
                 case 'prefix': column = 'prefix'; break;
                 case 'whileLive': column = 'while_live'; break;
+                case 'gifSpam': column = 'gif_spam'; break;
                 default: resolve(-1); return;
             } 
             let sql = 'UPDATE CHANNEL SET ' +column+ ' = ? WHERE channel_id = ?';

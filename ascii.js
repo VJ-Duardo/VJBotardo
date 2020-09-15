@@ -2,10 +2,10 @@ const braille = require('./generatebraille.js');
 const emotes = require('./emotes.js');
 
 
-function singleEmoteAsciis(channelObj, sayFunc, mode, userInput){
+function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
     function callProcessImage(url){
         let width = mode === 'ascii' ? 58 : 56;
-        braille.processImage(url, -1, 56, width, mode === 'ascii')
+        braille.processImage(url, -1, 56, width, (mode === 'ascii' && gifSpam))
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do !reload");
@@ -142,7 +142,7 @@ function randomAscii(channelObj, sayFunc){
     }
     
     if (typeof allEmotes !== 'undefined' && allEmotes.length > 1){
-        singleEmoteAsciis(channelObj, sayFunc, 'ascii', allEmotes[Math.floor(Math.random() * allEmotes.length)].url);
+        singleEmoteAsciis(channelObj, sayFunc, 'ascii', allEmotes[Math.floor(Math.random() * allEmotes.length)].url, false);
     } else {
         sayFunc(channelObj.name, "/me Can't currently find any emotes in this channel!");
     }
