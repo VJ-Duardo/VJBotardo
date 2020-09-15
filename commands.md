@@ -1,7 +1,40 @@
 # Commands
+__Default Prefix: !__
+
+<br>
+
+* __!setBot__ \<option\> \<value\>  
+Used for bot settings in the current channel. *e.g. !setBot modsCanEdit true*  
+Available options:  
+
+| option | description | value | needed privileges |
+| -- | -- | -- | -- |
+| modsCanEdit | Allows moderators to edit bot and command settings. Moderators cannot edit the following options if *false*. | true/false | dev, broadcaster |
+| prefix | Sets the command prefix. The commands ping and bot always work with *!* too to check the current prefix. | a-zA-Z0-9^!?"'#$%&()[]{}=+\*~\-\_,;@<>° 1-20 characters | dev, broadcaster, mod(!)|
+| whileLive | Bot wont be responsive while the channel is live if *true*. | true/false | dev, broadcaster, mod(!) |
+| gifSpam | Will stop !ascii of printing a gif in multiple frames if *false*. | true/false | dev, broadcaster, mod(!) |  
+
+* __!checkBot__  
+Shows the current bot settings in this channel.
+
+<br>
+
+* __!setCommand__ \<command\> \<option\> \<value\>  
+Sets options for commands in the current channel. *e.g. !setCommand ascii cooldown 10*  
+Availabe options:  
+
+| option | description | value | needed privileges |
+| -- | -- | -- | -- |
+| cooldown | The cooldown in seconds until a command can be used again. Every command has a minimum and maximum allowed cooldown, which can be seen once a wrong value has been entered. | Number in the allowed range. | dev, broadcaster, mod(!) |
+| enabled | Disables a command in the current channel if *false*. | true/false | dev, broadcaster, mod(!) |
+
+* __!checkCommand__ \<command\>  
+Shows the current settings for that command.
+
+<br>
 
 * __!bot__  
-  Information about the bot.
+Information about the bot.
   
 * __!commands__  
 Links to the command list.
@@ -26,7 +59,6 @@ Reloads the channel emotes in the channel the command got called from. Does not 
 Starts a game of "*Guess the emote!*". The mode determines the emotes in the play set. Possible modes are *channel*, *global* and *all*.  The default and minimum amount of rounds is one, the maximum being 20. 
 
 * __!guess stop__  
-__CURRENTLY BROKEN DOESNT WORK__
 Ends a "*Guess the emote!*" game after the current round has finished.
 
 <br>
