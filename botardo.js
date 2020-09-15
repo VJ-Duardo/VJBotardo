@@ -377,14 +377,14 @@ function modsCanEditCheck(channelObj, user){
 
 
 async function setBot(channel, user, option, value){
+    let channelObj = channelsObjs[channel];
+    if (!modsCanEditCheck(channelObj, user))
+        return -1;
+    
     if ([user, option, value].includes(undefined)){
         client.action(channel, "Some parameters are missing!");
         return -1;
     }
-    let channelObj = channelsObjs[channel];
-    
-    if (!modsCanEditCheck(channelObj, user))
-        return -1;
     
     let dbStatus;
     switch(option){
@@ -422,14 +422,14 @@ async function setBot(channel, user, option, value){
 
 
 async function setCommand(channel, user, command, option, value){
+    let channelObj = channelsObjs[channel];  
+    if (!modsCanEditCheck(channelObj, user))
+        return -1;
+    
     if ([user, command, option, value].includes(undefined)){
         client.action(channel, "Some parameters are missing!");
         return -1;
     }
-    
-    let channelObj = channelsObjs[channel];  
-    if (!modsCanEditCheck(channelObj, user))
-        return -1;
     
     if (!Object.keys(commandObjs).includes(command)){
         client.action(channel, "This command cannot be found!");

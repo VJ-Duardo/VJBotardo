@@ -185,7 +185,7 @@ describe('botardo.js tests', () => {
     describe('botardo.setBot()', () => {
         setBot = botardo.__get__('setBot');
         it ('should return -1 on empty params', async () => {
-            assert.equal(await setBot(), -1);
+            assert.equal(await setBot('#duardo1', {'user-id': '123', 'mod': true}), -1);
         });
         describe('user privilege tests', () => {
             it ('should return -1 if modsCanEdit and normal user', async () => {
@@ -240,7 +240,7 @@ describe('botardo.js tests', () => {
     describe('botardo.setCommand()', () => {
         setCommand = botardo.__get__('setCommand');
         it ('should return -1 on empty params', async () => {
-            assert.equal(await setCommand(), -1);
+            assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}), -1);
             assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra', 'cooldown'), -1);
             assert.equal(await setCommand('#duardo1', {'user-id': '123', 'mod': true}, 'ra'), -1);
             
