@@ -89,7 +89,6 @@ module.exports = {
     },
     getAllData: function(callback, table){
         return new Promise(function(resolve){
-            table = table.toLowerCase() === 'channel' ? table : 'command';
             let sql = 'SELECT * FROM ' +table;
             db.each(sql, [], (err, row) => {
                 if (err){
@@ -220,6 +219,12 @@ module.exports = {
                 }
                 resolve(1);
             });
+        });
+    },
+    setToken: function(token){
+        let sql = 'UPDATE IMPORTANT SET token = ?';
+        db.run(sql, [token], function(err){
+            console.log(err);
         });
     }
 };

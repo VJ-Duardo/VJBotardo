@@ -139,6 +139,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 
 
 (async function(){
+    pass.loadAppAccessToken();
     await db.getAllData(loadCommand, "COMMAND");
     await emotes.loadGlobalEmotes();
     emotes.loadAllExistingEmotes();
@@ -205,7 +206,7 @@ function commands(channel){
 
 
 
-function getLiveStatus(channel_id){
+function getLiveStatus(channel_id, channel){
     let getStreamsUrl = 'https://api.twitch.tv/helix/streams?user_id='+channel_id;
     return fetch(getStreamsUrl, {
         headers: {
@@ -217,9 +218,15 @@ function getLiveStatus(channel_id){
         return response.json();
     })
     .then((dataObj) => {
+        if (dataObj.status == 401 && dataObj.message === 'Invalid OAuth token'){
+            pass.setNewAppAccessToken();
+            client.action(channel, '[Refreshed app access token] Try again please.');
+            return true;
+        }
         return dataObj.data.length > 0;
     })
-    .catch(() => {
+    .catch((error) => {
+        console.log(error);
         return true;
     });
 }
@@ -238,7 +245,7 @@ async function allowanceCheck(channel, user, command, callback, params){
             return -1;
 
         if (!channelObj.whileLive){
-            if (await getLiveStatus(channelObj.id))
+            if (await getLiveStatus(channelObj.id, channel))
                 return -1;
         }
     }
