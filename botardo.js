@@ -26,6 +26,9 @@ opts = {
 const devID = '84800191';
 const client = new tmi.client(opts);
 
+var commandCount = 0;
+var startTime = 0;
+
 
 
 class Channel {
@@ -139,6 +142,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 
 
 (async function(){
+    startTime = new Date().getTime()/1000;
     pass.loadAppAccessToken();
     await db.getAllData(loadCommand, "COMMAND");
     await emotes.loadGlobalEmotes();
@@ -189,7 +193,10 @@ async function reloadChannelEmotes(channel){
 function ping(channel){
     client.ping()
         .then((data) => {
-            client.action(channel, "BING! (" + data*1000 + "ms). Used prefix in this channel: " +channelsObjs[channel].prefix);
+            client.action(channel, "BING! (" + data*1000 + "ms). \
+            Bot running for " + (((new Date().getTime()/1000)-startTime)/60).toFixed(2) + " minutes. \
+            Commands used: " + commandCount + ". \
+            Used prefix in this channel: " +channelsObjs[channel].prefix);
         })
         .catch(() => {
             client.action(channel, "Timed out");
@@ -258,6 +265,7 @@ async function allowanceCheck(channel, user, command, callback, params){
     if (now >= channelObj.lastCommandTime[command]+cooldown){
         channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
         callback(...params);
+        commandCount++;
         return 1;
     }
 }
