@@ -56,7 +56,8 @@ Reloads the channel emotes in the channel the command got called from. Does not 
 ### Games
 
 * __!guess__ \<mode\> [\<rounds\>]  
-Starts a game of "*Guess the emote!*". The mode determines the emotes in the play set. Possible modes are *channel*, *global* and *all*.  The default and minimum amount of rounds is one, the maximum being 20. 
+Starts a game of "*Guess the emote!*". The mode determines the emotes in the play set. Possible modes are *channel*, *global*, *all* and *origin*.  The default and minimum amount of rounds is one, the maximum being 20.   
+Mode *origin* presents emote descriptions from Supibots *$origin* command. 
 
 * __!guess stop__  
 Ends a "*Guess the emote!*" game after the current round has finished.
