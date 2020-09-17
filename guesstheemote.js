@@ -1,5 +1,7 @@
 const braille = require('./generatebraille.js');
 const db = require('./database.js');
+const fetch = require("node-fetch");
+
 var games = {};
 
 var reward = 10;
@@ -11,6 +13,9 @@ var firstHintTime = 15000;
 var secondHintTime = 30000;
 var resolveTime = 45000;
 var timeBetweenRounds = 4000;
+
+var emoteOrigins;
+loadOrigins().then(function(list){emoteOrigins=list;});
 
 
 class Game {
@@ -25,6 +30,8 @@ class Game {
         this.firstHint;
         this.secondHint;
         this.resolve;
+        this.originHints;
+        this.originLastHint = false;
     }
     
     clearHints(){
@@ -54,7 +61,7 @@ module.exports = {
         if (!getGameState(channelObj.name)){
             let newGame = createGameObject(channelObj, command[1], command[2]);
             if (newGame === -1){
-                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel" or "all" (e.g. !guess all 5)');
+                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel", "all" or "origin" (e.g. !guess all 5)');
                 return;
             } else if (newGame === -2){
                 sayFunc(channelObj.name, '/me No such emotes in this channel!');
@@ -66,7 +73,7 @@ module.exports = {
             if (!games[channelObj.name].roundActive){
                 return;
             }
-            if (new RegExp(getGameSolution(channelObj.name)).test(command[0])){
+            if (new RegExp('^'+getGameSolution(channelObj.name)+'$').test(command[0])){
                 let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name) + " (+"+reward+"USh)";
                 db.addUserPoints(user['user-id'], user['username'], reward);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
@@ -84,47 +91,69 @@ function startGame(channelObj, gameObj, sayFunc){
     
     gameObj.firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
     gameObj.secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
-    let loseString = "/me It was " +gameObj.solution.name+ " . Maybe open your eyes next time :)";
+    let loseString = "/me It was " +gameObj.solution.name+ " . Disappointing performance :Z";
     gameObj.resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
     
-    braille.processImage(gameObj.solution.url, 255)
-        .then((brailleString) => {
-            if (typeof brailleString === 'undefined'){
-                gameObj.setNewSolution();
-                gameObj.clearHints();
-                startGame(channelObj, gameObj, sayFunc);
-            } else {
-                channelObj.gameRunning = true;
-                channelObj.game = module.exports.guessTheEmote;
-                sayFunc(channelObj.name, '/me GUESS THE EMOTE! (' 
-                        + modes[gameObj.mode] + ') [' 
-                        + ((gameObj.roundsOverall-gameObj.rounds)+1) 
-                        + '/' + gameObj.roundsOverall + ']');
-                sayFunc(channelObj.name, brailleString);
-            }
-        });
+    if (gameObj.mode !== 'origin'){ 
+        braille.processImage(gameObj.solution.url, 255)
+            .then((brailleString) => {
+                if (typeof brailleString === 'undefined'){
+                    gameObj.setNewSolution();
+                    gameObj.clearHints();
+                    startGame(channelObj, gameObj, sayFunc);
+                } else {
+                    channelObj.gameRunning = true;
+                    channelObj.game = module.exports.guessTheEmote;
+                    sayFunc(channelObj.name, '/me GUESS THE EMOTE! (' 
+                            + modes[gameObj.mode] + ') [' 
+                            + ((gameObj.roundsOverall-gameObj.rounds)+1) 
+                            + '/' + gameObj.roundsOverall + ']');
+                    sayFunc(channelObj.name, brailleString);
+                }
+            });
+    } else {
+        gameObj.originHints = gameObj.solution.text
+                .replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g, '')
+                .split(gameObj.solution.name).join('[THE EMOTE]')
+                .split('. ')
+                .filter(str => typeof str !== 'undefined' && str.trim() !== '');
+        channelObj.gameRunning = true;
+        channelObj.game = module.exports.guessTheEmote;
+        sayFunc(channelObj.name, '/me Guess the emote [' 
+                            + ((gameObj.roundsOverall-gameObj.rounds)+1) 
+                            + '/' + gameObj.roundsOverall + '] : ' +getOriginHint(gameObj));
+    }
 }
 
 
 
 function giveFirstHint(channelObj, gameObj, sayFunc){
-    sayFunc(channelObj.name, "/me First Hint: It's a " +gameObj.solution.origin+ " emote :)");
+    if (gameObj.mode === 'origin'){
+        sayFunc(channelObj.name, "/me First Hint: " +getOriginHint(gameObj));
+    } else {
+        sayFunc(channelObj.name, "/me First Hint: It's a " +gameObj.solution.origin+ " emote :)");
+    }
 }
 
 function giveSecondHint(channelObj, gameObj, sayFunc){
-    braille.processImage(gameObj.solution.url)
-        .then((brailleString) => {
-            if (typeof brailleString === 'undefined'){
-                return;
-            } else {
-                sayFunc(channelObj.name, '/me Second Hint: ');
-                sayFunc(channelObj.name, brailleString);
-            }
-        });
+    if (gameObj.mode === 'origin'){
+        sayFunc(channelObj.name, "/me Second Hint: " +getOriginHint(gameObj));
+    } else {
+        braille.processImage(gameObj.solution.url)
+            .then((brailleString) => {
+                if (typeof brailleString === 'undefined'){
+                    return;
+                } else {
+                    sayFunc(channelObj.name, '/me Second Hint: ');
+                    sayFunc(channelObj.name, brailleString);
+                }
+            });
+        }
 }
 
 function resolveRound(channelObj, gameObj, sayFunc, endString){
     gameObj.roundActive = false;
+    gameObj.originLastHint = false;
     sayFunc(channelObj.name, endString);
     gameObj.clearHints();
     gameObj.rounds--;
@@ -137,16 +166,22 @@ function resolveRound(channelObj, gameObj, sayFunc, endString){
 }
 
 function createGameObject(channelObj, mode, rounds){
-    if (!modes.hasOwnProperty(mode)){
-        return -1;
-    }
     let emoteSet = [];
-    for (let list of modes[mode]){
-        if (typeof list === 'undefined'){
-            continue;
+    
+    if (mode === 'origin'){
+        emoteSet = emoteOrigins;
+    } else {
+        if (!modes.hasOwnProperty(mode)){
+            return -1;
         }
-        emoteSet = emoteSet.concat(channelObj.emotes[list]);
+        for (let list of modes[mode]){
+            if (typeof list === 'undefined'){
+                continue;
+            }
+            emoteSet = emoteSet.concat(channelObj.emotes[list]);
+        }
     }
+    
     if (typeof emoteSet === 'undefined' || emoteSet.length < 1){
         return -2;
     }
@@ -158,9 +193,7 @@ function createGameObject(channelObj, mode, rounds){
 
 
 function getRandomEmote(emoteSet){
-    let randomNumber = Math.floor(Math.random() * emoteSet.length);
-    let emote = emoteSet[randomNumber];
-    return emote;
+    return emoteSet[Math.floor(Math.random() * emoteSet.length)];
 }
 
 
@@ -188,4 +221,27 @@ function getGameState(channelName){
 
 function getGameSolution(channelName){
     return games[channelName].solution.name;
+}
+
+async function loadOrigins(){
+    const api = 'https://supinic.com/api/data/origin/list';
+    let response = await fetch(api);
+    let data = await response.json();
+    return data.data;
+}
+
+function getOriginHint(gameObj){
+    switch (gameObj.originHints.length){
+        case 0:
+            if (gameObj.originLastHint)
+                return 'Its a '+ gameObj.solution.type + ' emote.';
+            else
+                gameObj.originLastHint = true;
+                return gameObj.solution.name.substring(0, Math.floor(gameObj.solution.name.length/2))+'____';
+        default:
+            let randomIndex = Math.floor(Math.random() * gameObj.originHints.length);
+            let hintText = gameObj.originHints[randomIndex];
+            gameObj.originHints.splice(randomIndex, 1);
+            return hintText;
+    }
 }
