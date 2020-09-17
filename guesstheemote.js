@@ -237,7 +237,7 @@ function getOriginHint(gameObj){
                 return 'Its a '+ gameObj.solution.type + ' emote.';
             else
                 gameObj.originLastHint = true;
-                return gameObj.solution.name.substring(0, Math.floor(gameObj.solution.name.length/2))+'____';
+                return '____'+gameObj.solution.name.substring(Math.floor(gameObj.solution.name.length/2), gameObj.solution.name.length);
         default:
             let randomIndex = Math.floor(Math.random() * gameObj.originHints.length);
             let hintText = gameObj.originHints[randomIndex];

@@ -10,7 +10,7 @@ const ascii = require('./ascii.js');
 
 opts = {
     options: {
-        debug: true
+        debug: false
     },
     connection: {
         server: 'irc-ws.chat.twitch.tv',
