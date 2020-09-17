@@ -13,3 +13,4 @@ __Used API's and services:__
 * [BetterTTV](https://betterttv.com/)
 * [FrankerFaceZ](https://frankerfacez.com/developers)
 * [Twitter Emoji (Twemoji)](https://github.com/twitter/twemoji)
+* [Supinic](https://supinic.com/api/)
