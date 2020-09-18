@@ -11,7 +11,7 @@ Available options:
 | -- | -- | -- | -- |
 | modsCanEdit | Allows moderators to edit bot and command settings. Moderators cannot edit the following options if *false*. | true/false | dev, broadcaster |
 | prefix | Sets the command prefix. The commands ping and bot always work with *!* too to check the current prefix. | a-zA-Z0-9^!?"'#$%&()[]{}=+\*~\-\_,;@<>° 1-20 characters | dev, broadcaster, mod(!)|
-| whileLive | Bot wont be responsive while the channel is live if *true*. | true/false | dev, broadcaster, mod(!) |
+| whileLive | Bot wont be responsive while the channel is live if *false*. | true/false | dev, broadcaster, mod(!) |
 | gifSpam | Will stop !ascii of printing a gif in multiple frames if *false*. | true/false | dev, broadcaster, mod(!) |  
 
 * __!checkBot__  
