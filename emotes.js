@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const pass = require('./password.js');
+const db = require('./database.js');
 const sizes = ['4', '2', '1'];
 
 var twitchGlobalEmotes = [];
@@ -145,7 +146,7 @@ function getTwitchGlobal(){
     let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     
     return getJsonProm(twitchGlobalUrl, function(twGlObj){
-        let emoteList = twGlObj['emotes'];
+        let emoteList = twGlObj['emotes'].filter(emote => emote.id > 14);
         twitchGlobalEmotes = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
     });
 }

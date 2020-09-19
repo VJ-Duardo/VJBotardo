@@ -73,7 +73,7 @@ module.exports = {
             if (!games[channelObj.name].roundActive){
                 return;
             }
-            if (new RegExp('^'+getGameSolution(channelObj.name)+'$').test(command[0])){
+            if (getGameSolution(channelObj.name) === command[0]){
                 let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name) + " (+"+reward+"USh)";
                 db.addUserPoints(user['user-id'], user['username'], reward);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);

@@ -27,6 +27,13 @@ module.exports = {
             });
         });
     },
+    insertEmote: function(id, regex, url){
+        let sql = 'INSERT INTO emote(emote_id, regex, url) VALUES(?, ?, ?)';
+        db.run(sql, [id, regex, url], function(err){
+            if (err)
+                console.log(err.message);
+        });
+    },
     showRows: function(sqlQuery){
         return new Promise(function(resolve){
             db.all(sqlQuery, [], function(err, rows){
