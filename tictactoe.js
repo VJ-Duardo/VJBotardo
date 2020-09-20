@@ -194,7 +194,7 @@ module.exports = {
         } else {
             let gameObj = games[channelObj.name];
             if (gameObj.waitForAccept.status 
-                    && command[0] === '!accept' 
+                    && command[0] === channelObj.prefix+'accept' 
                     && user['username'].toLowerCase() === gameObj.playerTwo.name.toLowerCase()){
                 gameObj.playerTwo.id = user['user-id'];
                 gameObj.waitForAccept.status = false;
@@ -318,31 +318,28 @@ function checkUserExistence(channelObj, user){
 
 
 function checkCharacters(channelObj, gameObj){
-    [gameObj.playerOne, gameObj.playerTwo].forEach(function(player, i){
+    [gameObj.playerOne, gameObj.playerTwo].forEach(async function(player, i){
         if (typeof player.character === 'undefined' || (i === 1 && player.character === gameObj.playerOne.character)){
             gameObj.setDefaultLooks(player, i);
             return;
         }
         
-        let found = false;
-        for (const list of Object.values(channelObj.emotes).concat([emotes.allExisitingEmotes,
-                    [emotes.createNewEmote(player.character, emotes.getEmojiURL(player.character), 'emoji')]])){
-            let emote = list.find(emote => emote.name === player.character);
-            if (typeof emote !== 'undefined'){
-                gameObj.setDefaultLooks(player, i);
-                found = true;
-                braille.processImage(emote.url, 150, 18, 18)
-                    .then((brailleString) => {
-                        if (typeof brailleString !== 'undefined'){
-                            player.character = emote.name;
-                            gameObj.looks[player.character] = brailleString.split(" ");
-                        }
-                    });
-                break;
+        let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === player.character);
+        if (typeof emote === 'undefined'){
+            emote = await db.getEmoteByName(player.character);
+            if (emote === -1){
+                emote = emotes.createNewEmote(player.character, emotes.getEmojiURL(player.character), 'emoji');
             }
         }
-        if (!found)
-            gameObj.setDefaultLooks(player, i);
+        
+        gameObj.setDefaultLooks(player, i);
+        braille.processImage(emote.url, 150, 18, 18)
+            .then((brailleString) => {
+                if (typeof brailleString !== 'undefined'){
+                    player.character = emote.name;
+                    gameObj.looks[player.character] = brailleString.split(" ");
+                }
+            });
     });
 }
 

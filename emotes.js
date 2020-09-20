@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const schedule = require('node-schedule');
 const pass = require('./password.js');
 const db = require('./database.js');
 const sizes = ['4', '2', '1'];
@@ -163,20 +164,42 @@ function getTwitchEverything(){
     .then((response) => {
         return response.json();
     })
-    .then((dataObj) => {
+    .then(async(dataObj) => {
         if(dataObj.hasOwnProperty("error")){
+            if (typeof dataObj !== 'undefined')
+                console.log(dataObj);
             return;
         }
         
-        let emoteList = dataObj['emoticons'];
-        for (i=0; i<emoteList.length; i++){
-            emoteList[i] = new Emote(emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '3.0'), 'twitch');
+        const lastEmoteID = await db.getLastEmoteID();
+        if (lastEmoteID === -1){
+            return;
         }
+        let emoteList = dataObj['emoticons'].filter(emote => emote['id'] > lastEmoteID);
+        console.log('emote data loaded');
+        (async function(){
+            //db.sendQuery('PRAGMA cache_size=10000;');
+            db.sendQuery('BEGIN TRANSACTION;');
+            for (i=0; i<emoteList.length; i++){
+                await db.insertEmote(emoteList[i]['id'], emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '3.0'));
+            }
+            db.sendQuery('END TRANSACTION;');
+            console.log(emoteList.length + " new emotes added!");
+        })();
         module.exports.allExisitingEmotes = emoteList;
-        console.log("all emotes loaded!");
         return "done";
     });
 }
+
+function startEmoteSchedule(){
+    var rule = new schedule.RecurrenceRule();
+    rule.hour = [0,12];
+ 
+    var j = schedule.scheduleJob(rule, function(){
+        getTwitchEverything();
+    });
+}
+startEmoteSchedule();
 
 
 function convertBTTVAndTwitchLists(emoteList, url, postfix){

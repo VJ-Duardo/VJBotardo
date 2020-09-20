@@ -1,8 +1,9 @@
 const braille = require('./generatebraille.js');
 const emotes = require('./emotes.js');
+const db = require('./database.js');
 
 
-function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
+async function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
     function callProcessImage(url){
         let width = mode === 'ascii' ? 58 : 56;
         braille.processImage(url, -1, 56, width, (mode === 'ascii' && gifSpam))
@@ -45,14 +46,14 @@ function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
         return;
     }
     
-    for (const list of Object.values(channelObj.emotes).concat([emotes.allExisitingEmotes])){
-        let emote = list.find(searchEmote => searchEmote.name === userInput);
-        if (typeof emote !== 'undefined'){
-            callProcessImage(emote.url);
-            return;
+    let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === userInput);
+    if (typeof emote === 'undefined'){
+        emote = await db.getEmoteByName(userInput);
+        if (emote === -1){
+            emote = {url: emotes.getEmojiURL(userInput)};
         }
     }
-    callProcessImage(emotes.getEmojiURL(userInput));
+    callProcessImage(emote.url);
 }
 
 
@@ -114,37 +115,28 @@ async function twoEmoteAsciis(channelObj, sayFunc, mode, inputLeft, inputRight){
             continue;
         }
         
-        let found = false;
-        for (const list of Object.values(channelObj.emotes).concat([emotes.allExisitingEmotes])){
-            let emote = list.find(searchEmote => searchEmote.name === input);
-            if (typeof emote !== 'undefined'){
-                found = true;
-                await callProcessImage(emote.url);
-                break;
+        let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === input);
+        if (typeof emote === 'undefined'){
+            emote = await db.getEmoteByName(input);
+            if (emote === -1){
+                emote = {url: emotes.getEmojiURL(input)};
             }
         }
-        if (found)
-            continue;
-            
-        let processImageResult = await callProcessImage(emotes.getEmojiURL(input));
-        if (processImageResult === -1){
+        let processImageResult = await callProcessImage(emote.url);
+        if (processImageResult === -1)
             return;
-        }
+        
     }
     sayFunc(channelObj.name, resultArray.join(' '));
 }
 
 
-function randomAscii(channelObj, sayFunc){
-    let allEmotes = emotes.allExisitingEmotes;
-    for (const list of Object.values(channelObj.emotes)){
-        allEmotes = allEmotes.concat(list);
-    }
-    
-    if (typeof allEmotes !== 'undefined' && allEmotes.length > 1){
-        singleEmoteAsciis(channelObj, sayFunc, 'ascii', allEmotes[Math.floor(Math.random() * allEmotes.length)].url, false);
+async function randomAscii(channelObj, sayFunc, keyword){
+    let emote = await db.getRandomEmote(keyword);
+    if (emote === -1){
+        sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
-        sayFunc(channelObj.name, "/me Can't currently find any emotes in this channel!");
+        singleEmoteAsciis(channelObj, sayFunc, 'ascii', emote.url, false);
     }
 }
 

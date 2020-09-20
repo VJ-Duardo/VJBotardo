@@ -28,10 +28,65 @@ module.exports = {
         });
     },
     insertEmote: function(id, regex, url){
-        let sql = 'INSERT INTO emote(emote_id, regex, url) VALUES(?, ?, ?)';
+        let sql = 'INSERT INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
         db.run(sql, [id, regex, url], function(err){
             if (err)
                 console.log(err.message);
+        });
+    },
+    getLastEmoteID: function(){
+        return new Promise(function(resolve){
+            let sql = 'SELECT MAX(emote_id) FROM emote';
+            db.get(sql, [], function(err, row){
+                if (err){
+                    console.log(err);
+                    resolve(-1);
+                    return;
+                }
+                if (Object.values(row)[0] === null){
+                    resolve(0);
+                    return;
+                } else {
+                    resolve(Object.values(row)[0]);
+                }
+            });
+        });
+    },
+    getEmoteByName: function(name){
+        return new Promise(function(resolve){
+            let sql = 'SELECT * FROM emote WHERE name = ?';
+            db.get(sql, [name], function(err, row){
+                if (err){
+                    console.log(err);
+                    resolve(-1);
+                    return;
+                }
+                if (typeof row  === 'undefined'){
+                    resolve(-1);
+                    return;
+                } else {
+                    resolve(row);
+                }
+            });
+        });
+    },
+    getRandomEmote: function(keyword){
+        return new Promise(function(resolve){
+            keyword = typeof keyword === 'undefined' ? '' : keyword;
+            sql = 'SELECT * FROM emote WHERE name LIKE ? ORDER BY RANDOM() LIMIT 1';
+            db.get(sql, ['%'+keyword+'%'], function(err, row){
+                if (err){
+                    console.log(err);
+                    resolve(-1);
+                    return;
+                }
+                if (typeof row === 'undefined'){
+                    resolve(-1);
+                    return;
+                } else {
+                    resolve(row);
+                }
+            });
         });
     },
     showRows: function(sqlQuery){

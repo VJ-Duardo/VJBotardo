@@ -146,7 +146,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
     pass.loadAppAccessToken();
     await db.getAllData(loadCommand, "COMMAND");
     await emotes.loadGlobalEmotes();
-    emotes.loadAllExistingEmotes();
+    //emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
@@ -554,7 +554,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "antimirror", command[1]]);
             break;
         case prefix+'ra':
-            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc]);
+            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command[1]]);
             break;
         case prefix+'merge':
             allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "merge", command[1], command[2]]);
