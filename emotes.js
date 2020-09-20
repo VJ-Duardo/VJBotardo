@@ -155,6 +155,7 @@ function getTwitchGlobal(){
 function getTwitchEverything(){
     let twitchEmoteAPI = 'https://api.twitch.tv/kraken/chat/emoticons';
     
+    console.log('start of emote loading');
     return fetch(twitchEmoteAPI, {
         headers: {
             'Accept': 'application/vnd.twitchtv.v5+json',
@@ -194,6 +195,8 @@ function getTwitchEverything(){
 function startEmoteSchedule(){
     var rule = new schedule.RecurrenceRule();
     rule.hour = [0,12];
+    rule.minute = 0;
+    rule.second = 0;
  
     var j = schedule.scheduleJob(rule, function(){
         getTwitchEverything();
