@@ -27,9 +27,9 @@ module.exports = {
             });
         });
     },
-    insertEmote: function(id, regex, url){
+    insertEmote: function(id, name, url){
         let sql = 'INSERT INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
-        db.run(sql, [id, regex, url], function(err){
+        db.run(sql, [id, name, url], function(err){
             if (err)
                 console.log(err.message);
         });
@@ -54,7 +54,7 @@ module.exports = {
     },
     getEmoteByName: function(name){
         return new Promise(function(resolve){
-            let sql = 'SELECT * FROM emote WHERE name = ?';
+            let sql = 'SELECT * FROM emote WHERE name = ? ORDER BY emote_id DESC LIMIT 1';
             db.get(sql, [name], function(err, row){
                 if (err){
                     console.log(err);

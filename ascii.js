@@ -46,7 +46,7 @@ async function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
         return;
     }
     
-    let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === userInput);
+    let emote = [].concat.apply([], Object.values(channelObj.emotes).concat(Object.values(emotes.globalEmotes))).find(emote => emote.name === userInput);
     if (typeof emote === 'undefined'){
         emote = await db.getEmoteByName(userInput);
         if (emote === -1){
@@ -115,7 +115,7 @@ async function twoEmoteAsciis(channelObj, sayFunc, mode, inputLeft, inputRight){
             continue;
         }
         
-        let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === input);
+        let emote = [].concat.apply([], Object.values(channelObj.emotes).concat(Object.values(emotes.globalEmotes))).find(emote => emote.name === input);
         if (typeof emote === 'undefined'){
             emote = await db.getEmoteByName(input);
             if (emote === -1){

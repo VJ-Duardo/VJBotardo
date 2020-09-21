@@ -4,7 +4,11 @@ const pass = require('./password.js');
 const db = require('./database.js');
 const sizes = ['4', '2', '1'];
 
-var twitchGlobalEmotes = [];
+var globalEmotes = {
+    twitchGlobal: [],
+    bttvGlobal: [],
+    ffzGlobal: []
+};
 var twitchPicUrl = 'https://static-cdn.jtvnw.net/emoticons/v1/';
 var bttvPicUrl = 'https://cdn.betterttv.net/emote/';
 
@@ -20,18 +24,15 @@ class Emote{
 module.exports = {
     loadEmotes: function(channelObj){
         getFFZChannel(channelObj);
-        getFFZGlobal(channelObj);
         getBTTVChannel(channelObj);
-        getBTTVGlobal(channelObj);
         //getTwitchChannel(channelObj);
-        
-        channelObj.emotes.twitchGlobal = twitchGlobalEmotes;
-        console.log("twitchglobal in " + channelObj.name + " loaded!!");
     },  
     loadGlobalEmotes: function(){
-        return getTwitchGlobal();
+        getTwitchGlobal();
+        getBTTVGlobal();
+        getFFZGlobal();
     },  
-    loadAllExistingEmotes: function(){
+    loadTwitchSubEmotes: function(){
         return getTwitchEverything();
     },
     getEmojiURL: function(emoji){
@@ -43,7 +44,7 @@ module.exports = {
     createNewEmote: function(name, url, origin){
         return new Emote(name, url, origin);
     },
-    allExisitingEmotes: []
+    globalEmotes: globalEmotes
 };
 
 
@@ -75,13 +76,13 @@ function getFFZChannel(channelObj){
    });
 }
 
-function getFFZGlobal(channelObj){
+function getFFZGlobal(){
     let ffzGlobal = 'https://api.frankerfacez.com/v1/set/global';
     
     getJsonProm(ffzGlobal, function(ffzGlObj){
         let emoteList = ffzGlObj['sets']['3']['emoticons'].concat(ffzGlObj['sets']['4330']['emoticons']);
-        console.log("ffzGlobal in " + channelObj.name + " loaded!");
-        channelObj.emotes.ffzGlobal = convertFFZLists(emoteList);
+        globalEmotes.ffzGlobal = convertFFZLists(emoteList);
+        console.log("ffzglobal loaded!");
     });
 }
 
@@ -103,13 +104,13 @@ function getBTTVChannel(channelObj){
     });
 }
 
-function getBTTVGlobal(channelObj){
+function getBTTVGlobal(){
     let bttvGlobal = 'https://api.betterttv.net/2/emotes';
     
     getJsonProm(bttvGlobal, function(bttvGlObj){
         let emoteList = bttvGlObj['emotes'];
-        console.log("bttvglobal in " + channelObj.name + " loaded!");
-        channelObj.emotes.bttvGlobal = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
+        globalEmotes.bttvGlobal = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
+        console.log("bttvglobal loaded!");
     });
 }
 
@@ -148,7 +149,8 @@ function getTwitchGlobal(){
     
     return getJsonProm(twitchGlobalUrl, function(twGlObj){
         let emoteList = twGlObj['emotes'].filter(emote => emote.id > 14);
-        twitchGlobalEmotes = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        globalEmotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        console.log("twitchglobal loaded!");
     });
 }
 

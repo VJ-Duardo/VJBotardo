@@ -144,9 +144,9 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 (async function(){
     startTime = new Date().getTime()/1000;
     pass.loadAppAccessToken();
+    emotes.loadGlobalEmotes();
+    //emotes.loadTwitchSubEmotes();
     await db.getAllData(loadCommand, "COMMAND");
-    await emotes.loadGlobalEmotes();
-    //emotes.loadAllExistingEmotes();
     await db.getAllData(loadChannel, "CHANNEL");
     client.connect();
 })();
@@ -185,7 +185,7 @@ function showPoints(channel, userName, userId, anotherUser){
 
 async function reloadChannelEmotes(channel){
     channelsObjs[channel].loadEmotes();
-    await emotes.loadGlobalEmotes();
+    emotes.loadGlobalEmotes();
     client.action(channel, "Reloaded channel emotes.");
 }
 

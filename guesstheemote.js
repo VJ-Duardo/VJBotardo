@@ -1,6 +1,7 @@
+const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 const db = require('./database.js');
-const fetch = require("node-fetch");
+const emotes = require('./emotes.js');
 
 var games = {};
 
@@ -175,10 +176,11 @@ function createGameObject(channelObj, mode, rounds){
             return -1;
         }
         for (let list of modes[mode]){
-            if (typeof list === 'undefined'){
-                continue;
+            if (modes['global'].includes(list)){
+                emoteSet = emoteSet.concat(emotes.globalEmotes[list]);
+            } else {
+                emoteSet = emoteSet.concat(channelObj.emotes[list]);
             }
-            emoteSet = emoteSet.concat(channelObj.emotes[list]);
         }
     }
     

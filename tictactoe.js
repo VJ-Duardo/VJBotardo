@@ -324,7 +324,7 @@ function checkCharacters(channelObj, gameObj){
             return;
         }
         
-        let emote = [].concat.apply([], Object.values(channelObj.emotes)).find(emote => emote.name === player.character);
+        let emote = [].concat.apply([], Object.values(channelObj.emotes).concat(Object.values(emotes.globalEmotes))).find(emote => emote.name === player.character);
         if (typeof emote === 'undefined'){
             emote = await db.getEmoteByName(player.character);
             if (emote === -1){
