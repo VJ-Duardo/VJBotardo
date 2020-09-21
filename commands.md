@@ -80,8 +80,8 @@ Give up the current game. Doing this before the game was accepted is not counted
 * __!ascii__ \<emote\>|\<emoji\>|\<link\>  
 Generates a braille string from the provided emote, emoji or link.
 
-* __!ra__   
-Generates a random braille string and prints it to chat. (Excludes emojis)
+* __!ra__ [\<keyword\>]  
+Generates a braille string of a random sub emote and prints it to chat. If a keyword is provided, a random emote containing that keyword will be picked. (If such an emote can be found)
 
 * __!merge__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
 Creates and prints a single braille string with the two provided pictures next to each other. Fails if one of the two pictures is invalid.
