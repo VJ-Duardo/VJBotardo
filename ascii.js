@@ -136,7 +136,14 @@ async function randomAscii(channelObj, sayFunc, keyword){
     if (emote === -1){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
-        singleEmoteAsciis(channelObj, sayFunc, 'ascii', emote.url, false);
+        braille.processImage(emote.url, -1, 56, 58, false)
+            .then((brailleString) => {
+                if (typeof brailleString === 'undefined'){
+                    sayFunc(channelObj.name, "/me Something went wrong :(");
+                } else {
+                     sayFunc(channelObj.name, emote.name +" "+brailleString);   
+                }
+        });
     }
 }
 
