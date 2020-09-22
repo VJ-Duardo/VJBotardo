@@ -218,7 +218,7 @@ module.exports = {
                     return;
                 }
                 
-                gameObj.field[command[0]] = gameObj.turn.character;
+                gameObj.field[command[0].toLowerCase()] = gameObj.turn.character;
                 postRoundCheck(channelObj, gameObj);
             }
         }
