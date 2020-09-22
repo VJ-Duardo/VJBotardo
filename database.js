@@ -272,7 +272,7 @@ module.exports = {
                 case 'command': column = 'command_name'; break;
                 default: resolve(-1); return;
             }
-            let sql = 'INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ' +column+ ' = ?';
+            let sql = 'INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ' +column+ ' = ? AND command.dev_only = 0';
             db.run(sql, [addition], function(err){
                 if (err){
                     console.error(err.message);
