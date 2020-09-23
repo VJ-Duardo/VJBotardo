@@ -288,8 +288,8 @@ async function checkInputValues(channelObj, gameObj){
         return -1;
     }
     
-    db.getPoints(channelObj, 'display_name', gameObj.playerOne.name, checkPoints);
-    db.getPoints(channelObj, 'display_name', gameObj.playerTwo.name, checkPoints);
+    db.getPoints(channelObj, 'username', gameObj.playerOne.name, checkPoints);
+    db.getPoints(channelObj, 'username', gameObj.playerTwo.name, checkPoints);
     
     return 0;
 }

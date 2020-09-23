@@ -116,7 +116,8 @@ module.exports = {
             }
         }
         return resultsArr.join(' ').replace(/[⠀]/g, '⠄');
-    }
+    },
+    iterateOverPixels: iterateOverPixels
 };
 
 function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData){

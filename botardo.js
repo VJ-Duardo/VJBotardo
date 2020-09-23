@@ -1,6 +1,7 @@
 const tmi = require('tmi.js');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
+const snake = require('./snake.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const ttt = require('./tictactoe.js');
@@ -172,7 +173,7 @@ function kill(channel){
 
 function showPoints(channel, userName, userId, anotherUser){
     if (typeof anotherUser !== 'undefined'){
-        db.getPoints(channelsObjs[channel], 'display_name', anotherUser, function(_, name, points){
+        db.getPoints(channelsObjs[channel], 'username', anotherUser, function(_, name, points){
            client.say(channel, "/me " + name + " has " + points + " Ugandan shilling!");
         }); 
     } else {
@@ -180,6 +181,13 @@ function showPoints(channel, userName, userId, anotherUser){
             client.say(channel, "/me " + userName + " has " + points + " Ugandan shilling!");
         });
     }
+}
+
+
+async function getTopUsh(channel){
+    let top = 10;
+    let topString = await db.getTopUserScores(top, 'points');
+    client.action(channel, topString);
 }
 
 
@@ -528,14 +536,14 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, kill, [channel]);
             break;
         case prefix+'top':
-            allowanceCheck(...identParams, db.getTopUsers, [5, channel, sayFunc]);
+            allowanceCheck(channel, userstate, 'top', getTopUsh, [channel]);
             break;
         case '!ping':
         case prefix+'ping':
             allowanceCheck(channel, userstate, 'ping', ping, [channel]);
             break;
         case prefix+'ush':
-            allowanceCheck(...identParams, showPoints, [channel, userstate['display-name'], userstate['user-id'], command[1]]);
+            allowanceCheck(...identParams, showPoints, [channel, userstate['username'], userstate['user-id'], command[1]]);
             break;
         case '!bot':
         case prefix+'bot':
@@ -602,6 +610,8 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
         } else if (command[0] === prefix+'ttt'){
             allowanceCheck(...identParams, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
+        } else if (command[0] === prefix+'snake'){
+            allowanceCheck(...identParams, snake.playSnake, [channelsObjs[channel], sayFunc, userstate, command]);
         }
     }
 }

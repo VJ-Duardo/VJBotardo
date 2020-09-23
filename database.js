@@ -27,6 +27,26 @@ module.exports = {
             });
         });
     },
+    showRows: function(sqlQuery){
+        return new Promise(function(resolve){
+            db.all(sqlQuery, [], function(err, rows){
+                if (err) 
+                    resolve(err.message);
+                if (typeof rows !== 'undefined')
+                    resolve(rows.map(function(row){return JSON.stringify(row);}));
+                else
+                    resolve('Something went wrong.');
+            });
+        });
+    },
+    closeDB: function(){
+        db.close((err) => {
+            if (err) {
+                console.error(err.message);
+            }
+        });
+    },
+    
     insertEmote: function(id, name, url){
         let sql = 'INSERT INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
         db.run(sql, [id, name, url], function(err){
@@ -89,18 +109,7 @@ module.exports = {
             });
         });
     },
-    showRows: function(sqlQuery){
-        return new Promise(function(resolve){
-            db.all(sqlQuery, [], function(err, rows){
-                if (err) 
-                    resolve(err.message);
-                if (typeof rows !== 'undefined')
-                    resolve(rows.map(function(row){return JSON.stringify(row);}));
-                else
-                    resolve('Something went wrong.');
-            });
-        });
-    },
+    
     addUserPoints: function(id, name, points){
         checkIfUserExists(id)
             .then((result) => {
@@ -112,30 +121,14 @@ module.exports = {
                         }
                     });
                 } else {
-                    insertNewUser(id, name, points);
+                    insertNewUser(id, name, points, 0);
                 }                    
             })
             .catch((err) => {
                 console.error(err);
             });
     },
-    closeDB: function(){
-        db.close((err) => {
-            if (err) {
-                console.error(err.message);
-            }
-        });
-    },
-    getTopUsers: function(top, channel, sayFunc){
-        let sql = 'SELECT display_name, points FROM USER ORDER BY points DESC LIMIT ?';
-        db.all(sql, [top], (err, row) => {
-            if (err){
-                return console.error(err.message);
-            }
-        
-            sayFunc(channel, row.map((user, index) => index+1 + '. ' + user.display_name + ' - ' + user.points).join(', '));
-        });
-    },
+    //this function is terrible, really ashamed of it, but sadly too lazy to refactor it since i would need to refactor A LOT in ttt, never lucky
     getPoints: function(channelObj, attribute, value, callback){
         let sql = 'SELECT points FROM USER WHERE LOWER('+attribute+') = LOWER(?)';
         db.get(sql, [value], (err, row) => {
@@ -149,6 +142,51 @@ module.exports = {
             }
         });
     },
+    getSnakeScore: function(id){
+        return new Promise(function(resolve){
+           sql = 'SELECT snake_highscore FROM user where id = ?';
+           db.get(sql, [id], function(err, row){
+               if (err){
+                   console.log(err);
+                   resolve(0);
+                   return;
+               }
+               resolve(Object.values(row)[0]);
+           });
+        });
+    },
+    setHighscoreIfHigh: async function(id, name, score){
+        if (await checkIfUserExists(id)){
+            sql = 'UPDATE user SET snake_highscore = ? WHERE ? > snake_highscore AND id = ?';
+            db.run(sql, [score, score, id], function(err){
+                if (err){
+                    console.log(err);
+                    return;
+                }
+            });
+        } else {
+            insertNewUser(id, name, 0, score);
+        }
+    },
+    getTopUserScores: function(top, type){
+        return new Promise(function(resolve){
+            switch (type){
+                case 'snake': type = 'snake_highscore';break;
+                case 'points': type = 'points';break;
+                default: resolve(-1);return;
+            }
+            let sql = 'SELECT username, '+type+' FROM user ORDER BY '+type+' DESC LIMIT ?';
+            db.all(sql, [top], (err, row) => {
+                if (err){
+                    console.log(err.message);
+                    resolve(-1);
+                    return;
+                }
+                resolve(row.map((user, index) => index+1 + '. ' + user.username + ' - ' + user[type]).join(', '));
+            });
+        });
+    },
+    
     getAllData: function(callback, table){
         return new Promise(function(resolve){
             let sql = 'SELECT * FROM ' +table;
@@ -283,6 +321,7 @@ module.exports = {
             });
         });
     },
+    
     setToken: function(token){
         let sql = 'UPDATE IMPORTANT SET token = ?';
         db.run(sql, [token], function(err){
@@ -291,9 +330,9 @@ module.exports = {
     }
 };
 
-function insertNewUser(id, name, points){
-    let sql = 'INSERT INTO USER(id, display_name, points) VALUES (?, ?, ?)';
-    db.run(sql, [id, name, points], function(err){
+function insertNewUser(id, name, points, snakeHighscore){
+    let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?)';
+    db.run(sql, [id, name, points, snakeHighscore], function(err){
         if (err) 
             return console.error(err.message);
         console.log('New user inserted: ' + name);
