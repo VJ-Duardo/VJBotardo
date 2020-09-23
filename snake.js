@@ -103,9 +103,8 @@ class Game {
                 break;
             default:
                 return -1;
-                
-            this.turnDone = true;
         }
+        this.turnDone = true;
     }
 }
 
