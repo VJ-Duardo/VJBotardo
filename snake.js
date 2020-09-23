@@ -195,6 +195,8 @@ module.exports = {
     playSnake: function(channelObj, sayFunc, user, input){
         switch(input[1]){
             case undefined:
+                if (input[0] !== channelObj.prefix+'snake')
+                    break;
                 let p = channelObj.prefix;
                 sayFunc(channelObj.name, '/me Use '+p+'snake start to start a game, the controls are w a s d. '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
                 break;
