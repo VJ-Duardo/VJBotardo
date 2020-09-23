@@ -196,7 +196,7 @@ module.exports = {
         switch(input[1]){
             case undefined:
                 let p = channelObj.prefix;
-                sayFunc(channelObj.name, '/me Use '+p+'snake start to start a game, '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
+                sayFunc(channelObj.name, '/me Use '+p+'snake start to start a game, the controls are w a s d. '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
                 break;
             case 'top':
                 db.getTopUserScores(10, 'snake').then((topString) => {
