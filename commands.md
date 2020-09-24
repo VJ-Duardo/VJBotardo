@@ -75,6 +75,21 @@ Give up the current game. Doing this before the game was accepted is not counted
 
 <br>
 
+__[This game produces a lot of spam. By default it is disabled but it can be enabled using *setCommand*.]__
+* __!snake__  
+Prints information about snake to the screen. This is regular snake with a frame getting send to the chat frequently. The snake is controlled by posting *w*, *a*, *s* and *d* in the chat. Collecting the appearing apples raises the score.
+
+* __!snake start__  
+Starts a game of snake for the user calling it. 
+
+* __!snake score__  
+Shows the current snake highscore of the user calling.
+
+* __!snake top__  
+Prints a list of the users within the top highscores.
+
+<br>
+
 ### Braille Art ("ascii")
 
 * __!ascii__ \<emote\>|\<emoji\>|\<link\>  
