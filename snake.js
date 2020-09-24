@@ -10,7 +10,7 @@ const elemHeight = 8;
 
 const refreshRate = 1000;
 
-const appleChance = 0.5;
+const appleChance = 0.30;
 const appleMax = 2;
 const applePoints = 1;
 
@@ -71,6 +71,7 @@ class Game {
             return;
         } else {
             this.apples[freeCell] = (new Apple(freeCell[0], freeCell[1], elemWidth, elemHeight, "black", applePoints));
+            this.apples[freeCell].drawCell(this);
         }
     }
     
@@ -79,7 +80,7 @@ class Game {
         for (let x = 0; x < fieldWidth; x+= elemWidth){
             for (let y = 0; y < fieldHeight; y += elemHeight){
                 if ((!this.snake.isCellTaken(x, y)) 
-                        && this.snake.head.x !== x && this.snake.head.y !== y
+                        && !(this.snake.head.x === x && this.snake.head.y === y)
                         && !this.apples.hasOwnProperty([x, y])){
                     freeCells.push([x, y]);
                 }
@@ -260,7 +261,6 @@ function update(channel){
     gameObj.snake.insertNewHead(gameObj.snake.head.x+changeX, gameObj.snake.head.y+changeY);
 
     gameObj.clearField(0, 0, fieldWidth, fieldHeight);
-    gameObj.manageApples();
 
     let found = false;
     for (let apple of Object.values(gameObj.apples)){
@@ -273,6 +273,8 @@ function update(channel){
 
     if (!found)
         gameObj.snake.popTail();
+    
+    gameObj.manageApples();
      
     if (gameObj.checkGameOver()){
        gameOver(gameObj);
@@ -282,7 +284,7 @@ function update(channel){
     gameObj.snake.drawSnake(gameObj);
     gameObj.sayFunc(channel, printField(gameObj.context));
     
-    if (gameObj.getFreeCell === -1){
+    if (gameObj.getFreeCell() === -1 && Object.values(gameObj.apples).length === 0){
         gameOver(gameObj, true);
     }
 }
@@ -300,7 +302,7 @@ function gameOver(gameObj, won=false){
         db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
     } else {
         gameObj.sayFunc(gameObj.channelObj.name, 
-            "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + ((gameObj.points*ushReward)+winningBonus) + "USh plus a "+winningBonus+"USh winning bonus!");
+            "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + (gameObj.points*ushReward) + "USh plus a "+winningBonus+"USh winning bonus!");
         db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
     }
     db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points);
