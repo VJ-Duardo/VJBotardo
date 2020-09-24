@@ -182,7 +182,7 @@ module.exports = {
                     resolve(-1);
                     return;
                 }
-                resolve(row.map((user, index) => index+1 + '. ' + user.username + ' - ' + user[type]).join(', '));
+                resolve(row.map((user, index) => index+1 + '. ' + user.username + ' - ' + user[type]).join(' | '));
             });
         });
     },

@@ -15,6 +15,7 @@ const appleMax = 2;
 const applePoints = 1;
 
 const ushReward = 10;
+const winningBonus = 500;
 
 var games = {};
 
@@ -65,19 +66,29 @@ class Game {
             return;
         }
         
-        setApple(this.snake, this.apples);
-        function setApple(snake, apples){
-            let x = (Math.floor(Math.random() * (fieldWidth/elemWidth))*elemWidth);
-            let y = (Math.floor(Math.random() * (fieldHeight/elemHeight))*elemHeight);
-
-            if ((!snake.isCellTaken(x, y)) 
-                    && snake.head.x !== x && snake.head.y !== y
-                    && !apples.hasOwnProperty([x, y])){
-                apples[[x, y]] = (new Apple(x, y, elemWidth, elemHeight, "black", applePoints));
-            } else {
-                setApple(snake, apples);
+        let freeCell = this.getFreeCell();
+        if (freeCell === -1){
+            return;
+        } else {
+            this.apples[freeCell] = (new Apple(freeCell[0], freeCell[1], elemWidth, elemHeight, "black", applePoints));
+        }
+    }
+    
+    getFreeCell(){
+        let freeCells = [];
+        for (let x = 0; x < fieldWidth; x+= elemWidth){
+            for (let y = 0; y < fieldHeight; y += elemHeight){
+                if ((!this.snake.isCellTaken(x, y)) 
+                        && this.snake.head.x !== x && this.snake.head.y !== y
+                        && !this.apples.hasOwnProperty([x, y])){
+                    freeCells.push([x, y]);
+                }
             }
         }
+        if (freeCells.length < 1)
+            return -1;
+        else
+            return freeCells[Math.floor(Math.random() * freeCells.length)];
     }
     
     processInput(input){
@@ -270,6 +281,10 @@ function update(channel){
     
     gameObj.snake.drawSnake(gameObj);
     gameObj.sayFunc(channel, printField(gameObj.context));
+    
+    if (gameObj.getFreeCell === -1){
+        gameOver(gameObj, true);
+    }
 }
 
 
@@ -278,11 +293,17 @@ function printField(context){
     return braille.iterateOverPixels(pixelData, fieldWidth, 128, false);
 }
 
-function gameOver(gameObj){
-    gameObj.sayFunc(gameObj.channelObj.name, 
-        "/me GAME OVER! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + gameObj.points*ushReward + "USh!");
+function gameOver(gameObj, won=false){
+    if (!won) {
+        gameObj.sayFunc(gameObj.channelObj.name, 
+            "/me GAME OVER! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + gameObj.points*ushReward + "USh!");
+        db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
+    } else {
+        gameObj.sayFunc(gameObj.channelObj.name, 
+            "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + ((gameObj.points*ushReward)+winningBonus) + "USh plus a "+winningBonus+"USh winning bonus!");
+        db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
+    }
     db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points);
-    db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
     clearInterval(gameObj.updateInterval);
     delete games[gameObj.channelObj.name];
     gameObj.channelObj.gameRunning = false;
