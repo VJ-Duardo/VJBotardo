@@ -182,7 +182,7 @@ module.exports = {
         
         if (!getGameState(channelObj.name)){
             if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
-                sayFunc(channelObj.name, "/me Correct syntax is: !ttt <enemy> <points> [<emote>]");
+                sayFunc(channelObj.name, "/me Correct syntax is: "+channelObj.prefix+"ttt <enemy> <points> [<emote>]");
                 return;
             }
             let newGame = new Game(channelObj.name, sayFunc, user['username'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);

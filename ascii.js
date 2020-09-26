@@ -9,7 +9,7 @@ async function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
         braille.processImage(url, -1, 56, width, (mode === 'ascii' && gifSpam))
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
-                    sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do !reload");
+                    sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do "+channelObj.prefix+"reload");
                 } else {
                     if (mode === 'ascii'){
                         if (Array.isArray(brailleString)){
@@ -37,7 +37,8 @@ async function singleEmoteAsciis(channelObj, sayFunc, mode, userInput, gifSpam){
             });
     }
     if (typeof userInput === 'undefined'){
-        sayFunc(channelObj.name, "/me Correct syntax: !ascii/!mirror/!antimirror <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        let p = channelObj.prefix;
+        sayFunc(channelObj.name, "/me Correct syntax: "+p+"ascii/"+p+"mirror/"+p+"antimirror <emote>|<link>|<emoji>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
         return;
     }
     
@@ -105,7 +106,8 @@ async function twoEmoteAsciis(channelObj, sayFunc, mode, inputLeft, inputRight){
     }
     
     if (typeof inputLeft === 'undefined' || typeof inputRight === 'undefined'){
-        sayFunc(channelObj.name, "/me Correct syntax: !merge/!stack/!mix <emote>|<link> <emote>|<link>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
+        let p = channelObj.prefix;
+        sayFunc(channelObj.name, "/me Correct syntax: "+p+"merge/"+p+"stack/"+p+"mix <emote>|<link>|<emoji> <emote>|<link>|<emoji>. For more detailed options use: https://vj-duardo.github.io/Braille-Art/");
         return;
     }
     

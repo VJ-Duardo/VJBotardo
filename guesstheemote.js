@@ -62,7 +62,7 @@ module.exports = {
         if (!getGameState(channelObj.name)){
             let newGame = createGameObject(channelObj, command[1], command[2]);
             if (newGame === -1){
-                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel", "all" or "origin" (e.g. !guess all 5)');
+                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel", "all" or "origin" (e.g. '+channelObj.prefix+'guess all 5)');
                 return;
             } else if (newGame === -2){
                 sayFunc(channelObj.name, '/me No such emotes in this channel!');
