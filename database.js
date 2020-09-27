@@ -73,6 +73,11 @@ module.exports = {
         });
     },
     getEmoteByName: function(name){
+        let emoteParts = [];
+        if (new RegExp(/^\w+_\w{2}$/).test(name)){
+            emoteParts = name.split('_');
+            name = emoteParts[0];
+        }
         return new Promise(function(resolve){
             let sql = 'SELECT * FROM emote WHERE name = ? ORDER BY emote_id DESC LIMIT 1';
             db.get(sql, [name], function(err, row){
@@ -85,6 +90,7 @@ module.exports = {
                     resolve(-1);
                     return;
                 } else {
+                    row.url = emoteParts.length < 1 ? row.url : row.url.replace(/(\d+(?=\/\d\.0))/, "$1_"+emoteParts[1]);
                     resolve(row);
                 }
             });
