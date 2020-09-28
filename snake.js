@@ -21,13 +21,14 @@ var games = {};
 
 
 class Game {
-    constructor(channelObj, sayFunc, playerName, playerID){
+    constructor(channelObj, sayFunc, playerName, playerID, allMode=false){
         this.channelObj = channelObj;
         this.sayFunc = sayFunc;
         this.player = {
             name: playerName,
             id: playerID
         };
+        this.allMode = allMode;
         this.points = 0;
         this.apples = {};
         this.snake = new Snake("black");
@@ -223,14 +224,17 @@ module.exports = {
                 break;
             case 'start':
                 if (!games.hasOwnProperty(channelObj.name)){
-                    games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
+                    if (input[2] === 'chat')
+                        games[channelObj.name] = new Game(channelObj, sayFunc, channelObj.name+'\'s chat', channelObj.id+String(channelObj.id), true);
+                    else
+                        games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
                     channelObj.gameRunning = true;
                     channelObj.game = module.exports.playSnake;
                 }
                 return;
         }
         
-        if (!games.hasOwnProperty(channelObj.name) || games[channelObj.name].player.name !== user['username']){
+        if (!games.hasOwnProperty(channelObj.name) || (!games[channelObj.name].allMode && games[channelObj.name].player.name !== user['username'])){
             return;
         }
         games[channelObj.name].processInput(input[0]);
