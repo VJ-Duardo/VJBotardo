@@ -41,8 +41,8 @@ class Game {
         clearTimeout(this.resolve);
     }
     
-    setNewSolution(){
-        this.solution = getRandomEmote(this.playSet);
+    async setNewSolution(){
+        this.solution = await getRandomEmote(this.playSet);
     }
 }
 
@@ -86,9 +86,9 @@ module.exports = {
 };
 
 
-function startGame(channelObj, gameObj, sayFunc){
+async function startGame(channelObj, gameObj, sayFunc){
     gameObj.roundActive = true;
-    gameObj.setNewSolution();
+    await gameObj.setNewSolution();
     
     gameObj.firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
     gameObj.secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
@@ -99,7 +99,6 @@ function startGame(channelObj, gameObj, sayFunc){
         braille.processImage(gameObj.solution.url, 255)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
-                    gameObj.setNewSolution();
                     gameObj.clearHints();
                     startGame(channelObj, gameObj, sayFunc);
                 } else {
@@ -194,8 +193,25 @@ function createGameObject(channelObj, mode, rounds){
 }
 
 
-function getRandomEmote(emoteSet){
-    return emoteSet[Math.floor(Math.random() * emoteSet.length)];
+async function getRandomEmote(emoteSet){
+    const backupEmote = {
+        name:"FishMoley",
+        url:"https://cdn.betterttv.net/emote/566ca00f65dbbdab32ec0544/2x",
+        origin:"bttv"
+    };
+    let triesUntiBackup = 10;
+    let emote = null;
+    let trData = 0;
+    
+    while (trData === 0 || trData === 100){
+        emote = emoteSet[Math.floor(Math.random() * emoteSet.length)];
+        trData = await braille.getTransparencyData(emote.url);
+        triesUntiBackup--;
+        if (triesUntiBackup === 0){
+            return backupEmote;
+        }
+    }
+    return emote;
 }
 
 

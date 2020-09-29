@@ -43,14 +43,14 @@ module.exports = {
             return createStringFromImage(src);
         }
         
-        function createStringFromImage(url, onlyReturnTransparencyData=false){
+        function createStringFromImage(url){
             console.log(url);
             return loadImage(url)
                 .then((image) => {
                     context.clearRect(0, 0, width, height);
                     context.drawImage(image, 0, 0, canvas.width, canvas.height);
                     let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                    return iterateOverPixels(pixelData, canvas.width, treshold, onlyReturnTransparencyData);
+                    return iterateOverPixels(pixelData, canvas.width, treshold);
                 })
                 .catch((error) => {
                     console.log(error+"An error occured! (image)");
@@ -59,7 +59,7 @@ module.exports = {
         
         async function createStringFromGif(){
             let cumulativeVal = false;
-            let transparencyPercent = await createStringFromImage(src, true);
+            let transparencyPercent = await getTransparencyData(src);
             if (transparencyPercent < 10)
                 cumulativeVal = true;
             return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
@@ -117,7 +117,8 @@ module.exports = {
         }
         return resultsArr.join(' ').replace(/[⠀]/g, '⠄');
     },
-    iterateOverPixels: iterateOverPixels
+    iterateOverPixels: iterateOverPixels,
+    getTransparencyData: getTransparencyData
 };
 
 function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData){
@@ -149,6 +150,25 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     }
     
     return resultArray.join(' ').replace(/[⠀]/g, '⠄');
+}
+
+
+function getTransparencyData(url){
+    const width = 60;
+    const height = 60;
+    var canvas = createCanvas(width, height);
+    var context = canvas.getContext('2d');
+    
+    return loadImage(url)
+        .then((image) => {
+            context.clearRect(0, 0, width, height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            return iterateOverPixels(pixelData, canvas.width, 0, true);
+        })
+        .catch((error) => {
+            console.log(error+"An error occured! (image)");
+        });
 }
 
 
