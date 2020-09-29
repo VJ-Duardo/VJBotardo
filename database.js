@@ -55,6 +55,7 @@ module.exports = {
         });
     },
     getLastEmoteID: function(){
+        const goBackAmount = 150000;
         return new Promise(function(resolve){
             let sql = 'SELECT MAX(emote_id) FROM emote';
             db.get(sql, [], function(err, row){
@@ -67,7 +68,8 @@ module.exports = {
                     resolve(0);
                     return;
                 } else {
-                    resolve(Object.values(row)[0]);
+                    let id = Object.values(row)[0]-goBackAmount;
+                    resolve(id < 0 ? 0 : id);
                 }
             });
         });

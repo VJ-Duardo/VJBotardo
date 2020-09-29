@@ -187,7 +187,7 @@ function getTwitchEverything(){
                 await db.insertEmote(emoteList[i]['id'], emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '3.0'));
             }
             db.sendQuery('END TRANSACTION;');
-            console.log(emoteList.length + " new emotes added!");
+            console.log("up to " + emoteList.length + " new emotes added!");
         })();
         module.exports.allExisitingEmotes = emoteList;
         return "done";
