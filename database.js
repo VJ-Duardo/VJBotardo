@@ -51,7 +51,7 @@ module.exports = {
         let sql = 'INSERT INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
         db.run(sql, [id, name, url], function(err){
             if (err)
-                console.log(err.message);
+                return;
         });
     },
     getLastEmoteID: function(){
