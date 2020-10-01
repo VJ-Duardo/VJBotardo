@@ -42,7 +42,7 @@ class Game {
     }
     
     async setNewSolution(){
-        this.solution = await getRandomEmote(this.playSet);
+        this.solution = await getRandomEmote(this.playSet, this.mode);
     }
 }
 
@@ -87,8 +87,8 @@ module.exports = {
 
 
 async function startGame(channelObj, gameObj, sayFunc){
-    gameObj.roundActive = true;
     await gameObj.setNewSolution();
+    gameObj.roundActive = true;
     
     gameObj.firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
     gameObj.secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
@@ -193,7 +193,11 @@ function createGameObject(channelObj, mode, rounds){
 }
 
 
-async function getRandomEmote(emoteSet){
+async function getRandomEmote(emoteSet, mode){
+    if (mode === 'origin'){
+        return emoteSet[Math.floor(Math.random() * emoteSet.length)];
+    }
+    
     const backupEmote = {
         name:"FishMoley",
         url:"https://cdn.betterttv.net/emote/566ca00f65dbbdab32ec0544/2x",
