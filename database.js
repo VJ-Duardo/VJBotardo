@@ -190,7 +190,8 @@ module.exports = {
                     resolve(-1);
                     return;
                 }
-                resolve(row.map((user, index) => index+1 + '. ' + user.username + ' - ' + user[type]).join(' | '));
+                resolve(row.map((user, index) => row.findIndex(obj => obj[type] === user[type]) === -1 ? index+1 : (row.findIndex(obj => obj[type] === user[type])+1)
+                        + '. ' + user.username + ' - ' + user[type]).join(' | '));
             });
         });
     },
