@@ -82,6 +82,9 @@ Prints information about snake to the screen. This is regular snake with a frame
 * __!snake start__  
 Starts a game of snake for the user calling it. 
 
+* __!snake start chat__  
+Starts a game everyone in chat can participate in.
+
 * __!snake score__  
 Shows the current snake highscore of the user calling.
 
