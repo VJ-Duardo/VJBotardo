@@ -133,7 +133,13 @@ async function twoEmoteAsciis(channelObj, sayFunc, mode, inputLeft, inputRight){
 }
 
 
-async function randomAscii(channelObj, sayFunc, keyword){
+async function randomAscii(channelObj, sayFunc, keyword, option){
+    if (option === "-supersecretbanderoption"){
+        let count = await db.getRandomEmoteStat(keyword);
+        sayFunc(channelObj.name, "/me Found " +count+ " emotes containing that keyword SeemsGood");
+        return;
+    }
+    
     let emote = await db.getRandomEmote(keyword);
     if (emote === -1){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");

@@ -562,7 +562,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "antimirror", command[1]]);
             break;
         case prefix+'ra':
-            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command[1]]);
+            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command[1], command[2]]);
             break;
         case prefix+'merge':
             allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "merge", command[1], command[2]]);

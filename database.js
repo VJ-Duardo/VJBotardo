@@ -98,6 +98,25 @@ module.exports = {
             });
         });
     },
+    getRandomEmoteStat: function(keyword){
+        return new Promise(function(resolve){
+            keyword = typeof keyword === 'undefined' ? '' : keyword;
+            sql = 'SELECT Count(*) FROM emote WHERE name LIKE ?';
+            db.get(sql, ['%'+keyword+'%'], function(err, row){
+                if (err){
+                    console.log(err);
+                    resolve(-1);
+                    return;
+                }
+                if (typeof row === 'undefined'){
+                    resolve(-1);
+                    return;
+                } else {
+                    resolve(Object.values(row)[0]);
+                }
+            });
+        });
+    },
     getRandomEmote: function(keyword){
         return new Promise(function(resolve){
             keyword = typeof keyword === 'undefined' ? '' : keyword;
