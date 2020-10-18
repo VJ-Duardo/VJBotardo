@@ -17,6 +17,22 @@ const applePoints = 1;
 const ushReward = 10;
 const winningBonus = 500;
 
+
+const elemWidthRoyale = 2;
+const elemHeightRoyale = 2;
+
+const maxRoyalePlayers = 4;
+const minRoyalePlayers = 2;
+
+const ushMaxRewardRoyale = 100;
+
+const refreshRateRoyale = 750;
+
+const timeToStart = 3000;
+const timeToWait = 30000;
+
+const gapChance = 0.85;
+
 var games = {};
 
 
@@ -31,7 +47,7 @@ class Game {
         this.allMode = allMode;
         this.points = 0;
         this.apples = {};
-        this.snake = new Snake("black");
+        this.snake = new Snake("black", elemWidth, elemHeight);
         this.turnDone = false;
         this.canvas = createCanvas(fieldWidth, fieldHeight);
         this.context = this.canvas.getContext('2d');
@@ -123,6 +139,181 @@ class Game {
 
 
 
+class Player {
+    constructor(id, name){
+        this.id = id;
+        this.name = name;
+        this.turnDone = false;
+        this.snake;
+        this.out = false;
+        this.place = 1;
+    }
+    
+    setSnake(x, y, direction){
+        this.snake = new Snake("black", elemWidthRoyale, elemHeightRoyale, x, y, direction);
+    }
+}
+
+class GameRoyale extends Game{
+    constructor(channelObj, sayFunc, playerName, playerID){
+        super(channelObj, sayFunc, playerName, playerID, false);
+        this.players = {};
+        this.players[playerID] = new Player(playerID, playerName);
+        this.players[playerID].setSnake();
+        clearInterval(this.updateInterval);
+        let _this = this;
+        this.waitForJoin = {
+            status: true,
+            handle: setTimeout(function(){_this.resolveTimeUp();}, timeToWait)
+        };
+    }
+    
+    addPlayer(playerName, playerID){
+        if (Object.keys(this.players).length === maxRoyalePlayers || this.players.hasOwnProperty(playerID)){
+            return;
+        } else {
+            let newPlayer = new Player(playerID, playerName);
+            this.players[playerID] = newPlayer;
+            switch(Object.keys(this.players).length){
+                case 2:
+                    this.sayFunc(this.channelObj.name, "/me [2/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the bottom right!");
+                    newPlayer.setSnake(fieldWidth-elemWidthRoyale, fieldHeight-elemHeightRoyale, "west");
+                    break;
+                case 3:
+                    this.sayFunc(this.channelObj.name, "/me [3/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the top right!");
+                    newPlayer.setSnake(fieldWidth-elemWidthRoyale, 0, "south");
+                    break;
+                case 4:
+                    this.sayFunc(this.channelObj.name, "/me [4/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the bottom left! Game is starting in a few seconds...");
+                    newPlayer.setSnake(0, fieldHeight-elemHeightRoyale, "north");
+                    clearTimeout(this.waitForJoin.handle);
+                    let _this = this;
+                    setTimeout(function(){_this.resolveTimeUp();}, timeToStart);
+                    break;
+            }
+        }
+    }
+    
+    getAlivePlayers() {
+        let alive = 0;
+        for (let obj of Object.values(this.players)){
+            if (!obj.out)
+                alive++;
+        }
+        return alive;
+    }
+    
+    resolveTimeUp(){
+        if (Object.keys(this.players).length >= minRoyalePlayers){
+            let _this = this;
+            this.waitForJoin.status = false;
+            this.updateInterval = setInterval(function(){_this.update();}, refreshRateRoyale);
+        } else {
+            this.sayFunc(this.channelObj.name, "/me Seems like not enough people have joined :(");
+            this.channelObj.gameRunning = false;
+            delete games[this.channelObj.name];
+        }
+    }
+      
+    processInput(id, input){
+        let player = this.players[id];
+        if (player.turnDone || player.out)
+            return;
+
+        switch(input){
+            case "a":
+                if (player.snake.direction !== "east")
+                    player.snake.direction = "west";
+                break;
+            case "w":
+                if (player.snake.direction !== "south")
+                    player.snake.direction = "north";
+                break;
+            case "d":
+                if (player.snake.direction !== "west")
+                    player.snake.direction = "east";
+                break;
+            case "s":
+                if (player.snake.direction !== "north")
+                    player.snake.direction = "south";
+                break;
+            default:
+                return -1;
+        }
+        player.turnDone = true;
+    }
+    
+    checkGameOver(snake){
+        return ((typeof [].concat(...Object.values(this.players).map(obj => obj = obj.snake.body.slice(1))).find(cell => cell.x === snake.head.x && cell.y === snake.head.y) !== 'undefined')
+                || (snake.isOutOfBounds(fieldWidth, fieldHeight)));
+    }
+    
+    makeRandomGap(snake){
+        if (Math.random() >= gapChance && snake.body.length > 1){
+            snake.body.splice(1, 1);
+        }
+    }
+    
+    update(){
+        this.clearField(0, 0, fieldWidth, fieldHeight);
+        for (let player of Object.values(this.players)){
+            player.turnDone = false;
+            let snake = player.snake;
+            if (player.out){
+                snake.drawSnake(this);
+                continue;
+            }
+            let changeX = 0;
+            let changeY = 0;
+            switch(snake.direction){
+                case "north":
+                    changeY = -elemHeightRoyale;
+                    break;
+                case "east":
+                    changeX = elemWidthRoyale;
+                    break;
+                case "south":
+                    changeY = elemHeightRoyale;
+                    break;
+                case "west":
+                    changeX = -elemWidthRoyale;
+                    break;
+            }
+            snake.insertNewHead(snake.head.x+changeX, snake.head.y+changeY);
+            
+            let playersLeft = this.getAlivePlayers();
+            if (this.checkGameOver(snake)){
+                player.out = true;
+                player.place = playersLeft;
+                this.sayFunc(this.channelObj.name, '/me ' + player.name + ' is out! LuL ');
+            }
+            
+            if (playersLeft <= 1){
+                this.gameOver();
+                return;
+            }
+            
+            this.makeRandomGap(snake);
+            snake.drawSnake(this);
+        }
+        
+        this.sayFunc(this.channelObj.name, printField(this.context));
+    }
+    
+    gameOver(){
+        clearInterval(this.updateInterval);
+        this.channelObj.gameRunning = false;
+        let winner = Object.keys(this.players).find(id => this.players[id].place === 1);
+        let reward = ushMaxRewardRoyale * (Object.keys(this.players).length/maxRoyalePlayers);
+        this.sayFunc(this.channelObj.name, "/me The game is over! " + Object.values(this.players).map(obj => obj = obj.place + ". " + obj.name).sort().join(" | ") 
+                + ". " + this.players[winner].name  + " has earned " + reward + "USh!");
+        db.addUserPoints(winner, winner.name, reward);
+        delete games[this.channelObj.name];
+    }
+}
+
+
+
 class Cell{
     constructor(x, y, width, height, color){
         this.x = x;
@@ -165,11 +356,13 @@ class Apple extends Cell{
 
 
 class Snake{
-    constructor(color){
-        this.direction = "east";
+    constructor(color, width, height, startX = 0, startY = 0, direction = "east"){
+        this.direction = direction;
         this.color = color;
+        this.width = width;
+        this.height = height;
         
-        this.head = new Cell(0, 0, elemWidth, elemHeight, this.color);
+        this.head = new Cell(startX, startY, this.width, this.height, this.color);
         this.body = [this.head];       
     }
     
@@ -180,7 +373,7 @@ class Snake{
     }
     
     insertNewHead(x, y){
-        let newHead = new Cell(x, y, elemWidth, elemHeight, this.color);
+        let newHead = new Cell(x, y, this.width, this.height, this.color);
         this.head = newHead;
         this.body.unshift(newHead);
     }
@@ -210,7 +403,7 @@ module.exports = {
                 if (input[0] !== channelObj.prefix+'snake')
                     break;
                 let p = channelObj.prefix;
-                sayFunc(channelObj.name, '/me Use '+p+'snake start to start a game, the controls are w a s d. '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
+                sayFunc(channelObj.name, '/me Use '+p+'snake start to see the available modes, the controls are w a s d. '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
                 break;
             case 'top':
                 db.getTopUserScores(10, 'snake').then((topString) => {
@@ -224,14 +417,40 @@ module.exports = {
                 break;
             case 'start':
                 if (!games.hasOwnProperty(channelObj.name)){
-                    if (input[2] === 'chat')
-                        games[channelObj.name] = new Game(channelObj, sayFunc, channelObj.name+'\'s chat', channelObj.id+String(channelObj.id), true);
-                    else
-                        games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
+                    switch(input[2]){
+                        case 'chat':
+                            games[channelObj.name] = new Game(channelObj, sayFunc, channelObj.name+'\'s chat', channelObj.id+String(channelObj.id), true);
+                            break;
+                        case 'royale':
+                            games[channelObj.name] = new GameRoyale(channelObj, sayFunc, user['username'], user['user-id']);
+                            sayFunc(channelObj.name, "/me A new round of Snake Royale has started! PogChamp Type " + channelObj.prefix + "join to play!");
+                            break;
+                        case 'normal':
+                            games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
+                            break;
+                        default:
+                            let p = channelObj.prefix;
+                            sayFunc(channelObj.name, "/me Modes: "
+                                    +p+"snake start normal - normal game for one player, "
+                                    +p+"snake start chat - normal game where everyone in chat can give input, "
+                                    +p+"snake start royale - a curve fever inspired game for up to "+maxRoyalePlayers+" players.")
+                    }
                     channelObj.gameRunning = true;
                     channelObj.game = module.exports.playSnake;
                 }
                 return;
+        }
+        if (games.hasOwnProperty(channelObj.name) && games[channelObj.name] instanceof GameRoyale) {
+            if (games[channelObj.name].waitForJoin.status) {
+                if (input[0] === channelObj.prefix + "join"){
+                    games[channelObj.name].addPlayer(user['username'], user['user-id']);
+                }
+            } else {
+                if (Object.keys(games[channelObj.name].players).includes(user['user-id'])){
+                    games[channelObj.name].processInput(user['user-id'], input[0]);
+                }
+            }
+            return;
         }
         
         if (!games.hasOwnProperty(channelObj.name) || (!games[channelObj.name].allMode && games[channelObj.name].player.name !== user['username'])){
