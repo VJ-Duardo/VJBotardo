@@ -8,12 +8,12 @@ var fs = require('fs');
 
 
 const asciiModes = {
-    ascii: {params: 1, func: getAsciiContext}
-    /*mirror: {params: 1, func: mirror},
-    antimirror: {params: 1, func: antimirror},
+    ascii: {params: 1, func: getAsciiContext},
+    //mirror: {params: 1, func: mirror},
+    //antimirror: {params: 1, func: antimirror},
     stack: {params: 2, func: stack},
-    mix: {params: 2, func: mix},
-    merge: {params: 2, func: merge},*/
+    //mix: {params: 2, func: mix},
+    merge: {params: 2, func: merge}
 };
 
 const givenOptions = {
@@ -141,7 +141,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     if (options.hasOwnProperty('rotate'))
         rotateContext(context, options['rotate'], options['width'], options['height']);
     
-    await asciiModes[mode].func(options['width'], options['height'], context, urls[0], false);
+    context = await asciiModes[mode].func(options['width'], options['height'], context, false, ...urls);
     
     if (context === -1){
         return "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload";
@@ -155,6 +155,45 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
 }
 
 
+async function merge(width, height, context, _, srcLeft, srcRight){
+    function createStringFromImage(url, x, y){
+        return loadImage(url)
+            .then((image) => {
+                context.drawImage(image, x, y, width/2, height);
+                return context;
+            })
+            .catch((error) => {
+                console.log(error+"An error occured! (merge)");
+                return -1;
+            });
+    }
+    
+    await createStringFromImage(srcLeft, 0, 0);
+    await createStringFromImage(srcRight, width/2, 0);
+    return context;
+}
+
+
+
+async function stack(width, height, context, _, srcTop, srcBottom){
+    function createStringFromImage(url, x, y){
+        return loadImage(url)
+            .then((image) => {
+                context.drawImage(image, x, y, width, height/2);
+                return context;
+            })
+            .catch((error) => {
+                console.log(error+"An error occured! (merge)");
+                return -1;
+            });
+    }
+    
+    await createStringFromImage(srcTop, 0, 0);
+    await createStringFromImage(srcBottom, 0, height/2);
+    return context;
+}
+
+
 
 function generateTextAscii(textObj){
     console.log(textObj);
@@ -163,7 +202,6 @@ function generateTextAscii(textObj){
     const treshold = 128;
     
     let canvas = createCanvas(textObj['width'], textObj['height']);;
-    console.log(canvas);
     
     let context = canvas.getContext('2d');
     context.fillStyle = "black";
@@ -189,7 +227,7 @@ function rotateContext(context, degree, width, height){
 }
 
 
-function getAsciiContext(width, height, context, src, gifSpam){
+function getAsciiContext(width, height, context, gifSpam, src){
     if (!gifSpam){
         return createStringFromImage(src);
     }
