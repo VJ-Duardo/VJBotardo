@@ -265,7 +265,8 @@ module.exports = {
         '-': '⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⣿⣿⣿⣿⣿⣿⣿⣿⣿ ⠛⠛⠛⠛⠛⠛⠛⠛⠛',
         vertLine: '⠀'
     },
-    mirroredDic: createMirrorDic()
+    mirroredDic: createMirrorDic(),
+    invertedDic: createInvertedDic()
 };
 
 function createMirrorDic() {
@@ -290,4 +291,22 @@ function createMirrorDic() {
         resultObj[brailleDescrObj[key]] = brailleDescrObj[mirroredKey.join('')];
     }
      return resultObj;
+}
+
+
+function createInvertedDic(){
+    let resultDic = {};
+    let brailleDescrElemNumbers = Array.from(Array(8), (_, x) => (x + 1).toString());
+    for (const key of Object.keys(brailleDescrObj)) {
+        let invertedChar = '';
+        for (const number of brailleDescrElemNumbers) {
+            if (!key.includes(number)) {
+                invertedChar += number;
+            }
+        }
+        resultDic[brailleDescrObj[key]] = brailleDescrObj[invertedChar];
+    }
+    resultDic['⣿'] = '⠄';
+    resultDic['⠄'] = '⣿';
+    return resultDic;
 }

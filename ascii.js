@@ -148,9 +148,10 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     }
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
-    return braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither')) 
+    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither'));
             + " " 
             + brailleText;
+    return options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
 }
 
 

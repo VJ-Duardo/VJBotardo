@@ -104,6 +104,7 @@ module.exports = {
         }
     },
     mirror: mirror,
+    invert: invert,
     iterateOverPixels: iterateOverPixels,
     getTransparencyData: getTransparencyData
 };
@@ -289,4 +290,16 @@ function mirror(inputStr){
         }
     }
     return resultsArr.join(' ').replace(/[⠀]/g, '⠄');
+}
+
+function invert(inputStr) {
+    let resultStr = "";
+    for (i = 0; i < inputStr.length; i++) {
+        if (typeof  brailleData.invertedDic[inputStr[i]] !== 'undefined') {
+            resultStr += brailleData.invertedDic[inputStr[i]];
+        } else {
+            resultStr += inputStr[i];
+        }
+    }
+    return resultStr;
 }
