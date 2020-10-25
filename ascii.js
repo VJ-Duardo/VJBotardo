@@ -148,7 +148,9 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     }
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
-    return braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false) + " " + brailleText;
+    return braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither')) 
+            + " " 
+            + brailleText;
 }
 
 
@@ -157,6 +159,7 @@ function generateTextAscii(textObj){
     console.log(textObj);
     const font = "11px Corbel";
     const align = "center";
+    const treshold = 128;
     
     let canvas = createCanvas(textObj['width'], textObj['height']);;
     console.log(canvas);
@@ -170,7 +173,7 @@ function generateTextAscii(textObj){
     for (let line of textObj['textLines']){
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillText(line, textObj['x'], textObj['y'], canvas.width);
-        textAscii += braille.iterateOverPixels(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, 128, false) + " ";
+        textAscii += braille.iterateOverPixels(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, treshold, false) + " ";
     }
     
     return textAscii;

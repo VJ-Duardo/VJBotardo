@@ -108,18 +108,20 @@ module.exports = {
     getTransparencyData: getTransparencyData
 };
 
-function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData){
+function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering){
     let resultArray = new Array();
     let pixelArray = new Array();
     for(i=0; i<dataArray.length; i+=4){
         pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
     }
     
-    //treshold = 128;
-    //pixelArray = floydSteinberg(pixelArray, width);
-    
     if (onlyReturnTransparencyData){
         return getTransparencyPercent(pixelArray);
+    }
+    
+    if (useDithering){
+        treshold = 128;
+        pixelArray = floydSteinberg(pixelArray, width);
     }
     
     if (treshold === -1){
@@ -164,7 +166,7 @@ function floydSteinberg(pixelArray, width){
         quantError = [pixelArray[i].red, pixelArray[i].green, pixelArray[i].blue];
         
         if ((0.8*pixelArray[i].red + 0.1*pixelArray[i].green + 0.1*pixelArray[i].blue) > 128){
-           quantError.forEach((elem, index, array) => array[index] -= 255);
+           quantError.forEach((_, index, array) => array[index] -= 255);
            pixelArray[i].setRGB(255, 255, 255);
         } else {
            pixelArray[i].setRGB(0, 0, 0);
