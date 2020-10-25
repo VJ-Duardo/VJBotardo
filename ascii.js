@@ -96,7 +96,7 @@ function getTextObject(width, height, text){
     let lines = new Array(maxLines).fill("");
     let currentLine = 0;
     for (let word of text.split(" ")){
-        if (lines[currentLine].length + word.length <= maxCharsPerLine){
+        if ((lines[currentLine].length/2)-1 + word.length <= maxCharsPerLine){
             lines[currentLine] += " "+word.split("").join(" ")+" ";
         } else {
             if (word.length <= maxCharsPerLine && currentLine < lines.length-1){
@@ -148,7 +148,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     }
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
-    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither'));
+    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither'))
             + " " 
             + brailleText;
     return options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
