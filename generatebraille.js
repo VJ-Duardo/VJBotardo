@@ -103,20 +103,7 @@ module.exports = {
             });
         }
     },
-    mirror: function(inputStr) {
-        let lineArr = inputStr.split(/[ \n]/).filter(Boolean);
-        let resultsArr = new Array(lineArr.length).fill('');
-        for (i = 0; i < lineArr.length; i++) {
-            for (j = lineArr[i].length - 1; j >= 0; j--) {
-                if (typeof brailleData.mirroredDic[lineArr[i][j]] !== 'undefined') {
-                    resultsArr[i] += brailleData.mirroredDic[lineArr[i][j]];
-                } else {
-                    resultsArr[i] += lineArr[i][j];
-                }
-            }
-        }
-        return resultsArr.join(' ').replace(/[⠀]/g, '⠄');
-    },
+    mirror: mirror,
     iterateOverPixels: iterateOverPixels,
     getTransparencyData: getTransparencyData
 };
@@ -285,4 +272,19 @@ function getAverageColor(pixelArray, width){
 
 function setPixelCheck(pixel){
     return (pixel.alpha === 0) || (pixel.getAvg() > 245);
+}
+
+function mirror(inputStr){
+    let lineArr = inputStr.split(/[ \n]/).filter(Boolean);
+    let resultsArr = new Array(lineArr.length).fill('');
+    for (i = 0; i < lineArr.length; i++) {
+        for (j = lineArr[i].length - 1; j >= 0; j--) {
+            if (typeof brailleData.mirroredDic[lineArr[i][j]] !== 'undefined') {
+                esultsArr[i] += brailleData.mirroredDic[lineArr[i][j]];
+            } else {
+                resultsArr[i] += lineArr[i][j];
+            }
+        }
+    }
+    return resultsArr.join(' ').replace(/[⠀]/g, '⠄');
 }
