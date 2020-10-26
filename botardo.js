@@ -556,7 +556,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "ascii", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'mirror':
-            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "mirror", command[1]]);
+            allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'antimirror':
             allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "antimirror", command[1]]);

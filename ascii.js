@@ -9,7 +9,7 @@ var fs = require('fs');
 
 const asciiModes = {
     ascii: {params: 1, func: getAsciiContext},
-    //mirror: {params: 1, func: mirror},
+    mirror: {params: 1, func: mirror},
     //antimirror: {params: 1, func: antimirror},
     stack: {params: 2, func: stack},
     mix: {params: 2, func: mix},
@@ -83,7 +83,7 @@ function getTextObject(width, height, text){
     const maxLines = 4;
     const charHeight = 4;
     
-    const lineHeight = Math.round((height * relativeLineHeightPerMainHeight)/charHeight)*charHeight;
+    const lineHeight = Math.ceil((height * relativeLineHeightPerMainHeight)/charHeight)*charHeight;
     const maxCharsPerLine = Math.ceil(width * relativeCharactersPerWidth);
     
     let textObj = {
@@ -97,11 +97,11 @@ function getTextObject(width, height, text){
     let currentLine = 0;
     for (let word of text.split(" ")){
         if ((lines[currentLine].length/2)-1 + word.length <= maxCharsPerLine){
-            lines[currentLine] += " "+word.split("").join(" ")+" ";
+            lines[currentLine] += " "+word.split("").join(" ")+"  ";
         } else {
             if (word.length <= maxCharsPerLine && currentLine < lines.length-1){
                 currentLine++;
-                lines[currentLine] += " "+word.split("").join(" ")+" ";
+                lines[currentLine] += " "+word.split("").join(" ")+"  ";
             }
         }
     }
@@ -165,7 +165,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
 
 
 
-async function makeTwoEmoteAscii(context, srcOne, srcTwo, size){
+async function addPicsToContext(context, srcList, size){
     function createStringFromImage(url, x, y){
         return loadImage(url)
             .then((image) => {
@@ -178,7 +178,7 @@ async function makeTwoEmoteAscii(context, srcOne, srcTwo, size){
             });
     }
     
-    for (let src of [srcOne, srcTwo]){
+    for (let src of srcList){
         let status = await createStringFromImage(src.url, src.x, src.y);
         if (status === -1)
             return status;
@@ -187,18 +187,18 @@ async function makeTwoEmoteAscii(context, srcOne, srcTwo, size){
 }
 
 async function merge(width, height, context, _, srcLeft, srcRight){
-    return await makeTwoEmoteAscii(context, 
-        {url: srcLeft, x: 0, y: 0},
-        {url: srcRight, x: width/2, y: 0},
+    return await addPicsToContext(context, 
+        [{url: srcLeft, x: 0, y: 0},
+        {url: srcRight, x: width/2, y: 0}],
         {width: width/2, height: height});
 }
 
 
 
 async function stack(width, height, context, _, srcTop, srcBottom){
-    return await makeTwoEmoteAscii(context, 
-        {url: srcTop, x: 0, y: 0},
-        {url: srcBottom, x: 0, y: height/2},
+    return await addPicsToContext(context, 
+        [{url: srcTop, x: 0, y: 0},
+        {url: srcBottom, x: 0, y: height/2}],
         {width: width, height: height/2});
 }
 
@@ -212,10 +212,9 @@ async function mix(width, height, context, _, srcTop, srcBottom){
     context.closePath();
     context.save();
     context.clip();
-    context = await makeTwoEmoteAscii(context,
-    {url: srcTop, x: 0, y: 0},
-    {url: srcTop, x: 0, y: 0},
-    {width: width, height: height});
+    context = await addPicsToContext(context,
+        [{url: srcTop, x: 0, y: 0}],
+        {width: width, height: height});
     if (context === -1)
         return context;
     
@@ -227,11 +226,43 @@ async function mix(width, height, context, _, srcTop, srcBottom){
     context.lineTo(0, height);
     context.closePath();
     context.clip();
-    return await makeTwoEmoteAscii(context,
-    {url: srcBottom, x: 0, y: 0},
-    {url: srcBottom, x: 0, y: 0},
-    {width: width, height: height});
+    return await addPicsToContext(context,
+        [{url: srcBottom, x: 0, y: 0}],
+        {width: width, height: height});
 }
+
+
+async function mirror(width, height, context, _, src){
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(width/2, 0);
+    context.lineTo(width/2, height);
+    context.lineTo(0, height);
+    context.closePath();
+    context.save();
+    context.clip();
+    context = await addPicsToContext(context,
+        [{url: src, x: 0, y: 0}],
+        {width: width, height: height});
+    if (context === -1)
+        return context;
+    
+    context.restore();
+    context.translate(width/2, 0);
+    context.scale(-1, 1);
+    context.translate(-width/2, 0);
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(width/2, 0);
+    context.lineTo(width/2, height);
+    context.lineTo(0, height);
+    context.closePath();
+    context.clip();
+    return await addPicsToContext(context,
+        [{url: src, x: 0, y: 0}],
+        {width: width, height: height});
+}
+
 
 
 
