@@ -22,7 +22,8 @@ const givenOptions = {
     '-t': {descr: "text"},
     '-r': {descr: "rotate"},
     '-d': {descr: "dither"},
-    '-i': {descr: "invert"}
+    '-i': {descr: "invert"},
+    '-tr': {descr: "treshold"}
 };
 
 const defaultWidth = 58;
@@ -59,7 +60,7 @@ function createOptionsObj(optionsInput){
     if (optionsInput.length === 0)
         return optionsObj;
     
-    for (let opt of ['-w', '-h', '-r']){
+    for (let opt of ['-w', '-h', '-r', '-tr']){
         let optIndex = optionsInput.findIndex(str => str === opt);
         if (optIndex !== -1 && !isNaN(parseInt(optionsInput[optIndex+1]))){
             optionsObj[givenOptions[opt].descr] = parseInt(optionsInput[optIndex+1]);
@@ -154,7 +155,8 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     }
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
-    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], -1, false, options.hasOwnProperty('dither'))
+    let treshold = options.hasOwnProperty('treshold') ? options['treshold'] : -1;
+    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], treshold, false, options.hasOwnProperty('dither'))
             + " " 
             + brailleText;
     return options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
@@ -279,6 +281,15 @@ async function antimirror(width, height, context, _, src){
 
 
 
+function rotateContext(context, degree, width, height){
+    let angle = degree * Math.PI / 180;
+    context.translate(width/2, height/2);
+    context.rotate(angle);
+    context.translate(-width/2, -height/2);
+}
+
+
+
 function generateTextAscii(textObj){
     console.log(textObj);
     const font = "11px Corbel";
@@ -302,16 +313,6 @@ function generateTextAscii(textObj){
     return textAscii;
 }
 
-
-
-
-
-function rotateContext(context, degree, width, height){
-    let angle = degree * Math.PI / 180;
-    context.translate(width/2, height/2);
-    context.rotate(angle);
-    context.translate(-width/2, -height/2);
-}
 
 
 
