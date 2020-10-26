@@ -571,7 +571,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "stack", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'mix':
-            allowanceCheck(...identParams, ascii.twoEmoteAsciis, [channelsObjs[channel], sayFunc, "mix", command[1], command[2]]);
+            allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mix", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'reload':
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
