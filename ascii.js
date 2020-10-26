@@ -8,7 +8,7 @@ var fs = require('fs');
 
 
 const asciiModes = {
-    ascii: {params: 1, func: getAsciiContext},
+    ascii: {params: 1, func: plainAscii},
     mirror: {params: 1, func: mirror},
     antimirror: {params: 1, func: antimirror},
     stack: {params: 2, func: stack},
@@ -33,7 +33,7 @@ const maxCharacters = 500;
 
 
 async function getUrlByInput(channelObj, input){
-    if (/(ftp|http|https):\/\/.+/.test(input)){
+    if (/((ftp|http|https):\/\/.+)|(\.\/frames\/.+)/.test(input)){
         return input;
     }
     
@@ -125,12 +125,13 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         urls.push(await getUrlByInput(channelObj, input));
         userInput.shift();
     }
-    sayFunc(channelObj.name, await ascii(mode, urls, gifSpam, userInput));
+    sayFunc(channelObj.name, await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc));
+    return;
 }
 
 
 
-async function ascii(mode, urls, gifSpam, asciiOptions){
+async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
     console.log(options);
     let characters = (Math.ceil(options['width']/2) * Math.ceil(options['height']/4) + Math.ceil(options['height']/4));
@@ -148,7 +149,12 @@ async function ascii(mode, urls, gifSpam, asciiOptions){
     if (options.hasOwnProperty('rotate'))
         rotateContext(context, options['rotate'], options['width'], options['height']);
     
-    context = await asciiModes[mode].func(options['width'], options['height'], context, false, ...urls);
+    if (mode === 'ascii' && gifSpam && await gifCheck(...urls)){
+        context = await printGifAscii(channelObj, sayFunc, asciiOptions, ...urls);
+        return "";
+    } else {
+        context = await asciiModes[mode].func(options['width'], options['height'], context, ...urls);
+    }
     
     if (context === -1){
         return "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload";
@@ -188,7 +194,15 @@ async function addPicsToContext(context, srcList, size){
     return context;
 }
 
-async function merge(width, height, context, _, srcLeft, srcRight){
+
+async function plainAscii(width, height, context, srcLeft, srcRight){
+    return await addPicsToContext(context, 
+        [{url: srcLeft, x: 0, y: 0}],
+        {width: width, height: height});
+}
+
+
+async function merge(width, height, context, srcLeft, srcRight){
     return await addPicsToContext(context, 
         [{url: srcLeft, x: 0, y: 0},
         {url: srcRight, x: width/2, y: 0}],
@@ -197,7 +211,7 @@ async function merge(width, height, context, _, srcLeft, srcRight){
 
 
 
-async function stack(width, height, context, _, srcTop, srcBottom){
+async function stack(width, height, context, srcTop, srcBottom){
     return await addPicsToContext(context, 
         [{url: srcTop, x: 0, y: 0},
         {url: srcBottom, x: 0, y: height/2}],
@@ -205,7 +219,7 @@ async function stack(width, height, context, _, srcTop, srcBottom){
 }
 
 
-async function mix(width, height, context, _, srcTop, srcBottom){
+async function mix(width, height, context, srcTop, srcBottom){
     context.beginPath();
     context.moveTo(0, 0);
     context.lineTo(width, 0);
@@ -266,14 +280,14 @@ async function mirrorFunctions(width, height, context, src, clipReg){
 }
 
 
-async function mirror(width, height, context, _, src){
+async function mirror(width, height, context, src){
     return await mirrorFunctions(width, height, context, src, [
         {x: 0, y: 0}, {x: width/2, y: 0}, {x: width/2, y: height}, {x: 0, y: height}
     ]);
 }
 
 
-async function antimirror(width, height, context, _, src){
+async function antimirror(width, height, context, src){
     return await mirrorFunctions(width, height, context, src, [
         {x: width/2, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: width/2, y: height}
     ]);
@@ -318,68 +332,39 @@ function generateTextAscii(textObj){
 
 
 
-function getAsciiContext(width, height, context, gifSpam, src){
-    if (!gifSpam){
-        return createStringFromImage(src);
-    }
-        
-    function createStringFromImage(url){
-        console.log(url);
-        return loadImage(url)
-            .then((image) => {
-                context.drawImage(image, 0, 0, width, height);
-                return context;
-                //let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                //return braille.iterateOverPixels(pixelData, canvas.width, treshold);
-            })
-            .catch((error) => {
-                console.log(error+"An error occured! (image)");
-                return -1;
-            });
-    }
-        
-    async function createStringFromGif(){
-        let cumulativeVal = false;
-        let transparencyPercent = await getTransparencyData(src);
-        if (transparencyPercent < 10)
-            cumulativeVal = true;
-        return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
-            .then(async function (frameData) {
-                let stringsArr = [];
-                let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
-                for (let i=0; i<frameData.length; i+=frameJump){
-                    let prom = new Promise(function(resolve){
-                        let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
-                        stream.on('finish', async function(){
-                            let brailleString = await createStringFromImage('./frames/frame'+i+'.png');
-                            stringsArr.push(brailleString);
-                            resolve();
-                        });
+async function printGifAscii(channelObj, sayFunc, asciiOptions, src){
+    let cumulativeVal = false;
+    let transparencyPercent = await braille.getTransparencyData(src);
+    cumulativeVal = transparencyPercent < 10;
+    return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
+        .then(async function (frameData) {
+            let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
+            for (let i=0; i<frameData.length; i+=frameJump){
+                let prom = new Promise(function(resolve){
+                    let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
+                    stream.on('finish', async function(){
+                        await printAscii(channelObj, sayFunc, 'ascii', ['./frames/frame'+i+'.png'].concat(asciiOptions), false);
+                        resolve();
                     });
-                    await prom;
-                }
-                return stringsArr;
-            })
-            .catch((error) => {
-                console.log(error+" An error occured! (gif)");
-            });
-    }
-
-
-    
-    return fetch(src, {method:"HEAD"})
-        .then(response => response.headers.get("Content-Type"))
-        .then((type) => {
-            if (type === 'image/gif'){
-                return createStringFromGif();
-            } else {
-                return createStringFromImage(src);
+                });
+                await prom;
             }
-    });
+        })
+        .catch((error) => {
+            sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload");
+            console.log(error+" An error occured! (gif)");
+        });
 }
 
 
-
+function gifCheck(src){
+    return fetch(src, {method:"HEAD"})
+        .then(response => response.headers.get("Content-Type"))
+        .then((type) => {
+            console.log((type === 'image/gif'));
+            return (type === 'image/gif');
+    });
+}
 
 
 
@@ -407,5 +392,6 @@ async function randomAscii(channelObj, sayFunc, keyword, option){
 
 module.exports = {
     randomAscii: randomAscii,
-    printAscii: printAscii
+    printAscii: printAscii,
+    ascii: ascii
 };

@@ -1,7 +1,7 @@
 const fetch = require("node-fetch");
 const db = require('./database.js');
 const brailleData = require('./brailledata.js');
-const braille = require('./generatebraille.js');
+const ascii = require('./ascii.js');
 const emotes = require('./emotes.js');
 
 var games = {};
@@ -271,7 +271,7 @@ function gameTurnTimeout(channelObj, gameObj){
 
 function gameRequestTimeout(channelObj, gameObj, initial){
     if (initial){
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write !accept <emote> to play :)");
+        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write "+channelObj.prefix+"accept [<emote>] to play :)");
         gameObj.waitForAccept.handle = setTimeout(function(){gameRequestTimeout(channelObj, gameObj, false);}, gameObj.waitForAccept.waitTime);
         gameObj.waitForAccept.status = true;
     } else {
@@ -333,7 +333,7 @@ function checkCharacters(channelObj, gameObj){
         }
         
         gameObj.setDefaultLooks(player, i);
-        braille.processImage(emote.url, 150, 18, 18)
+        ascii.ascii("ascii", [emote.url], false, ["-w", "18", "-h", "18", "-tr", "150"], null, null)
             .then((brailleString) => {
                 if (typeof brailleString !== 'undefined'){
                     player.character = emote.name;

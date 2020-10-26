@@ -2,6 +2,7 @@ const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 const db = require('./database.js');
 const emotes = require('./emotes.js');
+const ascii = require('./ascii.js');
 
 var games = {};
 
@@ -96,7 +97,7 @@ async function startGame(channelObj, gameObj, sayFunc){
     gameObj.resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
     
     if (gameObj.mode !== 'origin'){ 
-        braille.processImage(gameObj.solution.url, 255)
+        ascii.ascii("ascii", [gameObj.solution.url], false, ["-tr", "255"], null, null)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     gameObj.clearHints();
@@ -139,7 +140,7 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
     if (gameObj.mode === 'origin'){
         sayFunc(channelObj.name, "/me Second Hint: " +getOriginHint(gameObj));
     } else {
-        braille.processImage(gameObj.solution.url)
+        ascii.ascii("ascii", [gameObj.solution.url], false, [], null, null)
             .then((brailleString) => {
                 if (typeof brailleString === 'undefined'){
                     return;

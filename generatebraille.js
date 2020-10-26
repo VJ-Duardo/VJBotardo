@@ -29,87 +29,13 @@ class Pixel {
 }
 
 module.exports = {
-    processImage: function(src, treshold=-1, height=60, width=60, playGifs=false){
-        console.log(src);
-        if (typeof src === 'undefined'){
-            return;
-        }
-        
-        var canvas = createCanvas(width, height);
-        var context = canvas.getContext('2d');
-        
-        
-        if (!playGifs){
-            return createStringFromImage(src);
-        }
-        
-        function createStringFromImage(url){
-            console.log(url);
-            return loadImage(url)
-                .then((image) => {
-                    context.clearRect(0, 0, width, height);
-                    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-                    let pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                    return iterateOverPixels(pixelData, canvas.width, treshold);
-                })
-                .catch((error) => {
-                    console.log(error+"An error occured! (image)");
-                });
-        }
-        
-        async function createStringFromGif(){
-            let cumulativeVal = false;
-            let transparencyPercent = await getTransparencyData(src);
-            if (transparencyPercent < 10)
-                cumulativeVal = true;
-            return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
-                .then(async function (frameData) {
-                    let stringsArr = [];
-                    let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
-                    for (let i=0; i<frameData.length; i+=frameJump){
-                        let prom = new Promise(function(resolve){
-                            let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
-                            stream.on('finish', async function(){
-                                let brailleString = await createStringFromImage('./frames/frame'+i+'.png');
-                                stringsArr.push(brailleString);
-                                resolve();
-                            });
-                        });
-                        await prom;
-                    }
-                    return stringsArr;
-                })
-                .catch((error) => {
-                    console.log(error+" An error occured! (gif)");
-                });
-        }
-        
-        
-        if ((src.length - src.lastIndexOf('.')+1) <= 4){
-            if (src.slice(src.length - 4) === '.gif'){
-                return createStringFromGif();
-            } else {
-                return createStringFromImage(src);
-            }
-        } else {
-            return fetch(src, {method:"HEAD"})
-                .then(response => response.headers.get("Content-Type"))
-                .then((type) => {
-                    if (type === 'image/gif'){
-                        return createStringFromGif();
-                    } else {
-                        return createStringFromImage(src);
-                    }
-            });
-        }
-    },
     mirror: mirror,
     invert: invert,
     iterateOverPixels: iterateOverPixels,
     getTransparencyData: getTransparencyData
 };
 
-function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering){
+function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false){
     let resultArray = new Array();
     let pixelArray = new Array();
     for(i=0; i<dataArray.length; i+=4){
