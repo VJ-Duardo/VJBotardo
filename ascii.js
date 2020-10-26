@@ -125,7 +125,12 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         urls.push(await getUrlByInput(channelObj, input));
         userInput.shift();
     }
-    sayFunc(channelObj.name, await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc));
+    let brailleString = await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc);
+    if (brailleString !== -1){
+        sayFunc(channelObj.name, brailleString);
+    } else {
+        sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload");
+    }
     return;
 }
 
@@ -157,7 +162,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     }
     
     if (context === -1){
-        return "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload";
+        return -1;
     }
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
@@ -361,7 +366,6 @@ function gifCheck(src){
     return fetch(src, {method:"HEAD"})
         .then(response => response.headers.get("Content-Type"))
         .then((type) => {
-            console.log((type === 'image/gif'));
             return (type === 'image/gif');
     });
 }
@@ -379,9 +383,9 @@ async function randomAscii(channelObj, sayFunc, keyword, option){
     if (emote === -1){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
-        braille.processImage(emote.url, -1, 56, 58, false)
+        ascii("ascii", [emote.url], false, [], null, null)
             .then((brailleString) => {
-                if (typeof brailleString === 'undefined'){
+                if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {
                      sayFunc(channelObj.name, emote.name +" "+brailleString);   

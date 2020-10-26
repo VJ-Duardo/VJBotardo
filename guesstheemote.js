@@ -99,7 +99,7 @@ async function startGame(channelObj, gameObj, sayFunc){
     if (gameObj.mode !== 'origin'){ 
         ascii.ascii("ascii", [gameObj.solution.url], false, ["-tr", "255"], null, null)
             .then((brailleString) => {
-                if (typeof brailleString === 'undefined'){
+                if (brailleString === -1){
                     gameObj.clearHints();
                     startGame(channelObj, gameObj, sayFunc);
                 } else {
@@ -142,7 +142,7 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
     } else {
         ascii.ascii("ascii", [gameObj.solution.url], false, [], null, null)
             .then((brailleString) => {
-                if (typeof brailleString === 'undefined'){
+                if (brailleString === -1){
                     return;
                 } else {
                     sayFunc(channelObj.name, '/me Second Hint: ');

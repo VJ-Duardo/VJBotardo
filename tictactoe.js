@@ -335,7 +335,7 @@ function checkCharacters(channelObj, gameObj){
         gameObj.setDefaultLooks(player, i);
         ascii.ascii("ascii", [emote.url], false, ["-w", "18", "-h", "18", "-tr", "150"], null, null)
             .then((brailleString) => {
-                if (typeof brailleString !== 'undefined'){
+                if (brailleString !== -1){
                     player.character = emote.name;
                     gameObj.looks[player.character] = brailleString.split(" ");
                 }
