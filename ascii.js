@@ -10,7 +10,7 @@ var fs = require('fs');
 const asciiModes = {
     ascii: {params: 1, func: getAsciiContext},
     mirror: {params: 1, func: mirror},
-    //antimirror: {params: 1, func: antimirror},
+    antimirror: {params: 1, func: antimirror},
     stack: {params: 2, func: stack},
     mix: {params: 2, func: mix},
     merge: {params: 2, func: merge}
@@ -232,12 +232,12 @@ async function mix(width, height, context, _, srcTop, srcBottom){
 }
 
 
-async function mirror(width, height, context, _, src){
+async function mirrorFunctions(width, height, context, src, clipReg){
     context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(width/2, 0);
-    context.lineTo(width/2, height);
-    context.lineTo(0, height);
+    context.moveTo(clipReg[0].x, clipReg[0].y);
+    context.lineTo(clipReg[1].x, clipReg[1].y);
+    context.lineTo(clipReg[2].x, clipReg[2].y);
+    context.lineTo(clipReg[3].x, clipReg[3].y);
     context.closePath();
     context.save();
     context.clip();
@@ -252,10 +252,10 @@ async function mirror(width, height, context, _, src){
     context.scale(-1, 1);
     context.translate(-width/2, 0);
     context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(width/2, 0);
-    context.lineTo(width/2, height);
-    context.lineTo(0, height);
+    context.moveTo(clipReg[0].x, clipReg[0].y);
+    context.lineTo(clipReg[1].x, clipReg[1].y);
+    context.lineTo(clipReg[2].x, clipReg[2].y);
+    context.lineTo(clipReg[3].x, clipReg[3].y);
     context.closePath();
     context.clip();
     return await addPicsToContext(context,
@@ -264,6 +264,18 @@ async function mirror(width, height, context, _, src){
 }
 
 
+async function mirror(width, height, context, _, src){
+    return await mirrorFunctions(width, height, context, src, [
+        {x: 0, y: 0}, {x: width/2, y: 0}, {x: width/2, y: height}, {x: 0, y: height}
+    ]);
+}
+
+
+async function antimirror(width, height, context, _, src){
+    return await mirrorFunctions(width, height, context, src, [
+        {x: width/2, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: width/2, y: height}
+    ]);
+}
 
 
 

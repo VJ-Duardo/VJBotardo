@@ -559,7 +559,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'antimirror':
-            allowanceCheck(...identParams, ascii.singleEmoteAsciis, [channelsObjs[channel], sayFunc, "antimirror", command[1]]);
+            allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "antimirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case prefix+'ra':
             allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command[1], command[2]]);
