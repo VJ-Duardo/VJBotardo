@@ -120,6 +120,16 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         return;
     }
     
+    if (mode === 'ascii' && userInput[0] === '-t'){
+        let textObject = getTextObject(defaultWidth, defaultHeight, userInput.slice(1, userInput.length).join(" "));
+        if (textObject['heightAll'] < 1){
+            sayFunc(channelObj.name, "/me The given text is too long!");
+        } else {
+            sayFunc(channelObj.name, generateTextAscii(getTextObject(defaultWidth, defaultHeight, userInput.slice(1, userInput.length).join(" "))));
+        }
+        return;
+    }
+    
     let urls = [];
     for (let input of userInput.slice(0, asciiModes[mode].params)){
         urls.push(await getUrlByInput(channelObj, input));
