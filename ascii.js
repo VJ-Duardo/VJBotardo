@@ -115,7 +115,7 @@ function getTextObject(width, height, text){
 
 
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
-    if (userInput.length < 1){
+    if (userInput.length < asciiModes[mode].params){
         sayFunc(channelObj.name, "/me Parameters are missing :Z");
         return;
     }
@@ -138,6 +138,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
 
 async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
+    console.log(options);
     let characters = (Math.ceil(options['width']/2) * Math.ceil(options['height']/4) + Math.ceil(options['height']/4));
     if (characters <= 0 || characters > maxCharacters){
         return "/me Please pick valid dimensions (max 500 characters)";
@@ -309,6 +310,7 @@ function rotateContext(context, degree, width, height){
 
 
 function generateTextAscii(textObj){
+    //console.log(textObj);
     const font = "11px Corbel";
     const align = "center";
     const treshold = 128;
