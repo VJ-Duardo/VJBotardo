@@ -382,8 +382,10 @@ function gifCheck(src){
 
 
 
-async function randomAscii(channelObj, sayFunc, keyword, option){
-    if (option === "-supersecretbanderoption"){
+async function randomAscii(channelObj, sayFunc, userInput){
+    let keyword = typeof userInput[0] !== 'undefined' 
+            && userInput[0].charAt(0) === '-' ? '' : userInput[0];
+    if (userInput.includes("-supersecretbanderoption")){
         let count = await db.getRandomEmoteStat(keyword);
         sayFunc(channelObj.name, "/me Found " +count+ " emotes containing that keyword SeemsGood");
         return;
@@ -393,7 +395,7 @@ async function randomAscii(channelObj, sayFunc, keyword, option){
     if (emote === -1){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
-        ascii("ascii", [emote.url], false, [], null, null)
+        ascii("ascii", [emote.url], false, userInput, null, null)
             .then((brailleString) => {
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
