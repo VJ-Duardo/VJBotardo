@@ -98,6 +98,34 @@ Prints a list of the users within the top highscores.
 
 ### Braille Art ("ascii")
 
+All the braille commands support the following options:  
+
+* __-h__ \<number\>  
+Sets the height of the ascii in pixels. One character consists of 2x4 pixels.
+  
+* __-w__ \<number\>  
+Sets the width of the ascii in pixels.
+ 
+* __-r__ \<number\>  
+Rotates the ascii given degrees.
+  
+* __-tr__ \<number\>  
+If set, static treshold dithering with the given number will be used to generate the ascii. 
+  
+* __-d__  
+If this option is present, the ascii will be generated using the Floyd-Steinberg-Algorithm.
+
+* __-i__  
+The end result will be inverted using this option.
+
+* __-t__ \<text\>  
+This option should always be set last, since everything written after the *-t* will be used as text and printed on the ascii.
+
+Example: *__!ascii forsenE -w 50 -h 52 -r 180__*  
+Example2: *__!ascii DatSheffy -tr 255 -t Who's that pokemon?__*
+
+<br>
+
 * __!ascii__ \<emote\>|\<emoji\>|\<link\>  
 Generates a braille string from the provided emote, emoji or link.
 
