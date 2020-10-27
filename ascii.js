@@ -116,7 +116,7 @@ function getTextObject(width, height, text){
 
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (userInput.length < asciiModes[mode].params){
-        sayFunc(channelObj.name, "/me Parameters are missing :Z");
+        sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t Check commands list for more info.");
         return;
     }
     
