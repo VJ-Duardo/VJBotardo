@@ -1,8 +1,6 @@
 const { createCanvas, loadImage } = require('canvas');
 const brailleData = require('./brailledata.js');
 const fetch = require("node-fetch");
-var gifFrames = require('gif-frames');
-var fs = require('fs');
 
 
 class Pixel {
@@ -28,6 +26,12 @@ class Pixel {
     }
 }
 
+
+const defaultMaskWidth = 1;
+const defaultMaskHeight = 1/3;
+const defaultMask = {width: defaultMaskWidth, height: defaultMaskHeight}
+
+
 module.exports = {
     mirror: mirror,
     invert: invert,
@@ -35,7 +39,7 @@ module.exports = {
     getTransparencyData: getTransparencyData
 };
 
-function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false){
+function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false, mask=defaultMask){
     let resultArray = new Array();
     let pixelArray = new Array();
     for(i=0; i<dataArray.length; i+=4){
@@ -52,7 +56,7 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     }
     
     if (treshold === -1){
-        treshold = getAverageColor(pixelArray, width);
+        treshold = getAverageColor(pixelArray, width, mask);
     } else {
         treshold = new Array(pixelArray.length).fill(treshold);
     }
@@ -154,12 +158,12 @@ function getTransparencyPercent(pixelArray){
 }
 
 
-function getAverageColor(pixelArray, width){
+function getAverageColor(pixelArray, width, mask){
     let tresholdsObj = {};
-    let maskWidth = width;
+    let maskWidth = width * mask.width;
     maskWidth = maskWidth > width ? width : maskWidth;
     maskWidth = maskWidth < 1 ? 1 : maskWidth;
-    let maskHeight = Math.round((pixelArray.length/width)/3);
+    let maskHeight = Math.round((pixelArray.length/width)*mask.height);
     maskHeight = maskHeight > Math.ceil(pixelArray.length/width) ? Math.ceil(pixelArray.length/width) : maskHeight;
     maskHeight = maskHeight < 1 ? 1 : maskHeight;
     

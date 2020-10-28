@@ -11,9 +11,9 @@ const asciiModes = {
     ascii: {params: 1, func: plainAscii},
     mirror: {params: 1, func: mirror},
     antimirror: {params: 1, func: antimirror},
-    stack: {params: 2, func: stack},
-    mix: {params: 2, func: mix},
-    merge: {params: 2, func: merge}
+    stack: {params: 2, func: stack, mask: {width: 1, height: 1/6}},
+    mix: {params: 2, func: mix, mask: {width: 1, height: 1/2}},
+    merge: {params: 2, func: merge, mask: {width: 1/2, height: 1/3}}
 };
 
 const givenOptions = {
@@ -139,7 +139,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (brailleString !== -1){
         sayFunc(channelObj.name, brailleString);
     } else {
-        sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload");
+        sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do "+channelObj.prefix+"reload");
     }
     return;
 }
@@ -177,7 +177,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
     let treshold = options.hasOwnProperty('treshold') ? options['treshold'] : -1;
-    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], treshold, false, options.hasOwnProperty('dither'))
+    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], treshold, false, options.hasOwnProperty('dither'), asciiModes[mode].mask)
             + " " 
             + brailleText;
     return options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
