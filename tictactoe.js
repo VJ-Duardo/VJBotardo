@@ -28,7 +28,7 @@ class Game {
         this.waitForInput = {
             status: false,
             handle: null,
-            waitTime: 15000
+            waitTime: 30000
         };
         this.nextRoundTimeout = {
             handle: null,
