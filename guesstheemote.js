@@ -256,11 +256,13 @@ async function loadOrigins(){
 function getOriginHint(gameObj){
     switch (gameObj.originHints.length){
         case 0:
-            if (gameObj.originLastHint)
+            if (gameObj.originLastHint){
                 return 'Its a '+ gameObj.solution.type + ' emote.';
-            else
+            } else {
                 gameObj.originLastHint = true;
-                return '____'+gameObj.solution.name.substring(Math.floor(gameObj.solution.name.length/2), gameObj.solution.name.length);
+                const hidePercent = 4/5;
+                return '____'+gameObj.solution.name.substring(Math.floor(gameObj.solution.name.length*hidePercent), gameObj.solution.name.length);
+            }
         default:
             let randomIndex = Math.floor(Math.random() * gameObj.originHints.length);
             let hintText = gameObj.originHints[randomIndex];

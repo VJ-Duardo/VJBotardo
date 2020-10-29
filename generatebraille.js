@@ -29,7 +29,7 @@ class Pixel {
 
 const defaultMaskWidth = 1;
 const defaultMaskHeight = 1/3;
-const defaultMask = {width: defaultMaskWidth, height: defaultMaskHeight}
+const defaultMask = {width: defaultMaskWidth, height: defaultMaskHeight};
 
 
 module.exports = {
@@ -213,7 +213,7 @@ function mirror(inputStr){
     for (i = 0; i < lineArr.length; i++) {
         for (j = lineArr[i].length - 1; j >= 0; j--) {
             if (typeof brailleData.mirroredDic[lineArr[i][j]] !== 'undefined') {
-                esultsArr[i] += brailleData.mirroredDic[lineArr[i][j]];
+                resultsArr[i] += brailleData.mirroredDic[lineArr[i][j]];
             } else {
                 resultsArr[i] += lineArr[i][j];
             }

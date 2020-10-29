@@ -545,7 +545,6 @@ function onMessageHandler (channel, userstate, message, self) {
         case prefix+'ush':
             allowanceCheck(...identParams, showPoints, [channel, userstate['username'], userstate['user-id'], command[1]]);
             break;
-        case '!bot':
         case prefix+'bot':
             allowanceCheck(channel, userstate, 'bot', about, [channel]);
             break;

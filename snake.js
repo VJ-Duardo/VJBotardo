@@ -433,7 +433,7 @@ module.exports = {
                             sayFunc(channelObj.name, "/me Modes: "
                                     +p+"snake start normal - normal game for one player, "
                                     +p+"snake start chat - normal game where everyone in chat can give input, "
-                                    +p+"snake start royale - a curve fever inspired game for up to "+maxRoyalePlayers+" players.")
+                                    +p+"snake start royale - a curve fever inspired game for up to "+maxRoyalePlayers+" players.");
                     }
                     channelObj.gameRunning = true;
                     channelObj.game = module.exports.playSnake;
