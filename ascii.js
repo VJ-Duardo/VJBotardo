@@ -1,10 +1,14 @@
 const braille = require('./generatebraille.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
-const { createCanvas, loadImage } = require('canvas');
 const fetch = require("node-fetch");
 var gifFrames = require('gif-frames');
 var fs = require('fs');
+
+const { registerFont, createCanvas, loadImage } = require('canvas');
+registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
+
+
 
 
 const asciiModes = {
@@ -321,7 +325,7 @@ function rotateContext(context, degree, width, height){
 
 function generateTextAscii(textObj){
     //console.log(textObj);
-    const font = "100 11px Corbel";
+    const font = "11px Noto Sans JP";
     const align = "center";
     const treshold = 128;
     

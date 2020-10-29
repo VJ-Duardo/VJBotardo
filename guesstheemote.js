@@ -6,7 +6,7 @@ const ascii = require('./ascii.js');
 
 var games = {};
 
-var reward = 10;
+var reward = 25;
 
 var maxRounds = 20;
 var defaultRounds = 1;
