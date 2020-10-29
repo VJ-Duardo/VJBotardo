@@ -321,7 +321,7 @@ function rotateContext(context, degree, width, height){
 
 function generateTextAscii(textObj){
     //console.log(textObj);
-    const font = "11px Corbel";
+    const font = "100 11px Corbel";
     const align = "center";
     const treshold = 128;
     
