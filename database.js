@@ -138,22 +138,26 @@ module.exports = {
     },
     
     addUserPoints: function(id, name, points){
-        checkIfUserExists(id)
-            .then((result) => {
-                if (result){
-                    sql = 'UPDATE USER SET points = points + ? WHERE id = ?';
-                    db.run(sql, [points, id], function(err){
-                        if (err){
-                            return console.error(err.message);
-                        }
-                    });
-                } else {
-                    insertNewUser(id, name, points, 0);
-                }                    
-            })
-            .catch((err) => {
-                console.error(err);
-            });
+        return new Promise(function(resolve){
+            checkIfUserExists(id)
+                .then(async (result) => {
+                    if (result){
+                        sql = 'UPDATE USER SET points = points + ? WHERE id = ?';
+                        db.run(sql, [points, id], function(err){
+                            if (err){
+                                console.log(err.message);
+                            }
+                            resolve();
+                        });
+                    } else {
+                        await insertNewUser(id, name, points, 0);
+                        resolve();
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        });
     },
     //this function is terrible, really ashamed of it, but sadly too lazy to refactor it since i would need to refactor A LOT in ttt, never lucky
     getPoints: function(channelObj, attribute, value, callback){
@@ -175,6 +179,10 @@ module.exports = {
            db.get(sql, [id], function(err, row){
                if (err){
                    console.log(err);
+                   resolve(0);
+                   return;
+               }
+               if (typeof row === 'undefined' || row === null){
                    resolve(0);
                    return;
                }
@@ -359,11 +367,16 @@ module.exports = {
 };
 
 function insertNewUser(id, name, points, snakeHighscore){
-    let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?)';
-    db.run(sql, [id, name, points, snakeHighscore], function(err){
-        if (err) 
-            return console.error(err.message);
-        console.log('New user inserted: ' + name);
+    return new Promise(function(resolve){
+        let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?)';
+        db.run(sql, [id, name, points, snakeHighscore], function(err){
+            if (err) {
+                console.log(err.message);
+            } else {
+                console.log('New user inserted: ' + name);
+            }
+            resolve();
+        });
     });
 }
 

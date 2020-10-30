@@ -518,15 +518,15 @@ function printField(context){
     return braille.iterateOverPixels(pixelData, fieldWidth, 128, false);
 }
 
-function gameOver(gameObj, won=false){
+async function gameOver(gameObj, won=false){
     if (!won) {
         gameObj.sayFunc(gameObj.channelObj.name, 
             "/me GAME OVER! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + gameObj.points*ushReward + "USh!");
-        db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
+        await db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
     } else {
         gameObj.sayFunc(gameObj.channelObj.name, 
             "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + (gameObj.points*ushReward) + "USh plus a "+winningBonus+"USh winning bonus!");
-        db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
+        await db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
     }
     db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points);
     clearInterval(gameObj.updateInterval);
