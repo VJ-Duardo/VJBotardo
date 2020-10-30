@@ -248,7 +248,10 @@ function getGameSolution(channelName){
 
 async function loadOrigins(){
     const api = 'https://supinic.com/api/data/origin/list';
-    let response = await fetch(api);
+    let response = await fetch(api, {
+        headers: {
+            'User-Agent': 'https://github.com/VJ-Duardo/VJBotardo/blob/master/guesstheemote.js#L250'
+    }});
     let data = await response.json();
     return data.data;
 }
