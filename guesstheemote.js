@@ -221,6 +221,7 @@ async function getRandomEmote(emoteSet, mode){
 
 
 function setRounds(rounds){
+    rounds = parseInt(rounds);
     if (typeof rounds === 'undefined' || isNaN(parseInt(rounds)) || rounds <= defaultRounds){
         return defaultRounds;
     }else if(rounds >= maxRounds){
