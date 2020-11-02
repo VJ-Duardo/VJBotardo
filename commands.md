@@ -110,7 +110,7 @@ Sets the width of the ascii in pixels.
 Rotates the ascii given degrees.
   
 * __-tr__ \<number\>  
-If set, static treshold dithering with the given number (between 0 and 255) will be used to generate the ascii. Generally, a higher value leads to a darker picture, while a lower value leads to a brighter one.
+If set, static threshold dithering with the given number (between 0 and 255) will be used to generate the ascii. Generally, a higher value leads to a darker picture, while a lower value leads to a brighter one.
   
 * __-d__  
 If this option is present, the ascii will be generated using the Floyd-Steinberg-Algorithm.
