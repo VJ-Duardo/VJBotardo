@@ -423,7 +423,8 @@ module.exports = {
                             break;
                         case 'royale':
                             games[channelObj.name] = new GameRoyale(channelObj, sayFunc, user['username'], user['user-id']);
-                            sayFunc(channelObj.name, "/me A new round of Snake Royale has started! PogChamp Type " + channelObj.prefix + "join to play!");
+                            sayFunc(channelObj.name, "/me A new round of Snake Royale has started! PogChamp Type " + channelObj.prefix + "join to play! " 
+                                    + user['username'] + " is starting from the top left!");
                             break;
                         case 'normal':
                             games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
