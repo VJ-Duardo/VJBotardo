@@ -523,7 +523,7 @@ async function checkCommand(channel, command){
 
 
 function onMessageHandler (channel, userstate, message, self) {
-    if (self) {
+    if (self || !channelsObjs.hasOwnProperty(channel)) {
         return; 
     }
 
