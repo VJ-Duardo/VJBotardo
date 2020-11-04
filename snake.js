@@ -220,7 +220,7 @@ class GameRoyale extends Game{
         if (player.turnDone || player.out)
             return;
 
-        switch(input){
+        switch(input.toLowerCase()){
             case "a":
                 if (player.snake.direction !== "east")
                     player.snake.direction = "west";
