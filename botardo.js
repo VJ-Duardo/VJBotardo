@@ -272,7 +272,7 @@ async function allowanceCheck(channel, user, command, callback, params){
     let now = Math.round(new Date().getTime() / 1000);
     if (now >= channelObj.lastCommandTime[command]+cooldown){
         channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
-        console.log(channel +", "+ command +", "+ params.filter(par => typeof par !== 'function' && typeof par !== 'object'));
+        console.log(channel +", "+ command +", "+ params.filter(par => typeof par !== 'function' && (typeof par !== 'object' || Array.isArray(par))));
         callback(...params);
         commandCount++;
         return 1;
