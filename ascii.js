@@ -152,7 +152,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
 
 async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
-    console.log(options);
+    //console.log(options);
     let characters = (Math.ceil(options['width']/2) * Math.ceil(options['height']/4) + Math.ceil(options['height']/4));
     if (characters <= 0 || characters > maxCharacters){
         return "/me Please pick valid dimensions (max 500 characters)";
