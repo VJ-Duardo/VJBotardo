@@ -121,7 +121,7 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
-        console.error('name '+e);
+        console.log('name '+e);
         return -1;
     }
 }

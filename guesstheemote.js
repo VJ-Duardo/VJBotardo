@@ -79,8 +79,6 @@ module.exports = {
                 let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name) + " (+"+reward+"USh)";
                 db.addUserPoints(user['user-id'], user['username'], reward);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
-            } else {
-                console.log(getGameSolution(channelObj.name));
             }
         }
     }
