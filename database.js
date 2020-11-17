@@ -226,14 +226,16 @@ module.exports = {
     getAllData: function(callback, table){
         return new Promise(function(resolve){
             let sql = 'SELECT * FROM ' +table;
-            db.each(sql, [], (err, row) => {
+            db.all(sql, [], async (err, rows) => {
                 if (err){
-                    console.error(err.message);
+                    console.log(err.message);
                     return;
                 }
-                callback(...Object.values(row));
+                for (const obj of rows){
+                    await callback(...Object.values(obj));
+                }
+                resolve();
             });
-            resolve();
         });
     },
     insertNewChannel: function(id, name){
