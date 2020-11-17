@@ -121,7 +121,6 @@ function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
-        console.log('name '+e);
         return -1;
     }
 }
@@ -156,6 +155,9 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
 client.on('disconnected', onDisconnectHandler);
+client.on("notice", (channel, _, message) => {
+    console.log(channel+ ": " +message);
+});
 
 
 
