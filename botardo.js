@@ -106,21 +106,21 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty('#'+name)){
         return -1;
     }
     
     prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
-    name = name.toLowerCase();
-    
+    name = '#' + name.toLowerCase();
+      
     try {
-        opts.channels.push(name);
-        name = '#' + name;
+        await client.join(name);
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
+        console.log("Error: " +name+ ": " +e);
         return -1;
     }
 }
@@ -145,10 +145,10 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
     startTime = new Date().getTime()/1000;
     pass.loadAppAccessToken();
     emotes.loadGlobalEmotes();
+    await client.connect();
     //emotes.loadTwitchSubEmotes();
     await db.getAllData(loadCommand, "COMMAND");
-    await db.getAllData(loadChannel, "CHANNEL");
-    client.connect();
+    db.getAllData(loadChannel, "CHANNEL");
 })();
 
 
@@ -295,18 +295,10 @@ async function devEval(channel, user, input){
 
 
 async function addChannel(channel, id, channelName){
-    let status = loadChannel(id, channelName);
+    let status = await loadChannel(id, channelName);
     if (status === -1){
         client.say(channel, "An Error occured!");
         return -1;
-    }
-    
-    try {
-        await client.join('#' + channelName);;
-    } catch(e){
-        client.say(channel, e);
-        delete channelsObjs['#' + channelName];
-        return -2;
     }
     
     let insertStatus = await db.insertNewChannel(id, channelName);
