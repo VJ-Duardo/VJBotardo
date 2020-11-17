@@ -224,7 +224,7 @@ function convertBTTVAndTwitchLists(emoteList, url, postfix){
 function convertFFZLists(emoteList){
     for (i=0; i<emoteList.length; i++){
         for (const size of sizes){
-            if (emoteList[i]['urls'].hasOwnProperty(size)){
+            if (emoteList[i]['urls'].hasOwnProperty(size) && emoteList[i]['urls'][size] !== null){
                 emoteList[i] = new Emote(emoteList[i]['name'], 'https:'+emoteList[i]['urls'][size], 'ffz');
                 break;
             }
