@@ -130,7 +130,8 @@ Example2: *__!ascii DatSheffy -tr 255 -t Who's that pokemon?__*
 Generates a braille string from the provided emote, emoji or link.
 
 * __!ra__ [\<keyword\>]  
-Generates a braille string of a random sub emote and prints it to chat. If a keyword is provided, a random emote containing that keyword will be picked. (If such an emote can be found)
+Generates a braille string of a random sub emote and prints it to chat. If a keyword is provided, a random emote containing that keyword will be picked. (If such an emote can be found).  
+When using the option __-ffz__ the bot will search for a fitting FrankerFaceZ emote.
 
 * __!merge__ \<emote\>|\<emoji\>|\<link\>  \<emote\>|\<emoji\>|\<link\>    
 Creates and prints a single braille string with the two provided pictures next to each other. Fails if one of the two pictures is invalid.
