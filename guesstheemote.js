@@ -138,7 +138,9 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
     if (gameObj.mode === 'origin'){
         sayFunc(channelObj.name, "/me Second Hint: " +getOriginHint(gameObj));
     } else {
-        ascii.ascii("ascii", [gameObj.solution.url], false, [], null, null)
+        const maxRotation = 360;
+        const randomRoation = Math.floor(Math.random() * maxRotation);
+        ascii.ascii("ascii", [gameObj.solution.url], false, ["-r", randomRoation, "-d"], null, null)
             .then((brailleString) => {
                 if (brailleString === -1){
                     return;
