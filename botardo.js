@@ -215,11 +215,11 @@ function ping(channel){
 }
 
 function about(channel){
-    client.action(channel, "A bot by Duardo1. Command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md Used prefix in this channel: " +channelsObjs[channel].prefix);
+    client.action(channel, "A bot by Duardo1. Command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb Used prefix in this channel: " +channelsObjs[channel].prefix);
 }
 
 function commands(channel){
-   client.action(channel, "A command list can be found here: https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md"); 
+   client.action(channel, "A command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb");
 }
 
 
