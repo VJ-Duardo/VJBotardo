@@ -1,6 +1,7 @@
 const braille = require('./generatebraille.js');
 const db = require('./database.js');
-const { createCanvas, loadImage } = require('canvas');
+const { registerFont, createCanvas, loadImage } = require('canvas');
+registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
 
 
 const pixelWidth = 60;
@@ -93,7 +94,7 @@ class Game {
     }
     
     addPreviousHits(hits){
-        const font = "8px Arial";
+        const font = "8px Noto Sans JP";
         const align = "center";
         const yTextCorrection = 3;
 
@@ -109,7 +110,7 @@ class Game {
     }
     
     async evaluateRound(input){
-        this.waitForInput.stats = false;
+        this.waitForInput.status = false;
         for (let chunk of input.split(" ")){
             let characters = chunk.split("");
             let optionIndex = characters.findIndex(char => ['l', 'r', 'u', 'd'].includes(char));
@@ -172,8 +173,8 @@ module.exports = {
         
         let gameObj = games[channelObj.name];
         if (gameObj.waitForInput.status && user['user-id'] === gameObj.currentPlayer){
-            gameObj.evaluateRound(input.join(" "));
             clearTimeout(gameObj.waitForInput.handle);
+            gameObj.evaluateRound(input.join(" "));
             gameObj.waitForInput.status = false;
         }
     }
