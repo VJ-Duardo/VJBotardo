@@ -31,7 +31,7 @@ class Ring{
     }
 }
 const rings = [
-    new Ring(0, 3, 3, "PogChamp bullseye!"),
+    new Ring(0, 3, 25, "PogChamp bullseye!"),
     new Ring(3, 8, 18, "SeemsGood Second ring, pretty good."),
     new Ring(8, 16, 10, ":/ Are you sure you read the rules?"),
     new Ring(16, 23, 5, "FailFish Are you afk?"),
@@ -60,14 +60,14 @@ class Game {
         this.context = this.canvas.getContext('2d');
         this.waitForInput = {
             status: false,
-            handle: null,
+            handle: null
         };
         this.currentPoint = {
             x: 0,
             y: 0
         };
         this.generateRandomPointAscii = this.generateRandomPointAscii.bind(this);
-        this.sayFunc(this.channelObj.name, "Get ready...");
+        this.sayFunc(this.channelObj.name, "/me Get ready...");
         let startRound = this.generateRandomPointAscii;
         setTimeout(function(){startRound();}, timeToNextRound);
     }
@@ -90,17 +90,18 @@ class Game {
         const radius = (pixelWidth/2) * Math.sqrt(Math.random());
         const angle = Math.random() * 2 * Math.PI;
         const x = pixelWidth/2 + radius * Math.cos(angle);
-        const y = (pixelHeight/2 + radius * Math.sin(angle)) - this.canvas.height * yCorrection;
-        await loadAndAddToCanvas(handImagePath, x, y);
+        const y = (pixelHeight/2 + radius * Math.sin(angle));
+        await loadAndAddToCanvas(handImagePath, x, y-(pixelHeight * yCorrection));
         this.currentPoint.x = x;
         this.currentPoint.y = y;
-        this.sayFunc(this.channelObj.name, "Round " +this.round+ "/" +maxRounds+ " " +printField(this.context));
+        this.sayFunc(this.channelObj.name, "/me Round " +this.round+ "/" +maxRounds+ " " +printField(this.context));
         this.sayFunc(this.channelObj.name, "/me Post your estimated points needed to move the dart arrow to the middle, your next input counts. You have "+secondsToInput+" seconds!");
         this.waitForInput.status = true;
         this.waitForInput.handle = setTimeout(function(){_this.evaluateRound("");}, secondsToInput*1000);
     }
     
     evaluateRound(input){
+        this.waitForInput.stats = false;
         for (let chunk of input.split(" ")){
             let characters = chunk.split("");
             let optionIndex = characters.findIndex(char => ['l', 'r', 'u', 'd'].includes(char));
@@ -123,7 +124,7 @@ class Game {
             }
         }
         
-        let distanceFromMiddle = Math.sqrt(((pixelWidth - this.currentPoint.x)^2) + ((pixelHeight - this.currentPoint.y)^2));
+        let distanceFromMiddle = Math.sqrt(((pixelWidth/2 - this.currentPoint.x) ** 2) + ((pixelHeight/2 - this.currentPoint.y) ** 2));
         let ring = rings.find(elem => distanceFromMiddle >= elem.start && distanceFromMiddle <= elem.end);
         this.points += ring.points;
         this.sayFunc(this.channelObj.name, "/me " +ring.message + ring.getPointsString() + " Points overall: " +this.points);
@@ -140,7 +141,7 @@ class Game {
     endGame(){
         this.sayFunc(this.channelObj.name, "/me Game is over! You got " +this.points+ " points and earned " +this.points+ "USh :D");
         this.channelObj.gameRunning = false;
-        db.addUserPoints(winner, winner.name, reward);
+        db.addUserPoints(this.currentPlayer, this.players[this.currentPlayer].name, this.points);
         delete games[this.channelObj.name];
     }
 }
