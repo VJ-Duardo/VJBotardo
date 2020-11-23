@@ -2,6 +2,7 @@ const tmi = require('tmi.js');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const snake = require('./snake.js');
+const darts = require('./darts.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const ttt = require('./tictactoe.js');
@@ -600,12 +601,20 @@ function onMessageHandler (channel, userstate, message, self) {
     if (channelsObjs[channel].gameRunning){
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
-        if (command[0] === prefix+'guess') {
-            allowanceCheck(...identParams, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
-        } else if (command[0] === prefix+'ttt'){
-            allowanceCheck(...identParams, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
-        } else if (command[0] === prefix+'snake'){
-            allowanceCheck(...identParams, snake.playSnake, [channelsObjs[channel], sayFunc, userstate, command]);
+        switch (command[0]){
+            case prefix+'guess':
+                allowanceCheck(...identParams, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
+                break;
+            case prefix+'ttt':
+                allowanceCheck(...identParams, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
+                break;
+            case prefix+'snake':
+                allowanceCheck(...identParams, snake.playSnake, [channelsObjs[channel], sayFunc, userstate, command]);
+                break;
+            case prefix+'darts':
+                darts.playDarts(channelsObjs[channel], sayFunc, userstate, command);
+                //allowanceCheck(...identParams, darts.playDarts, [channelsObjs[channel], sayFunc, userstate, command]);
+                break;
         }
     }
 }
