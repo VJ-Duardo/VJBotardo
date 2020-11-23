@@ -4,7 +4,7 @@ A twitch.tv chat bot
 
 <br>
 
-[__View current commands__](https://github.com/VJ-Duardo/VJBotardo/blob/master/commands.md)
+[__View current commands__](https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb)
   
  <br>
 
