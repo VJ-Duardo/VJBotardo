@@ -156,8 +156,9 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 client.on('message', onMessageHandler);
 client.on('connected', onConnectedHandler);
 client.on('disconnected', onDisconnectHandler);
-client.on("notice", (channel, _, message) => {
-    console.log(channel+ ": " +message);
+client.on("notice", (channel, msgID, message) => {
+    if (msgID === "msg_channel_suspended")
+        console.log(channel+ ": " +message);
 });
 
 
