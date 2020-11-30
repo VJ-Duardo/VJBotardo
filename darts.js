@@ -19,7 +19,6 @@ const timeToWaitForPlayers = 30000;
 
 const maxPlayers = 5;
 const minPlayers = 2;
-const rewardMultiplicator = 2;
 
 var games = {};
 
@@ -202,7 +201,7 @@ class GameParty extends Game {
             return;
         } else {
             this.players[playerID] = new Player(playerID, playerName);
-            this.sayFunc(this.channelObj.name, "/me ["+this.players.length+"/"+maxPlayers+"] " +playerName+ " joined!");
+            this.sayFunc(this.channelObj.name, "/me ["+Object.keys(this.players).length+"/"+maxPlayers+"] " +playerName+ " joined!");
             if (Object.keys(this.players).length === maxPlayers){
                 this.waitForJoin.status = false;
                 startGame();
@@ -223,11 +222,11 @@ class GameParty extends Game {
     }
     
     endGame(){
-        let standingsList = Object.keys(this.players).sort((a, b) => (a - b));
+        let standingsList = Object.keys(this.players).sort((a, b) => (b - a));
         let winner = this.players[standingsList[0]];
-        let reward = (this.players[standingsList[0]].points*rewardMultiplicator)*((standingsList.length/maxPlayers)+1);
+        let reward = parseInt((this.players[standingsList[0]].points)*((standingsList.length/maxPlayers)+1));
         this.sayFunc(this.channelObj.name, "/me Game is over! Final standings: " 
-                +standingsList.map(id, i => id = i+1 +". " +this.players[id].name+ ": " +this.players[id].points).join(" | ") +" "
+                +standingsList.map((id, i) => id = i+1 +". " +this.players[id].name+ ": " +this.players[id].points).join(" | ") +". "
                 +winner.name+ " wins " +reward+ " USh!");
         this.channelObj.gameRunning = false;
         db.addUserPoints(winner.id, winner.name, reward);
