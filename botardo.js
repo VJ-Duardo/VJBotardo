@@ -611,10 +611,9 @@ function onMessageHandler (channel, userstate, message, self) {
             case prefix+'snake':
                 allowanceCheck(...identParams, snake.playSnake, [channelsObjs[channel], sayFunc, userstate, command]);
                 break;
-            /*case prefix+'darts':
-                darts.playDarts(channelsObjs[channel], sayFunc, userstate, command);
-                //allowanceCheck(...identParams, darts.playDarts, [channelsObjs[channel], sayFunc, userstate, command]);
-                break;*/
+            case prefix+'darts':
+                allowanceCheck(...identParams, darts.playDarts, [channelsObjs[channel], sayFunc, userstate, command]);
+                break;
         }
     }
 }

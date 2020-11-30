@@ -14,7 +14,12 @@ const brailleTreshold = 250;
 
 const maxRounds = 5;
 const secondsToInput = 10;
-const timeToNextRound = 5000;
+const timeToNextRound = 7000;
+const timeToWaitForPlayers = 30000;
+
+const maxPlayers = 5;
+const minPlayers = 2;
+const rewardMultiplicator = 2;
 
 var games = {};
 
@@ -45,6 +50,7 @@ class Player {
     constructor(id, name){
         this.id = id;
         this.name = name;
+        this.points = 0;
     }
 }
 
@@ -54,9 +60,8 @@ class Game {
         this.sayFunc = sayFunc;
         this.players = {};
         this.players[playerID] = new Player(playerID, playerName);
-        this.currentPlayer = playerID;
+        this.currentPlayer = 0;
         this.round = 1;
-        this.points = 0;
         this.canvas = createCanvas(pixelWidth, pixelHeight);
         this.context = this.canvas.getContext('2d');
         this.waitForInput = {
@@ -70,9 +75,17 @@ class Game {
         };
         this.generateRandomPointAscii = this.generateRandomPointAscii.bind(this);
         this.evaluateRound = this.evaluateRound.bind(this);
-        this.sayFunc(this.channelObj.name, "/me Get ready...");
-        let startRound = this.generateRandomPointAscii;
-        setTimeout(function(){startRound();}, timeToNextRound);
+        this.startMessage(this.getPlayerByIndex(this.currentPlayer).name);
+        let startGame = this.generateRandomPointAscii;
+        this.startHandle = setTimeout(function(){startGame();}, timeToNextRound);
+    }
+    
+    getPlayerByIndex(i){
+        return this.players[Object.keys(this.players)[i]];
+    }
+    
+    startMessage(player){
+        this.sayFunc(this.channelObj.name, "/me " +player+ ", Get ready...");
     }
     
     async generateRandomPointAscii(){
@@ -136,27 +149,88 @@ class Game {
         this.hits.push({x: this.currentPoint.x, y: this.currentPoint.y});
         let distanceFromMiddle = Math.sqrt(((pixelWidth/2 - this.currentPoint.x) ** 2) + ((pixelHeight/2 - this.currentPoint.y) ** 2));
         let ring = rings.find(elem => distanceFromMiddle >= elem.start && distanceFromMiddle <= elem.end);
-        this.points += ring.points;
+        this.getPlayerByIndex(this.currentPlayer).points += ring.points;
         
         await loadAndAddToCanvas(boardImagePath, 0, 0, this.context);
         this.addPreviousHits([{x: this.currentPoint.x, y: this.currentPoint.y}]);
         this.sayFunc(this.channelObj.name, "/me "+ printField(this.context));
         
-        this.sayFunc(this.channelObj.name, "/me " +ring.message + ring.getPointsString() + " Points overall: " +this.points);
-        if (this.round === maxRounds){
+        this.sayFunc(this.channelObj.name, "/me " +ring.message + ring.getPointsString() + " Points overall: " +this.getPlayerByIndex(this.currentPlayer).points);
+        if (this.round === maxRounds && this.currentPlayer+1 >= Object.keys(this.players).length){
             this.endGame();
         } else {
-            this.round++;
+            if (this.currentPlayer+1 >= Object.keys(this.players).length){
+                this.round++;
+                this.currentPlayer = 0;
+            } else {
+                this.currentPlayer++;
+            }
             let _this = this;
-            this.sayFunc(this.channelObj.name, "/me Get ready for the next round...");
+            this.sayFunc(this.channelObj.name, "/me " +this.getPlayerByIndex(this.currentPlayer).name+ ", Get ready for the next round...");
             setTimeout(function(){_this.generateRandomPointAscii();}, timeToNextRound);
         }
     }
     
     endGame(){
-        this.sayFunc(this.channelObj.name, "/me Game is over! You got " +this.points+ " points and earned " +this.points+ "USh :D");
+        let player = this.getPlayerByIndex(this.currentPlayer);
+        this.sayFunc(this.channelObj.name, "/me Game is over! You got " +player.points+ " points and earned " +player.points+ "USh :D");
         this.channelObj.gameRunning = false;
-        db.addUserPoints(this.currentPlayer, this.players[this.currentPlayer].name, this.points);
+        db.addUserPoints(player.id, player.name, player.points);
+        delete games[this.channelObj.name];
+    }
+}
+
+
+class GameParty extends Game {
+    constructor(channelObj, sayFunc, playerID, playerName){
+        super(channelObj, sayFunc, playerID, playerName);
+        clearTimeout(this.startHandle);
+        let _this = this;
+        this.waitForJoin = {
+            status: true,
+            handle: setTimeout(function(){_this.startGame.bind(_this)();}, timeToWaitForPlayers)
+        };
+    }
+    
+    startMessage(player){
+        this.sayFunc(this.channelObj.name, "/me A new game of darts has been started! Type " +this.channelObj.prefix+ "join to play! Starting in "
+                +timeToWaitForPlayers/1000+" seconds. ("+player+" is already in)");
+    }
+    
+    addPlayer(playerName, playerID){
+        if (Object.keys(this.players).length === maxPlayers || this.players.hasOwnProperty(playerID)){
+            return;
+        } else {
+            this.players[playerID] = new Player(playerID, playerName);
+            this.sayFunc(this.channelObj.name, "/me ["+this.players.length+"/"+maxPlayers+"] " +playerName+ " joined!");
+            if (Object.keys(this.players).length === maxPlayers){
+                this.waitForJoin.status = false;
+                startGame();
+            }
+        }
+    }
+    
+    startGame(){
+        if (Object.keys(this.players).length < minPlayers){
+            this.sayFunc(this.channelObj.name, "/me Seems like noone joined :(");
+            this.channelObj.gameRunning = false;
+            delete games[this.channelObj.name];
+            return;
+        }
+        this.sayFunc(this.channelObj.name, "/me The Game is starting, " +this.getPlayerByIndex(this.currentPlayer).name+ ", Get ready...");
+        let startGame = this.generateRandomPointAscii;
+        setTimeout(function(){startGame();}, timeToNextRound);
+    }
+    
+    endGame(){
+        let standingsList = Object.keys(this.players).sort((a, b) => (a - b));
+        let winner = this.players[standingsList[0]];
+        let reward = (this.players[standingsList[0]].points*rewardMultiplicator)*((standingsList.length/maxPlayers)+1);
+        this.sayFunc(this.channelObj.name, "/me Game is over! Final standings: " 
+                +standingsList.map(id, i => id = i+1 +". " +this.players[id].name+ ": " +this.players[id].points).join(" | ") +" "
+                +winner.name+ " wins " +reward+ " USh!");
+        this.channelObj.gameRunning = false;
+        db.addUserPoints(winner.id, winner.name, reward);
         delete games[this.channelObj.name];
     }
 }
@@ -165,14 +239,41 @@ class Game {
 module.exports = {
     playDarts: function(channelObj, sayFunc, user, input){
         if (!games.hasOwnProperty(channelObj.name)){
-            games[channelObj.name] = new Game(channelObj, sayFunc, user['user-id'], user['username']);
-            channelObj.gameRunning = true;
-            channelObj.game = module.exports.playDarts;
+            switch(input[1]){
+                case 'howtoplay':
+                    sayFunc(channelObj.name, "/me A hand holding an arrow will appear on a random location on the board. "
+                        +''+"You have to guess now, how many dots the hand should move to bring the arrow to the middle. "
+                        +''+"The input has to look like this for exmaple: 2l 5u  This means 2 left and 5 up. You write r for right and d for down. "
+                        +''+"But you have only " +secondsToInput+ " seconds to move, with your next input counting immediately. "
+                        +''+"So dont waste time counting the dots, you have to estimate!");
+                    break;           
+                case 'party':
+                case 'normal':
+                    if (input[1] === 'normal')
+                        games[channelObj.name] = new Game(channelObj, sayFunc, user['user-id'], user['username']);
+                    else
+                        games[channelObj.name] = new GameParty(channelObj, sayFunc, user['user-id'], user['username']);
+                        channelObj.gameRunning = true;
+                        channelObj.game = module.exports.playDarts;
+                    break;
+                default:
+                    let p = channelObj.prefix;
+                    sayFunc(channelObj.name, "/me Available commands: "
+                        +p+ "darts howtoplay - You should read this before playing to know the controls and rules, "
+                        +p+ "darts normal - A " +maxRounds+ " round game for one player only, "
+                        +p+ "darts party - Up to " +maxPlayers+ " players take turns for " +maxRounds+ " rounds, with the player with the most points a the end winning!");
+            }
             return;
         }
         
         let gameObj = games[channelObj.name];
-        if (gameObj.waitForInput.status && user['user-id'] === gameObj.currentPlayer){
+        
+        if (gameObj instanceof GameParty && gameObj.waitForJoin.status && input[0] === channelObj.prefix+'join'){
+            gameObj.addPlayer(user['username'], user['user-id']);
+            return;
+        }
+        
+        if (gameObj.waitForInput.status && user['user-id'] === gameObj.getPlayerByIndex(gameObj.currentPlayer).id){
             clearTimeout(gameObj.waitForInput.handle);
             gameObj.evaluateRound(input.join(" "));
             gameObj.waitForInput.status = false;
