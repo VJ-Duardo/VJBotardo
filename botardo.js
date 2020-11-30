@@ -524,7 +524,7 @@ function onMessageHandler (channel, userstate, message, self) {
         return; 
     }
 
-    const command = message.trim().replace('󠀀', '').split(" ");
+    const command = message.replace('󠀀', '').trim().split(" ");
     const prefix = channelsObjs[channel].prefix;
     const identParams = [channel, userstate, command[0].replace(prefix, '')];
     
