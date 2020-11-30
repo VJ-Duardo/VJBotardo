@@ -157,6 +157,10 @@ class Game {
         this.sayFunc(this.channelObj.name, "/me "+ printField(this.context));
         
         this.sayFunc(this.channelObj.name, "/me " +origin+ " " +ring.message + ring.getPointsString() + " Points overall: " +this.getPlayerByIndex(this.currentPlayer).points);
+        this.updateGameStatus();
+    }
+    
+    updateGameStatus(){
         if (this.round === maxRounds && this.currentPlayer+1 >= Object.keys(this.players).length){
             this.endGame();
         } else {
@@ -175,12 +179,10 @@ class Game {
     concede(id){
         this.sayFunc(this.channelObj.name, "/me " +this.players[id].name+ " has given up :(");
         delete this.players[id];
-        if (Object.keys(this.players).length < minPlayers){
-            clearTimeout(this.nextRoundHandle);
-            clearTimeout(this.startHandle);
-            clearTimeout(this.waitForInput.handle);
-            this.endGame();
-        }
+        clearTimeout(this.nextRoundHandle);
+        clearTimeout(this.startHandle);
+        clearTimeout(this.waitForInput.handle);
+        this.endGame();
     }
     
     endGame(){
@@ -204,7 +206,7 @@ class GameParty extends Game {
             status: true,
             handle: setTimeout(function(){_this.startGame.bind(_this)();}, timeToWaitForPlayers)
         };
-        let startHandle = null;
+        this.startHandle = null;
     }
     
     startMessage(player){
@@ -219,7 +221,7 @@ class GameParty extends Game {
             this.players[playerID] = new Player(playerID, playerName);
             this.sayFunc(this.channelObj.name, "/me ["+Object.keys(this.players).length+"/"+maxPlayers+"] " +playerName+ " joined!");
             if (Object.keys(this.players).length === maxPlayers){
-                startGame();
+                this.startGame();
             }
         }
     }
@@ -233,12 +235,27 @@ class GameParty extends Game {
             return;
         }
         this.sayFunc(this.channelObj.name, "/me The Game is starting, " +this.getPlayerByIndex(this.currentPlayer).name+ ", Get ready...");
-        let startGame = this.generateRandomPointAscii;
-        this.startHandle = setTimeout(function(){startGame();}, timeToNextRound);
+        let genAscii = this.generateRandomPointAscii;
+        this.startHandle = setTimeout(function(){genAscii();}, timeToNextRound);
+    }
+    
+    concede(id){
+        this.sayFunc(this.channelObj.name, "/me " +this.players[id].name+ " has given up :(");
+        let playerPos = Object.keys(this.players).indexOf(id);
+        delete this.players[id];
+        clearTimeout(this.nextRoundHandle);
+        clearTimeout(this.startHandle);
+        clearTimeout(this.waitForInput.handle);
+        clearTimeout(this.waitForJoin.handle);
+        if (Object.keys(this.players).length < minPlayers){
+            this.endGame();
+        } else {
+            if (playerPos === this.currentPlayer)
+                this.updateGameStatus();
+        }
     }
     
     endGame(){
-        clearTimeout(this.startHandle);
         if (Object.keys(this.players).length >= 1 && !this.waitForJoin.status){
             let standingsList = Object.keys(this.players).sort((a, b) => (b - a));
             let winner = this.players[standingsList[0]];
@@ -250,7 +267,6 @@ class GameParty extends Game {
         } else {
             this.sayFunc(this.channelObj.name, "/me Too many people left :(");
         }
-        clearTimeout(this.waitForJoin.handle);
         this.channelObj.gameRunning = false;
         delete games[this.channelObj.name];
     }
@@ -289,12 +305,9 @@ module.exports = {
         
         let gameObj = games[channelObj.name];
         
-        switch(input[0]){
-            case channelObj.prefix+'concede':
-                if (gameObj.players.hasOwnProperty(user['user-id'])){
-                    gameObj.concede(user['user-id']);
-                    return;
-                }
+        if (input[0] === channelObj.prefix+'concede' && gameObj.players.hasOwnProperty(user['user-id'])){
+            gameObj.concede(user['user-id']);
+            return;
 ;        }
         
         if (gameObj instanceof GameParty && gameObj.waitForJoin.status && input[0] === channelObj.prefix+'join'){
