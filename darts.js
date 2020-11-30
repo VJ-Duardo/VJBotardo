@@ -7,6 +7,7 @@ registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
 const pixelWidth = 60;
 const pixelHeight = 60;
 const yCorrection = 0.158;
+const maxRandomRadius = 24;
             
 const boardImagePath = './assets/dart_board.png';
 const handImagePath = './assets/dart_hand.png';
@@ -92,7 +93,7 @@ class Game {
         await loadAndAddToCanvas(boardImagePath, 0, 0, this.context);
         this.addPreviousHits(this.hits);
         
-        const radius = (pixelWidth/2) * Math.sqrt(Math.random());
+        const radius = maxRandomRadius * Math.sqrt(Math.random());
         const angle = Math.random() * 2 * Math.PI;
         const x = pixelWidth/2 + radius * Math.cos(angle);
         const y = (pixelHeight/2 + radius * Math.sin(angle));
