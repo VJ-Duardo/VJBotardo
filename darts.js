@@ -75,6 +75,7 @@ class Game {
         };
         this.generateRandomPointAscii = this.generateRandomPointAscii.bind(this);
         this.evaluateRound = this.evaluateRound.bind(this);
+        this.endGame = this.endGame.bind(this);
         this.startMessage(this.getPlayerByIndex(this.currentPlayer).name);
         let startGame = this.generateRandomPointAscii;
         this.startHandle = setTimeout(function(){startGame();}, timeToNextRound);
@@ -185,11 +186,12 @@ class Game {
         this.endGame();
     }
     
-    endGame(){
+    async endGame(){
         if (Object.keys(this.players).length > 0){
             let player = this.getPlayerByIndex(this.currentPlayer);
             this.sayFunc(this.channelObj.name, "/me Game is over! You got " +player.points+ " points and earned " +player.points+ "USh :D");
-            db.addUserPoints(player.id, player.name, player.points);
+            await db.addUserPoints(player.id, player.name, player.points);
+            db.setHighscoreIfHigh(player.id, player.name, player.points, 'darts');
         }
         this.channelObj.gameRunning = false;
         delete games[this.channelObj.name];
@@ -255,15 +257,18 @@ class GameParty extends Game {
         }
     }
     
-    endGame(){
+    async endGame(){
         if (Object.keys(this.players).length >= 1 && !this.waitForJoin.status){
-            let standingsList = Object.keys(this.players).sort((a, b) => (b - a));
+            let standingsList = Object.keys(this.players).sort((a, b) => (this.players[b].points - this.players[a].points));
             let winner = this.players[standingsList[0]];
             let reward = parseInt((this.players[standingsList[0]].points)*((standingsList.length/maxPlayers)+1));
             this.sayFunc(this.channelObj.name, "/me Game is over! Final standings: " 
                     +standingsList.map((id, i) => id = i+1 +". " +this.players[id].name+ ": " +this.players[id].points).join(" | ") +". "
                     +winner.name+ " wins " +reward+ " USh!");
-            db.addUserPoints(winner.id, winner.name, reward);
+            await db.addUserPoints(winner.id, winner.name, reward);
+            for (const id of standingsList){
+                db.setHighscoreIfHigh(this.players[id].id, this.players[id].name, this.players[id].points, 'darts');
+            }
         } else {
             this.sayFunc(this.channelObj.name, "/me Too many people left :(");
         }
@@ -283,7 +288,12 @@ module.exports = {
                         +''+"The input has to look like this for exmaple: 2l 5u  This means 2 left and 5 up. You write r for right and d for down. "
                         +''+"But you have only " +secondsToInput+ " seconds to move, with your next input counting immediately. "
                         +''+"So dont waste time counting the dots, you have to estimate!");
-                    break;           
+                    break;
+                case 'score':
+                    db.getHighScore(user['user-id'], 'darts').then((score) => {
+                        sayFunc(channelObj.name, '/me ' +user['username']+'s highscore is: ' +score);
+                    });
+                    break;
                 case 'party':
                 case 'normal':
                     if (input[1] === 'normal')
@@ -293,7 +303,7 @@ module.exports = {
                         channelObj.gameRunning = true;
                         channelObj.game = module.exports.playDarts;
                     break;
-                default:
+                case undefined:
                     let p = channelObj.prefix;
                     sayFunc(channelObj.name, "/me Available commands: "
                         +p+ "darts howtoplay - You should read this before playing to know the controls and rules, "

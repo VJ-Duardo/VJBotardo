@@ -150,7 +150,7 @@ module.exports = {
                             resolve();
                         });
                     } else {
-                        await insertNewUser(id, name, points, 0);
+                        await insertNewUser(id, name, points, 0, 0);
                         resolve();
                     }
                 })
@@ -173,9 +173,13 @@ module.exports = {
             }
         });
     },
-    getSnakeScore: function(id){
+    getHighScore: function(id, type){
         return new Promise(function(resolve){
-           sql = 'SELECT snake_highscore FROM user where id = ?';
+            switch (type){
+                case 'snake': type = 'snake_highscore';break;
+                case 'darts': type = 'darts_highscore';break;
+            }
+           sql = 'SELECT '+type+' FROM user where id = ?';
            db.get(sql, [id], function(err, row){
                if (err){
                    console.log(err);
@@ -190,9 +194,13 @@ module.exports = {
            });
         });
     },
-    setHighscoreIfHigh: async function(id, name, score){
+    setHighscoreIfHigh: async function(id, name, score, type){
+        switch (type){
+            case 'snake': type = 'snake_highscore';break;
+            case 'darts': type = 'darts_highscore';break;
+        }
         if (await checkIfUserExists(id)){
-            sql = 'UPDATE user SET snake_highscore = ? WHERE ? > snake_highscore AND id = ?';
+            sql = 'UPDATE user SET '+type+' = ? WHERE ? > snake_highscore AND id = ?';
             db.run(sql, [score, score, id], function(err){
                 if (err){
                     console.log(err);
@@ -200,7 +208,10 @@ module.exports = {
                 }
             });
         } else {
-            insertNewUser(id, name, 0, score);
+            if (type === 'snake')
+                insertNewUser(id, name, 0, score, 0);
+            else
+                insertNewUser(id, name, 0, 0, score);
         }
     },
     getTopUserScores: function(top, type){
@@ -209,6 +220,7 @@ module.exports = {
                 case 'snake': type = 'snake_highscore';break;
                 case 'ush':
                 case 'points': type = 'points';break;
+                case 'darts': type = 'darts_highscore';break;
                 default: resolve(-1);return;
             }
             let sql = 'SELECT username, '+type+' FROM user ORDER BY '+type+' DESC LIMIT ?';
@@ -369,10 +381,10 @@ module.exports = {
     }
 };
 
-function insertNewUser(id, name, points, snakeHighscore){
+function insertNewUser(id, name, points, snakeHighscore, dartsHighscore){
     return new Promise(function(resolve){
-        let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?)';
-        db.run(sql, [id, name, points, snakeHighscore], function(err){
+        let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?, ?)';
+        db.run(sql, [id, name, points, snakeHighscore, dartsHighscore], function(err){
             if (err) {
                 console.log(err.message);
             } else {

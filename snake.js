@@ -406,7 +406,7 @@ module.exports = {
                 sayFunc(channelObj.name, '/me Use '+p+'snake start to see the available modes, the controls are w a s d. '+p+'snake score too see your highscore :)');
                 break;
             case 'score':
-                db.getSnakeScore(user['user-id']).then((score) => {
+                db.getHighScore(user['user-id'], 'snake').then((score) => {
                     sayFunc(channelObj.name, '/me ' +user['username']+'s highscore is: ' +score);
                 });
                 break;
@@ -525,7 +525,7 @@ async function gameOver(gameObj, won=false){
             "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + (gameObj.points*ushReward) + "USh plus a "+winningBonus+"USh winning bonus!");
         await db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
     }
-    db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points);
+    db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points, 'snake');
     clearInterval(gameObj.updateInterval);
     delete games[gameObj.channelObj.name];
     gameObj.channelObj.gameRunning = false;
