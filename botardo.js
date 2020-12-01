@@ -188,10 +188,11 @@ function showPoints(channel, userName, userId, anotherUser){
 }
 
 
-async function getTopUsh(channel){
-    let top = 10;
-    let topString = await db.getTopUserScores(top, 'points');
-    client.action(channel, topString);
+async function getTop(channel, type){
+    const top = 10;
+    let topString = await db.getTopUserScores(top, type);
+    if (topString !== -1)
+        client.action(channel, topString);
 }
 
 
@@ -533,7 +534,7 @@ function onMessageHandler (channel, userstate, message, self) {
             allowanceCheck(...identParams, kill, [channel]);
             break;
         case prefix+'top':
-            allowanceCheck(channel, userstate, 'top', getTopUsh, [channel]);
+            allowanceCheck(channel, userstate, 'top', getTop, [channel, command[1]]);
             break;
         case '!ping':
         case prefix+'ping':

@@ -403,12 +403,7 @@ module.exports = {
                 if (input[0] !== channelObj.prefix+'snake')
                     break;
                 let p = channelObj.prefix;
-                sayFunc(channelObj.name, '/me Use '+p+'snake start to see the available modes, the controls are w a s d. '+p+'snake score for your score and '+p+'snake top for the current top 10 :)');
-                break;
-            case 'top':
-                db.getTopUserScores(10, 'snake').then((topString) => {
-                    sayFunc(channelObj.name, '/me ' + topString);
-                });
+                sayFunc(channelObj.name, '/me Use '+p+'snake start to see the available modes, the controls are w a s d. '+p+'snake score too see your highscore :)');
                 break;
             case 'score':
                 db.getSnakeScore(user['user-id']).then((score) => {

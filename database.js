@@ -207,6 +207,7 @@ module.exports = {
         return new Promise(function(resolve){
             switch (type){
                 case 'snake': type = 'snake_highscore';break;
+                case 'ush':
                 case 'points': type = 'points';break;
                 default: resolve(-1);return;
             }
