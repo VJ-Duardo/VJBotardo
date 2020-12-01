@@ -190,6 +190,16 @@ function showPoints(channel, userName, userId, anotherUser){
 
 async function getTop(channel, type){
     const top = 10;
+    
+    if (typeof type === 'undefined'){
+        let p = channelsObjs[channel].prefix;
+        client.say(channel, "/me Available leaderboards: "
+                +p+ "top ush, "
+                +p+ "top snake, "
+                +p+ "top darts");
+        return;
+    }
+    
     let topString = await db.getTopUserScores(top, type);
     if (topString !== -1)
         client.action(channel, topString);
