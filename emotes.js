@@ -100,7 +100,7 @@ async function getRandomFFZEmote(keyword){
     const pages = await getFFZEmoteStat(keyword);
     if (pages === 0)
         return -1;
-    const ffzApi = "https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&page="+Math.ceil(Math.random() * pages)+"&q*="+keyword+"%";
+    const ffzApi = "https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&page="+Math.ceil(Math.random() * pages)+"&q=*"+keyword+"%";
     let response = await fetch(ffzApi);
     let data = await response.json();
     return !data.hasOwnProperty('error') ? convertFFZLists([data['emoticons'][0]])[0] : -1;
