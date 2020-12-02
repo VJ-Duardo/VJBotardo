@@ -200,7 +200,7 @@ module.exports = {
             case 'darts': type = 'darts_highscore';break;
         }
         if (await checkIfUserExists(id)){
-            sql = 'UPDATE user SET '+type+' = ? WHERE ? > snake_highscore AND id = ?';
+            sql = 'UPDATE user SET '+type+' = ? WHERE ? > '+type+' AND id = ?';
             db.run(sql, [score, score, id], function(err){
                 if (err){
                     console.log(err);

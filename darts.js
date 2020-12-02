@@ -267,7 +267,7 @@ class GameParty extends Game {
                     +winner.name+ " wins " +reward+ " USh!");
             await db.addUserPoints(winner.id, winner.name, reward);
             for (const id of standingsList){
-                db.setHighscoreIfHigh(this.players[id].id, this.players[id].name, this.players[id].points, 'darts');
+                await db.setHighscoreIfHigh(this.players[id].id, this.players[id].name, this.players[id].points, 'darts');
             }
         } else {
             this.sayFunc(this.channelObj.name, "/me Too many people left :(");
