@@ -382,7 +382,7 @@ module.exports = {
 
 function insertNewUser(id, name, points, snakeHighscore, dartsHighscore){
     return new Promise(function(resolve){
-        let sql = 'INSERT INTO USER(id, username, points, snake_highscore) VALUES (?, ?, ?, ?, ?)';
+        let sql = 'INSERT INTO USER(id, username, points, snake_highscore, darts_highscore) VALUES (?, ?, ?, ?, ?)';
         db.run(sql, [id, name, points, snakeHighscore, dartsHighscore], function(err){
             if (err) {
                 console.log(err.message);
