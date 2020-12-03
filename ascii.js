@@ -91,6 +91,9 @@ function getTextObject(width, height, text){
     const lineHeight = Math.ceil((height * relativeLineHeightPerMainHeight)/charHeight)*charHeight;
     const maxCharsPerLine = Math.ceil(width * relativeCharactersPerWidth);
     
+    if (height <= charHeight)
+        return null;
+    
     let textObj = {
         'height': lineHeight,
         'width': width,
@@ -160,7 +163,8 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let textObject = null;
     if (options.hasOwnProperty('text')){
         textObject = getTextObject(options['width'], options['height'], options['text']);
-        options['height'] -= textObject['heightAll'];
+        if (textObject !== null)
+            options['height'] -= textObject['heightAll'];
     }
     
     let canvas = createCanvas(options['width'], options['height']);

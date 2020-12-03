@@ -245,15 +245,22 @@ class GameParty extends Game {
         this.sayFunc(this.channelObj.name, "/me " +this.players[id].name+ " has given up :(");
         let playerPos = Object.keys(this.players).indexOf(id);
         delete this.players[id];
-        clearTimeout(this.nextRoundHandle);
-        clearTimeout(this.startHandle);
-        clearTimeout(this.waitForInput.handle);
-        clearTimeout(this.waitForJoin.handle);
+        if (this.waitForJoin.status && Object.keys(this.players).length > 0)
+            return;
+        
         if (Object.keys(this.players).length < minPlayers){
+            clearTimeout(this.nextRoundHandle);
+            clearTimeout(this.startHandle);
+            clearTimeout(this.waitForInput.handle);
+            clearTimeout(this.waitForJoin.handle);
             this.endGame();
         } else {
-            if (playerPos === this.currentPlayer)
+            if (playerPos === this.currentPlayer){
+                clearTimeout(this.nextRoundHandle);
+                clearTimeout(this.startHandle);
+                clearTimeout(this.waitForInput.handle);
                 this.updateGameStatus();
+            }
         }
     }
     
