@@ -103,9 +103,9 @@ class Game {
         this.currentPoint.x = x;
         this.currentPoint.y = y;
         this.sayFunc(this.channelObj.name, "/me Round " +this.round+ "/" +maxRounds+ " " +printField(this.context));
-        this.sayFunc(this.channelObj.name, "/me Post your estimated points needed to move the dart arrow to the middle, your next input counts. You have "+secondsToInput+" seconds!");
+        this.sayFunc(this.channelObj.name, "/me You have "+secondsToInput+" seconds!");
         this.waitForInput.status = true;
-        this.waitForInput.handle = setTimeout(function(){_this.evaluateRound("", "[Out of time]");}, secondsToInput*1000);
+        this.waitForInput.handle = setTimeout(function(){_this.evaluateRound("0r", "[Out of time]");}, secondsToInput*1000);
     }
     
     addPreviousHits(hits){
@@ -125,6 +125,9 @@ class Game {
     }
     
     async evaluateRound(input, origin){
+        if (!new RegExp(/^(\d+[udlr] )*(\d+[udlr] ?)$/g).test(input))
+            return;
+        clearTimeout(this.waitForInput.handle);
         this.waitForInput.status = false;
         for (let chunk of input.split(" ")){
             let characters = chunk.split("");
@@ -333,9 +336,7 @@ module.exports = {
         }
         
         if (gameObj.waitForInput.status && user['user-id'] === gameObj.getPlayerByIndex(gameObj.currentPlayer).id){
-            clearTimeout(gameObj.waitForInput.handle);
-            gameObj.evaluateRound(input.join(" "), "");
-            gameObj.waitForInput.status = false;
+            gameObj.evaluateRound(input.join(" ").toLowerCase(), "");
         }
     }
 };
