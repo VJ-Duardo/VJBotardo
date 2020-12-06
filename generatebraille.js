@@ -130,6 +130,8 @@ function getBrailleCode(pixelArray, pos, width, treshold){
         '13': '8'
     };
     for(k=0; k<2; k++){
+        if (Math.ceil((pos+1)/width) !== Math.ceil((pos+1+k)/width))
+            continue
         for(l=0; l<4; l++){
             if ((pos + k + (width*l)) < pixelArray.length){
                 if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold)){
