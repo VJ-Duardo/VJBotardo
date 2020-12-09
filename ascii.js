@@ -27,7 +27,8 @@ const givenOptions = {
     '-r': {descr: "rotate"},
     '-d': {descr: "dither"},
     '-i': {descr: "invert"},
-    '-tr': {descr: "treshold"}
+    '-tr': {descr: "treshold"},
+    '-g': {descr: "gif"}
 };
 
 const defaultWidth = 58;
@@ -71,7 +72,7 @@ function createOptionsObj(optionsInput){
         }
     }
     
-    ['-d', '-i'].forEach(function(opt){
+    ['-d', '-i', '-g'].forEach(function(opt){
         if (optionsInput.includes(opt))
             optionsObj[givenOptions[opt].descr] = null;
     });
@@ -123,7 +124,7 @@ function getTextObject(width, height, text){
 
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (userInput.length < asciiModes[mode].params){
-        sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t Check commands list for more info.");
+        sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t -g Check commands list for more info.");
         return;
     }
     
@@ -172,12 +173,15 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     if (options.hasOwnProperty('rotate'))
         rotateContext(context, options['rotate'], options['width'], options['height']);
     
-    if (mode === 'ascii' && gifSpam && await gifCheck(...urls)){
-        context = await printGifAscii(channelObj, sayFunc, asciiOptions, ...urls);
-        return "";
-    } else {
-        context = await asciiModes[mode].func(options['width'], options['height'], context, ...urls);
+    if (gifSpam
+            && ((mode !== 'ascii' && options.hasOwnProperty("gif")) || mode === 'ascii')){
+        let gifIndex = await gifCheck(urls);
+        if (gifIndex !== -1){
+            context = await printGifAscii(channelObj, sayFunc, mode, asciiOptions, urls, gifIndex);
+            return "";
+        }
     }
+    context = await asciiModes[mode].func(options['width'], options['height'], context, ...urls);
     
     if (context === -1){
         return -1;
@@ -355,18 +359,19 @@ function generateTextAscii(textObj){
 
 
 
-async function printGifAscii(channelObj, sayFunc, asciiOptions, src){
+async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index){
     let cumulativeVal = false;
-    let transparencyPercent = await braille.getTransparencyData(src);
+    let transparencyPercent = await braille.getTransparencyData(src[index]);
     cumulativeVal = transparencyPercent < 10;
-    return gifFrames({ url: src, frames: 'all', outputType: 'png', cumulative: cumulativeVal})
+    return gifFrames({ url: src[index], frames: 'all', outputType: 'png', cumulative: cumulativeVal})
         .then(async function (frameData) {
             let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
             for (let i=0; i<frameData.length; i+=frameJump){
                 let prom = new Promise(function(resolve){
                     let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
                     stream.on('finish', async function(){
-                        await printAscii(channelObj, sayFunc, 'ascii', ['./frames/frame'+i+'.png'].concat(asciiOptions), false);
+                        src[index] = './frames/frame'+i+'.png';
+                        await printAscii(channelObj, sayFunc, mode, src.concat(asciiOptions), false);
                         resolve();
                     });
                 });
@@ -380,12 +385,17 @@ async function printGifAscii(channelObj, sayFunc, asciiOptions, src){
 }
 
 
-function gifCheck(src){
-    return fetch(src, {method:"HEAD"})
-        .then(response => response.headers.get("Content-Type"))
-        .then((type) => {
-            return (type === 'image/gif');
-    });
+async function gifCheck(src){
+    for (let i=0; i<src.length; i++){
+        let result = await fetch(src[i], {method:"HEAD"})
+            .then(response => response.headers.get("Content-Type"))
+            .then((type) => {
+                return (type === 'image/gif');
+        });
+        if (result)
+            return i;
+    }
+    return -1;
 }
 
 
