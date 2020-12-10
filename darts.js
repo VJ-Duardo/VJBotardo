@@ -258,11 +258,22 @@ class GameParty extends Game {
             clearTimeout(this.waitForJoin.handle);
             this.endGame();
         } else {
+            if (playerPos < this.currentPlayer){
+                this.currentPlayer--;
+                return;
+            }
+            
             if (playerPos === this.currentPlayer){
                 clearTimeout(this.nextRoundHandle);
                 clearTimeout(this.startHandle);
                 clearTimeout(this.waitForInput.handle);
-                this.updateGameStatus();
+                if (playerPos > Object.keys(this.players).length-1){
+                    this.updateGameStatus();
+                } else {
+                    let _this = this;
+                    this.sayFunc(this.channelObj.name, "/me " +this.getPlayerByIndex(this.currentPlayer).name+ ", Get ready for the next round...");
+                    this.nextRoundHandle = setTimeout(function(){_this.generateRandomPointAscii();}, timeToNextRound);
+                }
             }
         }
     }
