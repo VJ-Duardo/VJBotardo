@@ -307,7 +307,7 @@ class GameRoyale extends Game{
         let reward = ushMaxRewardRoyale * (Object.keys(this.players).length/maxRoyalePlayers);
         this.sayFunc(this.channelObj.name, "/me The game is over! " + Object.values(this.players).map(obj => obj = obj.place + ". " + obj.name).sort().join(" | ") 
                 + ". " + this.players[winner].name  + " has earned " + reward + "USh!");
-        db.addUserPoints(winner, winner.name, reward);
+        db.addUserPoints(winner, this.players[winner].name, reward);
         delete games[this.channelObj.name];
     }
 }
