@@ -148,8 +148,9 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         sayFunc(channelObj.name, brailleString);
     } else {
         sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do "+channelObj.prefix+"reload");
+        return -1;
     }
-    return;
+    return 1;
 }
 
 
@@ -367,15 +368,22 @@ async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index
         .then(async function (frameData) {
             let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
             for (let i=0; i<frameData.length; i+=frameJump){
-                let prom = new Promise(function(resolve){
+                let prom = new Promise(function(resolve, reject){
                     let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
                     stream.on('finish', async function(){
                         src[index] = './frames/frame'+i+'.png';
-                        await printAscii(channelObj, sayFunc, mode, src.concat(asciiOptions), false);
-                        resolve();
+                        let status = await printAscii(channelObj, sayFunc, mode, src.concat(asciiOptions), false);
+                        if (status === -1)
+                            reject();
+                        else
+                            resolve();
                     });
                 });
-                await prom;
+                try{
+                    await prom;
+                }catch(_){
+                    return;
+                }
             }
         })
         .catch((error) => {
