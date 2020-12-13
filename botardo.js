@@ -333,21 +333,19 @@ async function addChannel(channel, id, channelName){
 async function removeChannel(channel, id){
     channelObj = Object.values(channelsObjs).find(obj => obj.id === id);
     if (typeof channelObj === 'undefined' || !channelsObjs.hasOwnProperty(channelObj.name)){
-        client.say(channel, "Cant find that channel.");
-        return -1;
+        client.say(channel, "Cant find that channel here.");
+    } else {
+        try {
+            await client.part(channelObj.name);
+        } catch(e){
+            client.say(channel, e);
+        }
+        delete channelsObjs[channelObj.name];
     }
-    
-    try {
-        await client.part(channelObj.name);
-    } catch(e){
-        client.say(channel, e);
-    }
-    
-    delete channelsObjs[channelObj.name];
     
     let deleteStatus = await db.deleteChannel(id);
     if (deleteStatus === 1){
-        client.say(channel, "Successfully removed channel.");
+        client.say(channel, "Successfully removed channel from db.");
         return 1;
     } else {
         client.say(channel, String(deleteStatus));
