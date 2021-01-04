@@ -48,30 +48,10 @@ module.exports = {
     },
     
     insertEmote: function(id, name, url){
-        let sql = 'INSERT INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
+        let sql = 'INSERT OR REPLACE INTO emote(emote_id, name, url) VALUES(?, ?, ?)';
         db.run(sql, [id, name, url], function(err){
             if (err)
                 return;
-        });
-    },
-    getLastEmoteID: function(){
-        const goBackAmount = 150000;
-        return new Promise(function(resolve){
-            let sql = 'SELECT MAX(emote_id) FROM emote';
-            db.get(sql, [], function(err, row){
-                if (err){
-                    console.log(err);
-                    resolve(-1);
-                    return;
-                }
-                if (Object.values(row)[0] === null){
-                    resolve(0);
-                    return;
-                } else {
-                    let id = Object.values(row)[0]-goBackAmount;
-                    resolve(id < 0 ? 0 : id);
-                }
-            });
         });
     },
     getEmoteByName: function(name){

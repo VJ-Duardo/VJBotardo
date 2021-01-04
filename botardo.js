@@ -512,7 +512,7 @@ function checkBot(channel){
 }
 
 async function checkCommand(channel, command){
-    if (!commandsObj.hasOwnProperty(command)){
+    if (!commandObjs.hasOwnProperty(command)){
         client.action(channel, "Unknown command!");
         return;
     }

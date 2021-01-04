@@ -193,22 +193,18 @@ function getTwitchEverything(){
             return;
         }
         
-        const lastEmoteID = await db.getLastEmoteID();
-        if (lastEmoteID === -1){
-            return;
-        }
-        let emoteList = dataObj['emoticons'].filter(emote => emote['id'] > lastEmoteID);
+        const count = await db.getRandomEmoteStat("");
+        let emoteList = dataObj['emoticons'];
         console.log('emote data loaded');
-        (async function(){
+        await (async function(){
             //db.sendQuery('PRAGMA cache_size=10000;');
             db.sendQuery('BEGIN TRANSACTION;');
             for (i=0; i<emoteList.length; i++){
                 await db.insertEmote(emoteList[i]['id'], emoteList[i]['regex'], emoteList[i]['images']['url'].replace('1.0', '3.0'));
             }
             db.sendQuery('END TRANSACTION;');
-            console.log("up to " + emoteList.length + " new emotes added!");
+            console.log((await db.getRandomEmoteStat("") - count) + " new emotes added!");
         })();
-        module.exports.allExisitingEmotes = emoteList;
         return "done";
     });
 }
