@@ -207,8 +207,10 @@ async function getRandomEmote(emoteSet, mode){
     let triesUntiBackup = 10;
     let emote = null;
     let trData = 0;
+    const min = 10;
+    const max = 90;
     
-    while (trData === 0 || trData === 100){
+    while (trData < min || trData > max){
         emote = emoteSet[Math.floor(Math.random() * emoteSet.length)];
         trData = await braille.getTransparencyData(emote.url);
         triesUntiBackup--;
