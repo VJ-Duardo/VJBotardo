@@ -147,7 +147,6 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
     pass.loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
-    //emotes.loadTwitchSubEmotes();
     await db.getAllData(loadCommand, "COMMAND");
     db.getAllData(loadChannel, "CHANNEL");
 })();
