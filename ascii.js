@@ -28,7 +28,9 @@ const givenOptions = {
     '-d': {descr: "dither"},
     '-i': {descr: "invert"},
     '-tr': {descr: "treshold"},
-    '-g': {descr: "gif"}
+    '-g': {descr: "gif"},
+    '-b': {descr: "background"},
+    '-e': {descr: "empty"}
 };
 
 const defaultWidth = 58;
@@ -72,7 +74,7 @@ function createOptionsObj(optionsInput){
         }
     }
     
-    ['-d', '-i', '-g'].forEach(function(opt){
+    ['-d', '-i', '-g', '-b', '-e'].forEach(function(opt){
         if (optionsInput.includes(opt))
             optionsObj[givenOptions[opt].descr] = null;
     });
@@ -124,7 +126,7 @@ function getTextObject(width, height, text){
 
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (userInput.length < asciiModes[mode].params){
-        sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t -g Check commands list for more info.");
+        sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t, -g, -b, -e Check commands list for more info.");
         return;
     }
     
@@ -190,10 +192,18 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
     let treshold = options.hasOwnProperty('treshold') ? options['treshold'] : -1;
-    let brailleResult =  braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, options['width'], treshold, false, options.hasOwnProperty('dither'), asciiModes[mode].mask)
+    let brailleResult = braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, 
+                            options['width'], 
+                            treshold, 
+                            false, 
+                            options.hasOwnProperty('dither'), 
+                            asciiModes[mode].mask,
+                            !options.hasOwnProperty('background'))
             + " " 
             + brailleText;
-    return options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
+    brailleResult = options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
+    brailleResult = options.hasOwnProperty('empty') ? brailleResult.replace(/[⠄]/g, '⠀') : brailleResult;
+    return brailleResult;
 }
 
 
@@ -332,7 +342,7 @@ function rotateContext(context, degree, width, height){
 
 
 
-function generateTextAscii(textObj){
+function generateTextAscii(textObj, setBackground){
     //console.log(textObj);
     const font = "11px Noto Sans JP";
     const align = "center";
@@ -352,7 +362,7 @@ function generateTextAscii(textObj){
         textAscii += braille.iterateOverPixels(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, treshold, false) + " ";
     }
     
-    return textAscii;
+    return setBackground ? textAscii : braille.invert(textAscii);
 }
 
 

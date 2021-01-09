@@ -39,7 +39,7 @@ module.exports = {
     getTransparencyData: getTransparencyData
 };
 
-function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false, mask=defaultMask){
+function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false, mask=defaultMask, setBackground=true){
     let resultArray = new Array();
     let pixelArray = new Array();
     for(i=0; i<dataArray.length; i+=4){
@@ -64,7 +64,7 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     for(i=0; i<pixelArray.length; i+=(width*4)){
         let line = "";
         for(j=0; j<width; j+=2){
-            line += brailleData.braille_descr_dic[getBrailleCode(pixelArray, i+j, width, treshold)];
+            line += brailleData.braille_descr_dic[getBrailleCode(pixelArray, i+j, width, treshold, setBackground)];
         }
         resultArray.push(line);
     }
@@ -117,7 +117,7 @@ function floydSteinberg(pixelArray, width){
 }
 
 
-function getBrailleCode(pixelArray, pos, width, treshold){
+function getBrailleCode(pixelArray, pos, width, treshold, setBackground){
     let brailleCode = "";
     let pixelPosToBraillePos = {
         '00': '1',
@@ -134,7 +134,7 @@ function getBrailleCode(pixelArray, pos, width, treshold){
             continue
         for(l=0; l<4; l++){
             if ((pos + k + (width*l)) < pixelArray.length){
-                if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold)){
+                if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold, setBackground)){
                     brailleCode += pixelPosToBraillePos[(k.toString() + l.toString())];
                 }
             }
@@ -144,8 +144,11 @@ function getBrailleCode(pixelArray, pos, width, treshold){
 }
 
 
-function evaluatePixel(pixel, pos, treshold){
-    return ((pixel.alpha === 0) || (pixel.getAvg() > treshold[pos]));
+function evaluatePixel(pixel, pos, treshold, setBackground){
+    if (pixel.alpha === 0 && !setBackground)
+        return false;
+    else
+        return ((pixel.alpha === 0 && setBackground) || (pixel.getAvg() > treshold[pos]));
 }
 
 
