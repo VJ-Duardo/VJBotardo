@@ -190,7 +190,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
         return -1;
     }
     
-    let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject) : "";
+    let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject, !options.hasOwnProperty('background')) : "";
     let treshold = options.hasOwnProperty('treshold') ? options['treshold'] : -1;
     let brailleResult = braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, 
                             options['width'], 
