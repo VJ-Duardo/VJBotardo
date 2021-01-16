@@ -141,14 +141,15 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 
 
 
-
+var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
     pass.loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
     await db.getAllData(loadCommand, "COMMAND");
-    db.getAllData(loadChannel, "CHANNEL");
+    await db.getAllData(loadChannel, "CHANNEL");
+    loading = false;
 })();
 
 
@@ -532,7 +533,7 @@ async function checkCommand(channel, command){
 
 
 function onMessageHandler (channel, userstate, message, self) {
-    if (self || !channelsObjs.hasOwnProperty(channel)) {
+    if (self || !channelsObjs.hasOwnProperty(channel) || loading) {
         return; 
     }
 
