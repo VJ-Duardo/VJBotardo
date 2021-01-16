@@ -180,6 +180,7 @@ function getTwitchEverything(){
 
         child.on('message', function(m) {
           resolve(m);
+          child.disconnect();
         });
 
         child.send("getTwitchEverything");
