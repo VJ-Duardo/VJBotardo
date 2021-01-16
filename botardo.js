@@ -597,15 +597,19 @@ function onMessageHandler (channel, userstate, message, self) {
         case prefix+'addCommand':
             allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5], command[6]]);
             break;
+        case prefix+'setbot':
         case prefix+'setBot':
             allowanceCheck(...identParams, setBot, [channel, userstate, command[1], command[2]]);         
             break;
+        case prefix+'checkbot':
         case prefix+'checkBot':
             allowanceCheck(...identParams, checkBot, [channel]);
             break;
+        case prefix+'setcommand':
         case prefix+'setCommand':
             allowanceCheck(...identParams, setCommand, [channel, userstate, command[1], command[2], command[3]]);
             break;
+        case prefix+'checkcommand':
         case prefix+'checkCommand':
             allowanceCheck(...identParams, checkCommand, [channel, command[1]]);
             break;
