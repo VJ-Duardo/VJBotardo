@@ -130,12 +130,16 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         return;
     }
     
-    if (mode === 'ascii' && userInput[0] === '-t'){
-        let textObject = getTextObject(defaultWidth, defaultHeight, userInput.slice(1, userInput.length).join(" "));
-        if (textObject['heightAll'] < 1){
-            sayFunc(channelObj.name, "/me The given text is too long!");
+    if (mode === 'ascii' && userInput[0].charAt(0) === '-' && userInput.includes('-t')){
+        let optionsObj = createOptionsObj(userInput);
+        let textObj = getTextObject(defaultWidth, defaultHeight, optionsObj['text']);
+        if (textObj['heightAll'] < 1){
+            sayFunc(channelObj.name, "/me The given text is too long for one line! Split it up!");
         } else {
-            sayFunc(channelObj.name, generateTextAscii(getTextObject(defaultWidth, defaultHeight, userInput.slice(1, userInput.length).join(" "))));
+            let result = generateTextAscii(textObj, !optionsObj.hasOwnProperty("background"));
+            result = optionsObj.hasOwnProperty('invert') ? braille.invert(result) : result;
+            result = optionsObj.hasOwnProperty('empty') ? result.replace(/[⠄]/g, '⠀') : result;
+            sayFunc(channelObj.name, result);
         }
         return;
     }
@@ -342,7 +346,7 @@ function rotateContext(context, degree, width, height){
 
 
 
-function generateTextAscii(textObj, setBackground){
+function generateTextAscii(textObj, setBackground=true){
     //console.log(textObj);
     const font = "11px Noto Sans JP";
     const align = "center";
