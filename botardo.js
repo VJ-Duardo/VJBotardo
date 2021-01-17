@@ -531,6 +531,45 @@ async function checkCommand(channel, command){
 
 
 
+async function suggest(channel, user, content){
+    if (typeof content === 'undefined' || content === ""){
+        client.action(channel, "Suggestions cannot be empty!");
+        return;
+    }
+    let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer '+pass.gitHubToken,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+            title: user['username'],
+            body: content
+        })
+    })
+    .then(response => {
+        if (response.status !== 201){
+            return -1;
+        }
+        return response.json();
+    })
+    .then(data => {
+        return data.number;
+    })
+    .catch(e => {
+        console.log(e);
+        return -1;
+    });
+      
+    if (status !== -1){
+        client.action(channel, "Suggestion was saved under number #" + status + ".");
+        return;
+    }
+    client.action(channel, "There was an issue, suggestion was most likely not saved :(");
+}
+
+
+
 
 function onMessageHandler (channel, userstate, message, self) {
     if (self || !channelsObjs.hasOwnProperty(channel) || loading) {
@@ -600,19 +639,22 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case prefix+'setbot':
         case prefix+'setBot':
-            allowanceCheck(...identParams, setBot, [channel, userstate, command[1], command[2]]);         
+            allowanceCheck(channel, userstate, 'setBot', setBot, [channel, userstate, command[1], command[2]]);         
             break;
         case prefix+'checkbot':
         case prefix+'checkBot':
-            allowanceCheck(...identParams, checkBot, [channel]);
+            allowanceCheck(channel, userstate, 'checkBot', checkBot, [channel]);
             break;
         case prefix+'setcommand':
         case prefix+'setCommand':
-            allowanceCheck(...identParams, setCommand, [channel, userstate, command[1], command[2], command[3]]);
+            allowanceCheck(channel, userstate, 'setCommand', setCommand, [channel, userstate, command[1], command[2], command[3]]);
             break;
         case prefix+'checkcommand':
         case prefix+'checkCommand':
-            allowanceCheck(...identParams, checkCommand, [channel, command[1]]);
+            allowanceCheck(channel, userstate, 'checkCommand', checkCommand, [channel, command[1]]);
+            break;
+        case prefix+'suggest':
+            allowanceCheck(...identParams, suggest, [channel, userstate, command.slice(1).join(" ")]);
             break;
     }
 
