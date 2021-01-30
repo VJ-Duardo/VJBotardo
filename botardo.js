@@ -639,7 +639,7 @@ function onMessageHandler (channel, userstate, message, self) {
             break;
         case prefix+'setbot':
         case prefix+'setBot':
-            allowanceCheck(channel, userstate, 'setBot', setBot, [channel, userstate, command[1], command[2]]);         
+            allowanceCheck(channel, userstate, 'setBot', setBot, [channel, userstate, command[1], command[2]]);
             break;
         case prefix+'checkbot':
         case prefix+'checkBot':

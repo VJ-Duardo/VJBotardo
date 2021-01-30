@@ -34,8 +34,13 @@ const givenOptions = {
 };
 
 const defaultWidth = 58;
+const maxWidth = 70;
 const defaultHeight = 56;
-const maxCharacters = 500;
+const maxHeightFrames = 20;
+const maxHeight = 60;
+const maxHeightOverall = 20*44;
+const maxCharactersPerSend = 460;
+const bestCharactersPerSend = 406;
 
 
 
@@ -86,15 +91,14 @@ function createOptionsObj(optionsInput){
 function getTextObject(width, height, text){
     const relativeStartY = 0.83;
     const relativeStartX = 0.5;
-    const relativeLineHeightPerMainHeight = 0.2;
+    const relativeTextLinesPerMainHeight = 0.8;
     const relativeCharactersPerWidth = 0.2;
-    const maxLines = 4;
-    const charHeight = 4;
     
-    const lineHeight = Math.ceil((height * relativeLineHeightPerMainHeight)/charHeight)*charHeight;
+    const lineHeight = 12;
+    const maxLines = Math.ceil(Math.ceil(height/lineHeight)*relativeTextLinesPerMainHeight);
     const maxCharsPerLine = Math.ceil(width * relativeCharactersPerWidth);
     
-    if (height <= charHeight)
+    if (height <= lineHeight)
         return null;
     
     let textObj = {
@@ -151,7 +155,23 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     }
     let brailleString = await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc);
     if (brailleString !== -1){
-        sayFunc(channelObj.name, brailleString);
+        if (brailleString.length > maxCharactersPerSend && gifSpam){
+            if (gifSpam){
+                let c = 0;
+                do {
+                    let match = brailleString.substring(0, bestCharactersPerSend).match(/(.+ )+/g);
+                    if (match === null)
+                        break;
+                    sayFunc(channelObj.name, match[0]);
+                    brailleString = brailleString.slice(match[0].length);
+                    c++;
+                }while(c < maxHeightFrames);
+            }else {
+                sayFunc(channelObj.name, brailleString.substring(0, maxCharactersPerSend).match(/(.+ )+/g)[0]);
+            }
+        }else{
+            sayFunc(channelObj.name, brailleString);
+        }
     } else {
         sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do "+channelObj.prefix+"reload");
         return -1;
@@ -164,9 +184,8 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
 async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
     //console.log(options);
-    let characters = (Math.ceil(options['width']/2) * Math.ceil(options['height']/4) + Math.ceil(options['height']/4));
-    if (characters <= 0 || characters > maxCharacters){
-        return "/me Please pick valid dimensions (max 500 characters)";
+    if (options['width'] > maxWidth || options['height'] > maxHeightOverall || options['width'] < 1 || options['height'] < 1){
+        return "/me Please pick valid dimensions (max width is "+maxWidth+", max height is "+maxHeightOverall+")";
     }
     let textObject = null;
     if (options.hasOwnProperty('text')){
@@ -181,7 +200,8 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
         rotateContext(context, options['rotate'], options['width'], options['height']);
     
     if (gifSpam
-            && ((mode !== 'ascii' && options.hasOwnProperty("gif")) || mode === 'ascii')){
+            && ((mode !== 'ascii' && options.hasOwnProperty("gif")) || mode === 'ascii') 
+            && (Math.ceil(options['width']/2) * Math.ceil(options['height']/4)) <= maxCharactersPerSend){
         let gifIndex = await gifCheck(urls);
         if (gifIndex !== -1){
             context = await printGifAscii(channelObj, sayFunc, mode, asciiOptions, urls, gifIndex);
