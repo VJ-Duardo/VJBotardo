@@ -155,7 +155,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     }
     let brailleString = await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc);
     if (brailleString !== -1){
-        if (brailleString.length > maxCharactersPerSend && gifSpam){
+        if (brailleString.length > maxCharactersPerSend){
             if (gifSpam){
                 let c = 0;
                 do {
