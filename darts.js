@@ -232,6 +232,7 @@ class GameParty extends Game {
     }
     
     startGame(){
+        clearTimeout(this.waitForJoin.handle);
         this.waitForJoin.status = false;
         if (Object.keys(this.players).length < minPlayers){
             this.sayFunc(this.channelObj.name, "/me Seems like noone joined :(");
