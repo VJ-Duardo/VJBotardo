@@ -179,7 +179,13 @@ module.exports = {
             case 'snake': type = 'snake_highscore';break;
             case 'darts': type = 'darts_highscore';break;
         }
-        if (await checkIfUserExists(id)){
+        let userStatus;
+        try{
+            userStatus = await checkIfUserExists(id);
+        } catch(e){
+            return;
+        }
+        if (userStatus){
             sql = 'UPDATE user SET '+type+' = ? WHERE ? > '+type+' AND id = ?';
             db.run(sql, [score, score, id], function(err){
                 if (err){
@@ -379,7 +385,9 @@ function checkIfUserExists(id){
         let sql = 'SELECT EXISTS (SELECT * FROM USER WHERE id = ?) AS result';
         db.get(sql, [id], (err, row) => {
             if (err){
-                reject(err.message);
+                console.log(err.message);
+                reject();
+                return;
             }
 
             if (row.result === 1){
