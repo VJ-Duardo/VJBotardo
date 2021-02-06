@@ -15,6 +15,7 @@ const asciiModes = {
     ascii: {params: 1, func: plainAscii},
     mirror: {params: 1, func: mirror},
     antimirror: {params: 1, func: antimirror},
+    overlay: {params: 2, func: overlay},
     stack: {params: 2, func: stack, mask: {width: 1, height: 1/6}},
     mix: {params: 2, func: mix, mask: {width: 1, height: 1/2}},
     merge: {params: 2, func: merge, mask: {width: 1/2, height: 1/3}}
@@ -260,6 +261,14 @@ async function addPicsToContext(context, srcList, size){
 async function plainAscii(width, height, context, srcLeft, srcRight){
     return await addPicsToContext(context, 
         [{url: srcLeft, x: 0, y: 0}],
+        {width: width, height: height});
+}
+
+
+async function overlay(width, height, context, srcLeft, srcRight){
+    return await addPicsToContext(context, 
+        [{url: srcLeft, x: 0, y: 0},
+        {url: srcRight, x: 0, y: 0}],
         {width: width, height: height});
 }
 
