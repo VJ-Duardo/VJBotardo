@@ -15,8 +15,8 @@ opts = {
         debug: false
     },
     connection: {
-        port: 80,
         server: 'irc.chat.twitch.tv',
+        port: 6697,
         reconnect: true
     },
     identity: {
