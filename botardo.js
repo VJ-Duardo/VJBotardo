@@ -17,7 +17,8 @@ opts = {
     connection: {
         server: 'irc.chat.twitch.tv',
         port: 6697,
-        reconnect: true
+        reconnect: true,
+        secure: true
     },
     identity: {
       username: "vjbotardo",
