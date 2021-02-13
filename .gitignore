@@ -1,6 +1,12 @@
-/node_modules
 password.js
 database.db
 testdatabase.db
 /frames
 /fonts
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
