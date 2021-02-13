@@ -1,12 +1,7 @@
 # VJBotardo
 
-A twitch.tv chat bot
-
-<br>
-
-[__View current commands__](https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb)
-  
- <br>
+A twitch.tv chat bot  
+[__View current commands__](https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb)  
 
 __Used API's and services:__
 * [Twitch Emotes](https://twitchemotes.com/apidocs)
