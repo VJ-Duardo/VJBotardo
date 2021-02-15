@@ -1,4 +1,4 @@
-const tmi = require('dank-twitch-irc');
+const {ChatClient} = require('dank-twitch-irc');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const snake = require('./snake.js');
@@ -10,7 +10,7 @@ const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
 const ascii = require('./ascii.js');
 
-let client = new tmi({
+const client = new ChatClient({
     username: "vjbotardo",
     password: pass.password,
     rateLimits: "verifiedBot",
