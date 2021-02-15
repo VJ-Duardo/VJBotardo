@@ -176,15 +176,15 @@ class GameRoyale extends Game{
             this.players[playerID] = newPlayer;
             switch(Object.keys(this.players).length){
                 case 2:
-                    this.sayFunc(this.channelObj.name, "/me [2/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the bottom right!");
+                    this.sayFunc(this.channelObj.name, `/me [2/${maxRoyalePlayers}] ${playerName}, you are starting from the bottom right!`);
                     newPlayer.setSnake(fieldWidth-elemWidthRoyale, fieldHeight-elemHeightRoyale, "west");
                     break;
                 case 3:
-                    this.sayFunc(this.channelObj.name, "/me [3/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the top right!");
+                    this.sayFunc(this.channelObj.name, `/me [3/${maxRoyalePlayers}] ${playerName}, you are starting from the top right!`);
                     newPlayer.setSnake(fieldWidth-elemWidthRoyale, 0, "south");
                     break;
                 case 4:
-                    this.sayFunc(this.channelObj.name, "/me [4/"+maxRoyalePlayers+"] " + playerName + ", you are starting from the bottom left! Game is starting in a few seconds...");
+                    this.sayFunc(this.channelObj.name, `/me [4/${maxRoyalePlayers}] ${playerName}, you are starting from the bottom left! Game is starting in a few seconds...`);
                     newPlayer.setSnake(0, fieldHeight-elemHeightRoyale, "north");
                     clearTimeout(this.waitForJoin.handle);
                     let _this = this;
@@ -285,7 +285,7 @@ class GameRoyale extends Game{
             if (this.checkGameOver(snake)){
                 player.out = true;
                 player.place = playersLeft;
-                this.sayFunc(this.channelObj.name, '/me ' + player.name + ' is out! LuL ');
+                this.sayFunc(this.channelObj.name, `/me ${player.name} is out! LuL `);
             }
             
             if (playersLeft <= 1){
@@ -305,8 +305,8 @@ class GameRoyale extends Game{
         this.channelObj.gameRunning = false;
         let winner = Object.keys(this.players).find(id => this.players[id].place === 1);
         let reward = ushMaxRewardRoyale * (Object.keys(this.players).length/maxRoyalePlayers);
-        this.sayFunc(this.channelObj.name, "/me The game is over! " + Object.values(this.players).map(obj => obj = obj.place + ". " + obj.name).sort().join(" | ") 
-                + ". " + this.players[winner].name  + " has earned " + reward + "USh!");
+        this.sayFunc(this.channelObj.name, `/me The game is over! ${Object.values(this.players).map(obj => obj = `${obj.place}. ${obj.name}`).sort().join(" | ")}. \
+        ${this.players[winner].name} has earned ${reward}USh!`);
         db.addUserPoints(winner, this.players[winner].name, reward);
         delete games[this.channelObj.name];
     }
@@ -403,11 +403,11 @@ module.exports = {
                 if (input[0] !== channelObj.prefix+'snake')
                     break;
                 let p = channelObj.prefix;
-                sayFunc(channelObj.name, '/me Use '+p+'snake start to see the available modes, the controls are w a s d. '+p+'snake score too see your highscore :)');
+                sayFunc(channelObj.name, `/me Use ${p}snake start to see the available modes, the controls are w a s d. ${p}snake score too see your highscore :)`);
                 break;
             case 'score':
                 db.getHighScore(user['user-id'], 'snake').then((score) => {
-                    sayFunc(channelObj.name, '/me ' +user['username']+'s highscore is: ' +score);
+                    sayFunc(channelObj.name, `/me ${user['username']}s highscore is: ${score}`);
                 });
                 break;
             case 'start':
@@ -418,8 +418,8 @@ module.exports = {
                             break;
                         case 'royale':
                             games[channelObj.name] = new GameRoyale(channelObj, sayFunc, user['username'], user['user-id']);
-                            sayFunc(channelObj.name, "/me A new round of Snake Royale has started! PogChamp Type " + channelObj.prefix + "join to play! " 
-                                    + user['username'] + " is starting from the top left!");
+                            sayFunc(channelObj.name, `/me A new round of Snake Royale has started! PogChamp Type ${channelObj.prefix}join to play! \
+                            ${user['username']} is starting from the top left!`);
                             break;
                         case 'normal':
                             games[channelObj.name] = new Game(channelObj, sayFunc, user['username'], user['user-id']);
@@ -429,7 +429,7 @@ module.exports = {
                             sayFunc(channelObj.name, "/me Modes: "
                                     +p+"snake start normal - normal game for one player, "
                                     +p+"snake start chat - normal game where everyone in chat can give input, "
-                                    +p+"snake start royale - a curve fever inspired game for up to "+maxRoyalePlayers+" players.");
+                                    +p+`snake start royale - a curve fever inspired game for up to ${maxRoyalePlayers} players.`);
                             return;
                     }
                     channelObj.gameRunning = true;
@@ -518,11 +518,11 @@ function printField(context){
 async function gameOver(gameObj, won=false){
     if (!won) {
         gameObj.sayFunc(gameObj.channelObj.name, 
-            "/me GAME OVER! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + gameObj.points*ushReward + "USh!");
+            `/me GAME OVER! ${gameObj.player.name} got ${gameObj.points} points and earned ${gameObj.points * ushReward}USh!`);
         await db.addUserPoints(gameObj.player.id, gameObj.player.name, gameObj.points*ushReward);
     } else {
         gameObj.sayFunc(gameObj.channelObj.name, 
-            "/me Wow you actually won PogChamp ! " + gameObj.player.name + " got " + gameObj.points + " points and earned " + (gameObj.points*ushReward) + "USh plus a "+winningBonus+"USh winning bonus!");
+            `/me Wow you actually won PogChamp ! ${gameObj.player.name} got ${gameObj.points} points and earned ${gameObj.points * ushReward}USh plus a ${winningBonus}USh winning bonus!`);
         await db.addUserPoints(gameObj.player.id, gameObj.player.name, ((gameObj.points*ushReward)+winningBonus));
     }
     db.setHighscoreIfHigh(gameObj.player.id, gameObj.player.name, gameObj.points, 'snake');

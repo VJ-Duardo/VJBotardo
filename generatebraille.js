@@ -87,7 +87,7 @@ function getTransparencyData(url){
             return iterateOverPixels(pixelData, canvas.width, 0, true);
         })
         .catch((error) => {
-            console.log(error+"An error occured! (image)");
+            console.log(`${error}An error occured! (image)`);
         });
 }
 

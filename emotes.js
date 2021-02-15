@@ -67,14 +67,14 @@ function getJsonProm(url, callback){
 
 
 function getFFZChannel(channelObj){
-   let ffzChannel = 'https://api.frankerfacez.com/v1/room/' + channelObj.name.substring(1); 
+   let ffzChannel = `https://api.frankerfacez.com/v1/room/${channelObj.name.substring(1)}`; 
    
    getJsonProm(ffzChannel, function(ffzChObj){
        if (ffzChObj.hasOwnProperty("error")){
            return;
        }
        let emoteList = ffzChObj['sets'][ffzChObj['room']['set']]['emoticons'];
-       console.log("ffzChannel in " + channelObj.name + " loaded!");
+       console.log(`ffzChannel in ${channelObj.name} loaded!`);
        channelObj.emotes.ffzChannel = convertFFZLists(emoteList);
    });
 }
@@ -90,7 +90,7 @@ function getFFZGlobal(){
 }
 
 async function getFFZEmoteStat(keyword){
-    const ffzApi = "https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&q="+keyword;
+    const ffzApi = `https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&q=${keyword}`;
     let response = await fetch(ffzApi);
     let data = await response.json();
     return !data.hasOwnProperty('error') ? parseInt(data['_total']) : 0;
@@ -101,7 +101,7 @@ async function getRandomFFZEmote(keyword){
     const pages = await getFFZEmoteStat(keyword);
     if (pages === 0)
         return -1;
-    const ffzApi = "https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&page="+Math.ceil(Math.random() * pages)+"&q=*"+keyword+"%";
+    const ffzApi = `https://api.frankerfacez.com/v1/emoticons?_sceheme=https&per_page=1&page=${Math.ceil(Math.random() * pages)}&q=*${keyword}%`;
     let response = await fetch(ffzApi);
     let data = await response.json();
     return !data.hasOwnProperty('error') ? convertFFZLists([data['emoticons'][0]])[0] : -1;
@@ -111,7 +111,7 @@ async function getRandomFFZEmote(keyword){
 
 
 function getBTTVChannel(channelObj){
-    let bttvChannel = 'https://api.betterttv.net/2/channels/' + channelObj.name.substring(1);
+    let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name.substring(1)}`;
     
     getJsonProm(bttvChannel, function(bttvChObj){
         if (bttvChObj.hasOwnProperty("message") && bttvChObj['message'] === "channel not found"){
@@ -119,7 +119,7 @@ function getBTTVChannel(channelObj){
         }
         
         let emoteList = bttvChObj['emotes'];
-        console.log("bttvchannel in " + channelObj.name + " loaded!");
+        console.log(`bttvchannel in ${channelObj.name} loaded!`);
         channelObj.emotes.bttvChannel = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/3x');
     });
 }
@@ -142,7 +142,7 @@ function getTwitchChannel(channelObj){
     let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
     fetch(twitchUserUrl + channelObj.name.substring(1), {
         headers: {
-            'Authorization': 'Bearer ' + pass.authToken,
+            'Authorization': `Bearer ${pass.authToken}`,
             'Client-ID': pass.clientId
         }
     })
@@ -150,7 +150,7 @@ function getTwitchChannel(channelObj){
         return response.json();
     })
     .then((dataObj) => {
-        let twitchEmotesUrl = 'https://api.twitchemotes.com/api/v4/channels/' + dataObj.data[0].id;
+        let twitchEmotesUrl = `https://api.twitchemotes.com/api/v4/channels/${dataObj.data[0].id}`;
 
         getJsonProm(twitchEmotesUrl, function(twChObj){
             if(twChObj.hasOwnProperty("error")){
@@ -158,7 +158,7 @@ function getTwitchChannel(channelObj){
             }
             
             let emoteList = twChObj['emotes'];
-            console.log("twitchchannel in " + channelObj.name + " loaded!");
+            console.log(`twitchchannel in ${channelObj.name} loaded!`);
             channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
         });
      });

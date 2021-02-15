@@ -63,7 +63,7 @@ module.exports = {
         if (!getGameState(channelObj.name)){
             let newGame = createGameObject(channelObj, command[1], command[2]);
             if (newGame === -1){
-                sayFunc(channelObj.name, '/me Invalid mode! Has to be "global", "channel", "all" or "origin" (e.g. '+channelObj.prefix+'guess all 5)');
+                sayFunc(channelObj.name, `/me Invalid mode! Has to be "global", "channel", "all" or "origin" (e.g. ${channelObj.prefix}guess all 5)`);
                 return;
             } else if (newGame === -2){
                 sayFunc(channelObj.name, '/me No such emotes in this channel!');
@@ -76,7 +76,7 @@ module.exports = {
                 return;
             }
             if (getGameSolution(channelObj.name).toLowerCase() === command[0].toLowerCase()){
-                let winString = "/me " + user['display-name'] + " guessed it right! It's "+ getGameSolution(channelObj.name) + " (+"+reward+"USh)";
+                let winString = `/me ${user['display-name']} guessed it right! It's ${getGameSolution(channelObj.name)} (+${reward}USh)`;
                 db.addUserPoints(user['user-id'], user['username'], reward);
                 resolveRound(channelObj, games[channelObj.name], sayFunc, winString);
             }
@@ -91,7 +91,7 @@ async function startGame(channelObj, gameObj, sayFunc){
     
     gameObj.firstHint = setTimeout(function(){giveFirstHint(channelObj, gameObj, sayFunc);}, firstHintTime);
     gameObj.secondHint = setTimeout(function(){giveSecondHint(channelObj, gameObj, sayFunc);}, secondHintTime);
-    let loseString = "/me It was " +gameObj.solution.name+ " . Disappointing performance :Z";
+    let loseString = `/me It was ${gameObj.solution.name} . Disappointing performance :Z`;
     gameObj.resolve = setTimeout(function(){resolveRound(channelObj, gameObj, sayFunc, loseString);}, resolveTime);
     
     if (gameObj.mode !== 'origin'){ 
@@ -128,15 +128,15 @@ async function startGame(channelObj, gameObj, sayFunc){
 
 function giveFirstHint(channelObj, gameObj, sayFunc){
     if (gameObj.mode === 'origin'){
-        sayFunc(channelObj.name, "/me First Hint: " +getOriginHint(gameObj));
+        sayFunc(channelObj.name, `/me First Hint: ${getOriginHint(gameObj)}`);
     } else {
-        sayFunc(channelObj.name, "/me First Hint: It's a " +gameObj.solution.origin+ " emote :)");
+        sayFunc(channelObj.name, `/me First Hint: It's a ${gameObj.solution.origin} emote :)`);
     }
 }
 
 function giveSecondHint(channelObj, gameObj, sayFunc){
     if (gameObj.mode === 'origin'){
-        sayFunc(channelObj.name, "/me Second Hint: " +getOriginHint(gameObj));
+        sayFunc(channelObj.name, `/me Second Hint: ${getOriginHint(gameObj)}`);
     } else {
         const maxRotation = 360;
         const randomRoation = Math.floor(Math.random() * maxRotation);
@@ -263,11 +263,11 @@ function getOriginHint(gameObj){
     switch (gameObj.originHints.length){
         case 0:
             if (gameObj.originLastHint){
-                return 'Its a '+ gameObj.solution.type + ' emote.';
+                return `Its a ${gameObj.solution.type} emote.`;
             } else {
                 gameObj.originLastHint = true;
                 const hidePercent = 4/5;
-                return '____'+gameObj.solution.name.substring(Math.floor(gameObj.solution.name.length*hidePercent), gameObj.solution.name.length);
+                return `____${gameObj.solution.name.substring(Math.floor(gameObj.solution.name.length * hidePercent), gameObj.solution.name.length)}`;
             }
         default:
             let randomIndex = Math.floor(Math.random() * gameObj.originHints.length);

@@ -37,7 +37,7 @@ async function getTwitchEverything(){
     });
     try {
         await prom;
-        console.log((await db.getRandomEmoteStat("") - count) + " new emotes added!");
+        console.log(`${await db.getRandomEmoteStat("") - count} new emotes added!`);
     } catch(e){
         console.log(e);
         return "error";
