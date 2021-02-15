@@ -1,4 +1,4 @@
-const tmi = require('tmi.js');
+const tmi = require('dank-twitch-irc');
 const pass = require('./password.js');
 const guess = require('./guesstheemote.js');
 const snake = require('./snake.js');
@@ -10,21 +10,16 @@ const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
 const ascii = require('./ascii.js');
 
-opts = {
-    options: {
-        debug: false
-    },
-    connection: {
-        reconnect: true
-    },
-    identity: {
-      username: "vjbotardo",
-      password: pass.password
-    },
-    channels: []
-};
+let client = new tmi({
+    username: "vjbotardo",
+    password: pass.password,
+    rateLimits: "verifiedBot",
+    ignoreUnhandledPromiseRejections: true,
+    connectionRateLimits: {
+        parallelConnections: 5
+    }
+});
 const devID = '84800191';
-const client = new tmi.client(opts);
 
 var commandCount = 0;
 var startTime = 0;
