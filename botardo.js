@@ -106,12 +106,12 @@ function booleanCheck(bool, defaultBool){
 }
 
 async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
-    if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty('#'+name)){
+    if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(`#${name}`)){
         return -1;
     }
     
     prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
-    name = '#' + name.toLowerCase();
+    name = `#${name.toLowerCase()}`;
       
     try {
         await client.join(name);
@@ -119,7 +119,7 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
-        console.log("Error: " +name+ ": " +e);
+        console.log(`Error: ${name}: ${e}`);
         return -1;
     }
 }
@@ -156,7 +156,7 @@ client.on('connected', onConnectedHandler);
 client.on('disconnected', onDisconnectHandler);
 client.on("notice", (channel, msgID, message) => {
     if (msgID === "msg_channel_suspended")
-        console.log(channel+ ": " +message);
+        console.log(`${channel}: ${message}`);
 });
 
 
@@ -176,11 +176,11 @@ function kill(channel){
 function showPoints(channel, userName, userId, anotherUser){
     if (typeof anotherUser !== 'undefined'){
         db.getPoints(channelsObjs[channel], 'username', anotherUser, function(_, name, points){
-           client.say(channel, "/me " + name + " has " + points + " Ugandan shilling!");
+           client.say(channel, `/me ${name} has ${points} Ugandan shilling!`);
         }); 
     } else {
         db.getPoints(channelsObjs[channel], 'id', userId, function(_, _, points){
-            client.say(channel, "/me " + userName + " has " + points + " Ugandan shilling!");
+            client.say(channel, `/me ${userName} has ${points} Ugandan shilling!`);
         });
     }
 }
@@ -191,10 +191,7 @@ async function getTop(channel, type){
     
     if (typeof type === 'undefined'){
         let p = channelsObjs[channel].prefix;
-        client.say(channel, "/me Available leaderboards: "
-                +p+ "top ush, "
-                +p+ "top snake, "
-                +p+ "top darts");
+        client.say(channel, `/me Available leaderboards: ${p}top ush, ${p}top snake, ${p}top darts`);
         return;
     }
     
@@ -214,10 +211,10 @@ async function reloadChannelEmotes(channel){
 function ping(channel){
     client.ping()
         .then((data) => {
-            client.action(channel, "BING! (" + data*1000 + "ms). \
-            Bot running for " + (((new Date().getTime()/1000)-startTime)/60).toFixed(2) + " minutes. \
-            Commands used: " + commandCount + ". \
-            Used prefix in this channel: " +channelsObjs[channel].prefix);
+            client.action(channel, `BING! (${data * 1000}ms). \
+            Bot running for ${(((new Date().getTime() / 1000) - startTime) / 60).toFixed(2)} minutes. \
+            Commands used: ${commandCount}. \
+            Used prefix in this channel: ${channelsObjs[channel].prefix}`);
         })
         .catch(() => {
             client.action(channel, "Timed out");
@@ -225,7 +222,7 @@ function ping(channel){
 }
 
 function about(channel){
-    client.action(channel, "A bot by Duardo1. Command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb Used prefix in this channel: " +channelsObjs[channel].prefix);
+    client.action(channel, `A bot by Duardo1. Command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb Used prefix in this channel: ${channelsObjs[channel].prefix}`);
 }
 
 function commands(channel){
@@ -235,10 +232,10 @@ function commands(channel){
 
 
 function getLiveStatus(channel_id, channel){
-    let getStreamsUrl = 'https://api.twitch.tv/helix/streams?user_id='+channel_id;
+    let getStreamsUrl = `https://api.twitch.tv/helix/streams?user_id=${channel_id}`;
     return fetch(getStreamsUrl, {
         headers: {
-            'Authorization': 'Bearer ' + pass.authToken,
+            'Authorization': `Bearer ${pass.authToken}`,
             'Client-ID': pass.clientId
         }
     })
@@ -285,7 +282,7 @@ async function allowanceCheck(channel, user, command, callback, params){
     let now = Math.round(new Date().getTime() / 1000);
     if (now >= channelObj.lastCommandTime[command]+cooldown){
         channelObj.lastCommandTime[command] = Math.round(new Date().getTime() / 1000);
-        console.log(channel +", "+ command +", "+ params.filter(par => typeof par !== 'function' && (typeof par !== 'object' || Array.isArray(par))));
+        console.log(`${channel}, ${command}, ${params.filter(par => typeof par !== 'function' && (typeof par !== 'object' || Array.isArray(par)))}`);
         try{
             callback(...params);
         } catch(e){
@@ -395,7 +392,7 @@ function optionCheck(channel, value, options){
     if (options.includes(value))
         return true;
     
-    client.say(channel, 'Value must be ' + options.join('-'));
+    client.say(channel, `Value must be ${options.join('-')}`);
     return false;
 }
 
@@ -420,13 +417,13 @@ async function setBot(channel, user, option, value){
     let dbStatus;
     switch(option){
         case 'prefix':
-            const prefixRegex = '^[a-zA-Z0-9^!?\"\'#$%&\\(\\)\\[\\]{}=+*~\\-_,;@<>°]{'+channelObj.minPrefix+','+channelObj.maxPrefix+'}$';
+            const prefixRegex = `^[a-zA-Z0-9^!?"'#$%&\\(\\)\\[\\]{}=+*~\\-_,;@<>°]{${channelObj.minPrefix},${channelObj.maxPrefix}}$`;
             value = value.trim();
             if (new RegExp(prefixRegex).test(value)){
                 channelObj.prefix = value;
                 dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
             } else { 
-                client.action(channel, 'Allowed characters: a-zA-Z0-9^!?"\'#$%&()[]{}=+*~\\-_,;@<>° Min length: '+channelObj.minPrefix+', Max length: '+channelObj.maxPrefix);
+                client.action(channel, `Allowed characters: a-zA-Z0-9^!?"'#$%&()[]{}=+*~\\-_,;@<>° Min length: ${channelObj.minPrefix}, Max length: ${channelObj.maxPrefix}`);
                 return -1;}
             break;
         case 'modsCanEdit':
@@ -445,7 +442,7 @@ async function setBot(channel, user, option, value){
             return -1;
     }
     if (dbStatus === 1)
-        client.action(channel, 'Changed option ' + option + ' to ' + value);
+        client.action(channel, `Changed option ${option} to ${value}`);
     else
         client.action(channel, 'Something went wrong in the db.');
     return 1;
@@ -495,7 +492,7 @@ async function setCommand(channel, user, command, option, value){
             return -1;
     }
     if (dbStatus === 1)
-        client.action(channel, 'Changed option ' + option + ' of ' + command + ' to ' + value);
+        client.action(channel, `Changed option ${option} of ${command} to ${value}`);
     else
         client.action(channel, 'Something went wrong in the db.');
     return 1;
@@ -509,8 +506,8 @@ async function setCommand(channel, user, command, option, value){
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
-    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return attr+': '+channelObj[attr];}).join(', ');
-    client.action(channel, "Settings in this channel: "+ channelAttributes);
+    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
+    client.action(channel, `Settings in this channel: ${channelAttributes}`);
 }
 
 async function checkCommand(channel, command){
@@ -525,8 +522,7 @@ async function checkCommand(channel, command){
     
     let cooldown = await commandObj.getChannelCooldown(channelObj.id);
     let enabled = await commandObj.getEnabledStatus(channelObj.id);
-    client.action(channel, "Settings for command " +command + ": " + "cooldown: " + cooldown 
-            + " sec, enabled: " + enabled);
+    client.action(channel, `Settings for command ${command}: cooldown: ${cooldown} sec, enabled: ${enabled}`);
 }
 
 
@@ -541,7 +537,7 @@ async function suggest(channel, user, content){
     let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer '+pass.gitHubToken,
+          'Authorization': `Bearer ${pass.gitHubToken}`,
           'Accept': 'application/vnd.github.v3+json'
         },
         body: JSON.stringify({
@@ -564,7 +560,7 @@ async function suggest(channel, user, content){
     });
       
     if (status !== -1){
-        client.action(channel, "Suggestion was saved under number #" + status + ".");
+        client.action(channel, `Suggestion was saved under number #${status}.`);
         return;
     }
     client.action(channel, "There was an issue, suggestion was most likely not saved :(");
@@ -583,83 +579,83 @@ function onMessageHandler (channel, userstate, message, self) {
     const identParams = [channel, userstate, command[0].replace(prefix, '')];
     
     switch(command[0]){
-        case prefix+'stop':
+        case `${prefix}stop`:
             allowanceCheck(...identParams, kill, [channel]);
             break;
-        case prefix+'top':
+        case `${prefix}top`:
             allowanceCheck(channel, userstate, 'top', getTop, [channel, command[1]]);
             break;
         case '!ping':
-        case prefix+'ping':
+        case `${prefix}ping`:
             allowanceCheck(channel, userstate, 'ping', ping, [channel]);
             break;
-        case prefix+'ush':
+        case `${prefix}ush`:
             allowanceCheck(...identParams, showPoints, [channel, userstate['username'], userstate['user-id'], command[1]]);
             break;
-        case prefix+'bot':
+        case `${prefix}bot`:
             allowanceCheck(channel, userstate, 'bot', about, [channel]);
             break;
-        case prefix+'commands':
+        case `${prefix}commands`:
             allowanceCheck(...identParams, commands, [channel]);
             break;
-        case prefix+'ascii':
+        case `${prefix}ascii`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "ascii", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'mirror':
+        case `${prefix}mirror`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'antimirror':
+        case `${prefix}antimirror`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "antimirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'ra':
+        case `${prefix}ra`:
             allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command.slice(1, command.length)]);
             break;
-        case prefix+'merge':
+        case `${prefix}merge`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "merge", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'stack':
+        case `${prefix}stack`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "stack", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'mix':
+        case `${prefix}mix`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mix", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'overlay':
+        case `${prefix}overlay`:
              allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "overlay", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             //allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "mix", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
-        case prefix+'reload':
+        case `${prefix}reload`:
             allowanceCheck(...identParams, reloadChannelEmotes, [channel]);
             break;
         case '!eval':
-        case prefix+'eval':
+        case `${prefix}eval`:
             allowanceCheck(channel, userstate, 'eval', devEval, [channel, userstate, command.slice(1).join(" ")]);
             break;
-        case prefix+'addChannel':
+        case `${prefix}addChannel`:
             allowanceCheck(...identParams, addChannel, [channel, command[1], command[2]]);
             break;
-        case prefix+'removeChannel':
+        case `${prefix}removeChannel`:
             allowanceCheck(...identParams, removeChannel, [channel, command[1]]);
             break;
-        case prefix+'addCommand':
+        case `${prefix}addCommand`:
             allowanceCheck(...identParams, addCommand, [channel, command[1], command[2], command[3], command[4], command[5], command[6]]);
             break;
-        case prefix+'setbot':
-        case prefix+'setBot':
+        case `${prefix}setbot`:
+        case `${prefix}setBot`:
             allowanceCheck(channel, userstate, 'setBot', setBot, [channel, userstate, command[1], command[2]]);
             break;
-        case prefix+'checkbot':
-        case prefix+'checkBot':
+        case `${prefix}checkbot`:
+        case `${prefix}checkBot`:
             allowanceCheck(channel, userstate, 'checkBot', checkBot, [channel]);
             break;
-        case prefix+'setcommand':
-        case prefix+'setCommand':
+        case `${prefix}setcommand`:
+        case `${prefix}setCommand`:
             allowanceCheck(channel, userstate, 'setCommand', setCommand, [channel, userstate, command[1], command[2], command[3]]);
             break;
-        case prefix+'checkcommand':
-        case prefix+'checkCommand':
+        case `${prefix}checkcommand`:
+        case `${prefix}checkCommand`:
             allowanceCheck(channel, userstate, 'checkCommand', checkCommand, [channel, command[1]]);
             break;
-        case prefix+'suggest':
+        case `${prefix}suggest`:
             allowanceCheck(...identParams, suggest, [channel, userstate, command.slice(1).join(" ")]);
             break;
     }
@@ -668,16 +664,16 @@ function onMessageHandler (channel, userstate, message, self) {
         channelsObjs[channel].game(channelsObjs[channel], sayFunc, userstate, command);
     } else{
         switch (command[0]){
-            case prefix+'guess':
+            case `${prefix}guess`:
                 allowanceCheck(...identParams, guess.guessTheEmote, [channelsObjs[channel], sayFunc, userstate, command]);
                 break;
-            case prefix+'ttt':
+            case `${prefix}ttt`:
                 allowanceCheck(...identParams, ttt.tictactoe, [channelsObjs[channel], sayFunc, userstate, command]);
                 break;
-            case prefix+'snake':
+            case `${prefix}snake`:
                 allowanceCheck(...identParams, snake.playSnake, [channelsObjs[channel], sayFunc, userstate, command]);
                 break;
-            case prefix+'darts':
+            case `${prefix}darts`:
                 allowanceCheck(...identParams, darts.playDarts, [channelsObjs[channel], sayFunc, userstate, command]);
                 break;
         }
