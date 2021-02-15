@@ -82,7 +82,7 @@ module.exports = {
         return new Promise(function(resolve){
             keyword = typeof keyword === 'undefined' ? '' : keyword;
             sql = 'SELECT Count(*) FROM emote WHERE name LIKE ?';
-            db.get(sql, ['%'+keyword+'%'], function(err, row){
+            db.get(sql, [`%${keyword}%`], function(err, row){
                 if (err){
                     console.log(err);
                     resolve(-1);
@@ -101,7 +101,7 @@ module.exports = {
         return new Promise(function(resolve){
             keyword = typeof keyword === 'undefined' ? '' : keyword;
             sql = 'SELECT * FROM emote WHERE name LIKE ? ORDER BY RANDOM() LIMIT 1';
-            db.get(sql, ['%'+keyword+'%'], function(err, row){
+            db.get(sql, [`%${keyword}%`], function(err, row){
                 if (err){
                     console.log(err);
                     resolve(-1);
@@ -141,7 +141,7 @@ module.exports = {
     },
     //this function is terrible, really ashamed of it, but sadly too lazy to refactor it since i would need to refactor A LOT in ttt, never lucky
     getPoints: function(channelObj, attribute, value, callback){
-        let sql = 'SELECT points FROM USER WHERE LOWER('+attribute+') = LOWER(?)';
+        let sql = `SELECT points FROM USER WHERE LOWER(${attribute}) = LOWER(?)`;
         db.get(sql, [value], (err, row) => {
             if (err){
                 reject(err.message);
@@ -159,7 +159,7 @@ module.exports = {
                 case 'snake': type = 'snake_highscore';break;
                 case 'darts': type = 'darts_highscore';break;
             }
-           sql = 'SELECT '+type+' FROM user where id = ?';
+           sql = `SELECT ${type} FROM user where id = ?`;
            db.get(sql, [id], function(err, row){
                if (err){
                    console.log(err);
@@ -186,7 +186,7 @@ module.exports = {
             return;
         }
         if (userStatus){
-            sql = 'UPDATE user SET '+type+' = ? WHERE ? > '+type+' AND id = ?';
+            sql = `UPDATE user SET ${type} = ? WHERE ? > ${type} AND id = ?`;
             db.run(sql, [score, score, id], function(err){
                 if (err){
                     console.log(err);
@@ -208,7 +208,7 @@ module.exports = {
                 case 'darts': type = 'darts_highscore';break;
                 default: resolve(-1);return;
             }
-            let sql = 'SELECT username, '+type+' FROM user ORDER BY '+type+' DESC LIMIT ?';
+            let sql = `SELECT username, ${type} FROM user ORDER BY ${type} DESC LIMIT ?`;
             db.all(sql, [top], (err, row) => {
                 if (err){
                     console.log(err.message);
@@ -223,7 +223,7 @@ module.exports = {
     
     getAllData: function(callback, table){
         return new Promise(function(resolve){
-            let sql = 'SELECT * FROM ' +table;
+            let sql = `SELECT * FROM ${table}`;
             db.all(sql, [], async (err, rows) => {
                 if (err){
                     console.log(err.message);
@@ -285,7 +285,7 @@ module.exports = {
                 case 'gifSpam': column = 'gif_spam'; break;
                 default: resolve(-1); return;
             } 
-            let sql = 'UPDATE CHANNEL SET ' +column+ ' = ? WHERE channel_id = ?';
+            let sql = `UPDATE CHANNEL SET ${column} = ? WHERE channel_id = ?`;
             db.run(sql, [value, id], function(err){
                 if (err){
                     console.error(err.message);
@@ -304,7 +304,7 @@ module.exports = {
                 case 'cooldown': column = 'cooldown'; break;
                 default: resolve(-1); return;
             }
-            let sql = 'UPDATE CHANNEL_COMMAND SET ' +column+ ' = ? WHERE channel_id = ? AND command_name = ?';
+            let sql = `UPDATE CHANNEL_COMMAND SET ${column} = ? WHERE channel_id = ? AND command_name = ?`;
             db.run(sql, [value, id, command], function(err){
                 if (err){
                     console.error(err.message);
@@ -322,7 +322,7 @@ module.exports = {
                 case 'enabled': column = 'enabled'; break;
                 case 'cooldown': column = 'cooldown'; break;
             }
-            let sql = 'SELECT ' +column+ ' FROM CHANNEL_COMMAND WHERE channel_id = ? AND command_name = ?';
+            let sql = `SELECT ${column} FROM CHANNEL_COMMAND WHERE channel_id = ? AND command_name = ?`;
             db.get(sql, [id, command], (err, row) => {
                 if (err){
                     console.error(err.message);
@@ -346,7 +346,7 @@ module.exports = {
                 case 'command': column = 'command_name'; break;
                 default: resolve(-1); return;
             }
-            let sql = 'INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ' +column+ ' = ? AND command.dev_only = 0';
+            let sql = `INSERT INTO CHANNEL_COMMAND (channel_id, command_name) SELECT channel_id, command_name FROM CHANNEL CROSS JOIN COMMAND WHERE ${column} = ? AND command.dev_only = 0`;
             db.run(sql, [addition], function(err){
                 if (err){
                     console.error(err.message);
@@ -373,7 +373,7 @@ function insertNewUser(id, name, points, snakeHighscore, dartsHighscore){
             if (err) {
                 console.log(err.message);
             } else {
-                console.log('New user inserted: ' + name);
+                console.log(`New user inserted: ${name}`);
             }
             resolve();
         });
