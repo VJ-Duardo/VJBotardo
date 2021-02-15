@@ -174,7 +174,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
             sayFunc(channelObj.name, brailleString);
         }
     } else {
-        sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do "+channelObj.prefix+"reload");
+        sayFunc(channelObj.name, `/me Cant find emote in this channel or invalid link :Z If you added a new emote, do ${channelObj.prefix}reload`);
         return -1;
     }
     return 1;
@@ -186,7 +186,7 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
     //console.log(options);
     if (options['width'] > maxWidth || options['height'] > maxHeightOverall || options['width'] < 1 || options['height'] < 1){
-        return "/me Please pick valid dimensions (max width is "+maxWidth+", max height is "+maxHeightOverall+")";
+        return `/me Please pick valid dimensions (max width is ${maxWidth}, max height is ${maxHeightOverall})`;
     }
     let textObject = null;
     if (options.hasOwnProperty('text')){
@@ -217,15 +217,13 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     
     let brailleText = textObject !== null && textObject['textLines'].length > 0 ? generateTextAscii(textObject, !options.hasOwnProperty('background')) : "";
     let treshold = options.hasOwnProperty('treshold') ? options['treshold'] : -1;
-    let brailleResult = braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data, 
-                            options['width'], 
-                            treshold, 
-                            false, 
-                            options.hasOwnProperty('dither'), 
-                            asciiModes[mode].mask,
-                            !options.hasOwnProperty('background'))
-            + " " 
-            + brailleText;
+    let brailleResult = `${braille.iterateOverPixels(context.getImageData(0, 0, options['width'], options['height']).data,
+        options['width'],
+        treshold,
+        false,
+        options.hasOwnProperty('dither'),
+        asciiModes[mode].mask,
+        !options.hasOwnProperty('background'))} ${brailleText}`;
     brailleResult = options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
     brailleResult = options.hasOwnProperty('empty') ? brailleResult.replace(/[⠄]/g, '⠀') : brailleResult;
     return brailleResult;
@@ -244,7 +242,7 @@ async function addPicsToContext(context, srcList, size){
                 return 1;
             })
             .catch((err) => {
-                console.log(err+" An error occured! (image)");
+                console.log(`${err} An error occured! (image)`);
                 return -1;
             });
     }
@@ -414,7 +412,7 @@ async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index
                 let prom = new Promise(function(resolve, reject){
                     let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
                     stream.on('finish', async function(){
-                        src[index] = './frames/frame'+i+'.png';
+                        src[index] = `./frames/frame${i}.png`;
                         let status = await printAscii(channelObj, sayFunc, mode, src.concat(asciiOptions), false);
                         if (status === -1)
                             reject();
@@ -431,7 +429,7 @@ async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index
         })
         .catch((error) => {
             sayFunc(channelObj.name, "/me Cant find emote in this channel or invalid link :Z If you added a new emote, do reload");
-            console.log(error+" An error occured! (gif)");
+            console.log(`${error} An error occured! (gif)`);
         });
 }
 
@@ -460,7 +458,7 @@ async function randomAscii(channelObj, sayFunc, userInput){
     
     if (userInput.includes("-supersecretbanderoption")){
         const count = await countFunction(keyword);
-        sayFunc(channelObj.name, "/me Found " +count+ " emotes containing that keyword SeemsGood");
+        sayFunc(channelObj.name, `/me Found ${count} emotes containing that keyword SeemsGood`);
         return;
     }
     
@@ -473,7 +471,7 @@ async function randomAscii(channelObj, sayFunc, userInput){
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {
-                     sayFunc(channelObj.name, emote.name +" "+brailleString);   
+                     sayFunc(channelObj.name, `${emote.name} ${brailleString}`);   
                 }
         });
     }

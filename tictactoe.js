@@ -170,11 +170,11 @@ module.exports = {
                 clearTimeout(gameObj.nextRoundTimeout.handle);
                 gameObj.loser = gameObj.getPlayerByAttribute('name', user['username'].toLowerCase());
                 gameObj.winner = gameObj.getOtherPlayer(gameObj.loser);
-                sayFunc(channelObj.name, "/me " + user['username'] + " has given up :/");
+                sayFunc(channelObj.name, `/me ${user['username']} has given up :/`);
                 settleGameEnd(channelObj, gameObj, 1);
             } else {
                 clearTimeout(gameObj.waitForAccept.handle);
-                sayFunc(channelObj.name, "/me " + user['username'] + " Does not want to play :(");
+                sayFunc(channelObj.name, `/me ${user['username']} Does not want to play :(`);
                 endGame(channelObj);
             }
             return;
@@ -182,7 +182,7 @@ module.exports = {
         
         if (!getGameState(channelObj.name)){
             if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
-                sayFunc(channelObj.name, "/me Correct syntax is: "+channelObj.prefix+"ttt <enemy> <points> [<emote>]");
+                sayFunc(channelObj.name, `/me Correct syntax is: ${channelObj.prefix}ttt <enemy> <points> [<emote>]`);
                 return;
             }
             let newGame = new Game(channelObj.name, sayFunc, user['username'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);
@@ -227,7 +227,7 @@ module.exports = {
 
 
 function startRound(channelObj, gameObj){
-    gameObj.sayFunc(channelObj.name, "/me It's " + gameObj.turn.name + "'s ( "+ gameObj.turn.character + " ) turn! Options: (" + gameObj.getEmptyCells() + ")");
+    gameObj.sayFunc(channelObj.name, `/me It's ${gameObj.turn.name}'s ( ${gameObj.turn.character} ) turn! Options: (${gameObj.getEmptyCells()})`);
     
     gameObj.waitForInput.status = true;
     gameObj.waitForInput.handle = setTimeout(function(){gameTurnTimeout(channelObj, gameObj);}, gameObj.waitForInput.waitTime);
@@ -238,7 +238,7 @@ function settleGameEnd(channelObj, gameObj, result){
     if (result === 0){
         gameObj.sayFunc(channelObj.name, "/me Tie! No one loses USh :)");
     } else {
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.winner.name + " won! He wins " + gameObj.stake + " USh!");
+        gameObj.sayFunc(channelObj.name, `/me ${gameObj.winner.name} won! He wins ${gameObj.stake} USh!`);
         if (gameObj.stake === 0){
         } else {
             db.addUserPoints(gameObj.winner.id, gameObj.winner.name, gameObj.stake);
@@ -263,7 +263,7 @@ function postRoundCheck(channelObj, gameObj){
 }
 
 function gameTurnTimeout(channelObj, gameObj){
-    gameObj.sayFunc(channelObj.name, "/me " + gameObj.turn.name + " did not complete his turn in time. A random move was done! :Z");
+    gameObj.sayFunc(channelObj.name, `/me ${gameObj.turn.name} did not complete his turn in time. A random move was done! :Z`);
     gameObj.setRandomCell(gameObj.turn.character);
     postRoundCheck(channelObj, gameObj);
 }
@@ -271,11 +271,11 @@ function gameTurnTimeout(channelObj, gameObj){
 
 function gameRequestTimeout(channelObj, gameObj, initial){
     if (initial){
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + ", " + gameObj.playerOne.name + " wants to play a game of tictactoe! Write "+channelObj.prefix+"accept [<emote>] to play :)");
+        gameObj.sayFunc(channelObj.name, `/me ${gameObj.playerTwo.name}, ${gameObj.playerOne.name} wants to play a game of tictactoe! Write ${channelObj.prefix}accept [<emote>] to play :)`);
         gameObj.waitForAccept.handle = setTimeout(function(){gameRequestTimeout(channelObj, gameObj, false);}, gameObj.waitForAccept.waitTime);
         gameObj.waitForAccept.status = true;
     } else {
-        gameObj.sayFunc(channelObj.name, "/me " + gameObj.playerTwo.name + " did not accept the request in time!");
+        gameObj.sayFunc(channelObj.name, `/me ${gameObj.playerTwo.name} did not accept the request in time!`);
         endGame(channelObj);
     }
 }
@@ -296,7 +296,7 @@ async function checkInputValues(channelObj, gameObj){
 
 
 function checkUserExistence(channelObj, user){
-    let api = 'https://tmi.twitch.tv/group/user/'+ channelObj.name.substring(1) +'/chatters';
+    let api = `https://tmi.twitch.tv/group/user/${channelObj.name.substring(1)}/chatters`;
     return fetch(api)
         .then((response) => {
             return response.json();
@@ -307,7 +307,7 @@ function checkUserExistence(channelObj, user){
                    return true;
                 }
             }
-            games[channelObj.name].sayFunc(channelObj.name, "/me " + user + ' cannot be found in this channel!');
+            games[channelObj.name].sayFunc(channelObj.name, `/me ${user} cannot be found in this channel!`);
             endGame(channelObj);
             return false;
         })
@@ -357,7 +357,7 @@ function checkPoints(channelObj, player, points){
     
     if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
         if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){
-            games[channelObj.name].sayFunc(channelObj.name, "/me " + player + ' does not have enough USh! You can use 0 to play for nothing :)');
+            games[channelObj.name].sayFunc(channelObj.name, `/me ${player} does not have enough USh! You can use 0 to play for nothing :)`);
             this.err = true;
         }
     }
