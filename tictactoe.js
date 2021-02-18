@@ -296,7 +296,7 @@ async function checkInputValues(channelObj, gameObj){
 
 
 function checkUserExistence(channelObj, user){
-    let api = `https://tmi.twitch.tv/group/user/${channelObj.name.substring(1)}/chatters`;
+    let api = `https://tmi.twitch.tv/group/user/${channelObj.name}/chatters`;
     return fetch(api)
         .then((response) => {
             return response.json();

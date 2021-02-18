@@ -67,7 +67,7 @@ function getJsonProm(url, callback){
 
 
 function getFFZChannel(channelObj){
-   let ffzChannel = `https://api.frankerfacez.com/v1/room/${channelObj.name.substring(1)}`; 
+   let ffzChannel = `https://api.frankerfacez.com/v1/room/${channelObj.name}`; 
    
    getJsonProm(ffzChannel, function(ffzChObj){
        if (ffzChObj.hasOwnProperty("error")){
@@ -111,7 +111,7 @@ async function getRandomFFZEmote(keyword){
 
 
 function getBTTVChannel(channelObj){
-    let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name.substring(1)}`;
+    let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name}`;
     
     getJsonProm(bttvChannel, function(bttvChObj){
         if (bttvChObj.hasOwnProperty("message") && bttvChObj['message'] === "channel not found"){
@@ -140,7 +140,7 @@ function getBTTVGlobal(){
 
 function getTwitchChannel(channelObj){
     let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
-    fetch(twitchUserUrl + channelObj.name.substring(1), {
+    fetch(twitchUserUrl + channelObj.name, {
         headers: {
             'Authorization': `Bearer ${pass.authToken}`,
             'Client-ID': pass.clientId
