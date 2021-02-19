@@ -1,7 +1,7 @@
 const db = require('./database.js');
 const fetch = require("node-fetch");
 const pass = require('./password.js');
-const request = require('request');
+const got = require('got');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 
@@ -19,12 +19,12 @@ async function getTwitchEverything(){
     const count = await db.getRandomEmoteStat("");
     let prom =  new Promise(function(resolve){
         db.sendQuery('BEGIN TRANSACTION;');
-        request({
+        got(twitchEmoteAPI, {
+            isStream: true,
             headers: {
-              'Accept': 'application/vnd.twitchtv.v5+json',
-              'Client-ID': pass.clientId
-            },
-            url: twitchEmoteAPI
+                    'Accept': 'application/vnd.twitchtv.v5+json',
+                    'Client-ID': pass.clientId
+            }
         })
         .pipe(JSONStream.parse('emoticons.*'))
         .pipe(es.mapSync(function(data) {
