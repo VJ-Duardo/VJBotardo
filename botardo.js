@@ -15,7 +15,6 @@ const client = new ChatClient({
     password: pass.password,
     rateLimits: "verifiedBot",
     ignoreUnhandledPromiseRejections: true
-    }
 });
 const devID = "84800191";
 
