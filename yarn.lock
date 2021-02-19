@@ -2069,7 +2069,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:^7.1.2, node-gyp@npm:latest":
+"node-gyp@npm:latest":
   version: 7.1.2
   resolution: "node-gyp@npm:7.1.2"
   dependencies:
@@ -3255,7 +3255,6 @@ fsevents@~2.3.1:
     gif-frames: ^1.0.1
     mocha: ^8.3.0
     node-fetch: ^2.6.1
-    node-gyp: ^7.1.2
     node-schedule: ^2.0.0
     request: ^2.88.2
     rewire: ^5.0.0
