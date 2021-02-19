@@ -14,9 +14,7 @@ const client = new ChatClient({
     username: "vjbotardo",
     password: pass.password,
     rateLimits: "verifiedBot",
-    ignoreUnhandledPromiseRejections: true,
-    connectionRateLimits: {
-        parallelConnections: 5
+    ignoreUnhandledPromiseRejections: true
     }
 });
 const devID = "84800191";
