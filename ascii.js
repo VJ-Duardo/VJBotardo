@@ -43,6 +43,8 @@ const maxHeightOverall = 20*44;
 const maxCharactersPerSend = 460;
 const bestCharactersPerSend = 406;
 
+const frameDelay = 100;
+
 
 
 async function getUrlByInput(channelObj, input){
@@ -160,6 +162,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
             if (gifSpam){
                 let c = 0;
                 do {
+                    await new Promise(resolve => setTimeout(resolve, frameDelay));
                     let match = brailleString.substring(0, bestCharactersPerSend).match(/(.+ )+/g);
                     if (match === null)
                         break;
@@ -409,6 +412,7 @@ async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index
         .then(async function (frameData) {
             let frameJump = frameData.length > 20 ? Math.ceil(frameData.length/20) : 1;
             for (let i=0; i<frameData.length; i+=frameJump){
+                await new Promise(resolve => setTimeout(resolve, frameDelay));
                 let prom = new Promise(function(resolve, reject){
                     let stream = frameData[i].getImage().pipe(fs.createWriteStream('./frames/frame'+i+'.png'));
                     stream.on('finish', async function(){
