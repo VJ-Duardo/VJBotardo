@@ -96,7 +96,7 @@ async function startGame(channelObj, gameObj, sayFunc){
     
     if (gameObj.mode !== 'origin'){ 
         ascii.ascii("ascii", [gameObj.solution.url], false, ["-tr", "255"], null, null)
-            .then((brailleString) => {
+            .then(async (brailleString) => {
                 if (brailleString === -1){
                     gameObj.clearHints();
                     startGame(channelObj, gameObj, sayFunc);
@@ -107,6 +107,8 @@ async function startGame(channelObj, gameObj, sayFunc){
                             + modes[gameObj.mode] + ') [' 
                             + ((gameObj.roundsOverall-gameObj.rounds)+1) 
                             + '/' + gameObj.roundsOverall + ']');
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     sayFunc(channelObj.name, brailleString);
                 }
             });
@@ -152,13 +154,14 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
         }
 }
 
-function resolveRound(channelObj, gameObj, sayFunc, endString){
+async function resolveRound(channelObj, gameObj, sayFunc, endString){
     gameObj.roundActive = false;
     gameObj.originLastHint = false;
     sayFunc(channelObj.name, endString);
     gameObj.clearHints();
     gameObj.rounds--;
     if (games[channelObj.name].rounds === 0){
+        await new Promise(resolve => setTimeout(resolve, 100));
         sayFunc(channelObj.name, '/me game ended nam');
         endGame(channelObj);
     } else {
