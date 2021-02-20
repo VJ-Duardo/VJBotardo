@@ -106,7 +106,7 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
       
     try {
         await client.join(name);
-        channelsObjs[name] = new Channel(String(id), name.toLowerCase(), prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
+        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
@@ -289,13 +289,14 @@ async function devEval(channel, input){
 
 
 async function addChannel(channel, id, channelName){
+    channelName = typeof channelName !== 'undefined' ? channelName.toLowerCase() : channelName;
     let status = await loadChannel(id, channelName);
     if (status === -1){
         client.say(channel, "An Error occured!");
         return -1;
     }
     
-    let insertStatus = await db.insertNewChannel(id, channelName.toLowerCase());
+    let insertStatus = await db.insertNewChannel(id, channelName);
     if (insertStatus === 1){
         let insertCCStatus = await db.insertIntoChannelCommand("channel", id);
         if (insertCCStatus === 1){
