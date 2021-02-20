@@ -47,7 +47,9 @@ module.exports = {
     },
     globalEmotes: globalEmotes,
     getFFZEmoteStat: getFFZEmoteStat,
-    getRandomFFZEmote: getRandomFFZEmote
+    getRandomFFZEmote: getRandomFFZEmote,
+    getBTTVEmoteStat: getBTTVEmoteStat,
+    getRandomBTTVEmote: getRandomBTTVEmote
 };
 
 
@@ -132,6 +134,32 @@ function getBTTVGlobal(){
         globalEmotes.bttvGlobal = convertBTTVAndTwitchLists(emoteList, bttvPicUrl, '/2x');
         console.log("bttvglobal loaded!");
     });
+}
+
+async function getBTTVEmoteStat(keyword){
+    if (keyword == '' || keyword.length < 3){
+        return 0;
+    }
+    const queryApi = `https://api.betterttv.net/3/emotes/shared/search?query=${keyword}&offset=0&limit=100`;
+    let data = await (await fetch(queryApi)).json();
+    return data.hasOwnProperty("message") ? 0 : data.length;
+}
+
+async function getRandomBTTVEmote(keyword){
+    if (keyword === ''){
+        const maxOffset = 4000;
+        const bttvTrendingApi = `https://api.betterttv.net/3/emotes/shared/trending?offset=${Math.floor(Math.random() * maxOffset+1)}&limit=1`;
+        let data = await (await fetch(bttvTrendingApi)).json();
+        return data.length > 0 && !data.hasOwnProperty("message") ? convertBTTVAndTwitchLists([data[0].emote], bttvPicUrl, '/3x')[0] : -1;
+    } else {
+        const count = await getBTTVEmoteStat(keyword);
+        if (count === 0){
+            return -1;
+        }
+        const queryApi = `https://api.betterttv.net/3/emotes/shared/search?query=${keyword}&offset=${Math.floor(Math.random() * count)}&limit=1`;
+        let data = await (await fetch(queryApi)).json();
+        return data.length > 0 && !data.hasOwnProperty("message") ? convertBTTVAndTwitchLists(data, bttvPicUrl, '/3x')[0] : -1;
+    }
 }
 
 

@@ -131,6 +131,25 @@ function getTextObject(width, height, text){
 
 
 
+async function printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString, extra=""){
+    if (gifSpam){
+        let c = 0;
+        do {
+            await new Promise(resolve => setTimeout(resolve, frameDelay));
+            let match = brailleString.substring(0, bestCharactersPerSend).match(/(.+ )+/g);
+            if (match === null)
+                break;
+            sayFunc(channelObj.name, match[0]);
+            brailleString = brailleString.slice(match[0].length);
+            c++;
+        }while(c < maxHeightFrames);
+        sayFunc(channelObj.name, extra);
+    }else {
+        sayFunc(channelObj.name, `${extra} ${brailleString.substring(0, maxCharactersPerSend).match(/(.+ )+/g)[0]}`);
+    }
+}
+
+
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (userInput.length < asciiModes[mode].params){
         sayFunc(channelObj.name, "/me Parameter(s) are missing :Z Available extra options: -w, -h, -r, -d, -i, -tr, -t, -g, -b, -e Check commands list for more info.");
@@ -159,21 +178,8 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     let brailleString = await ascii(mode, urls, gifSpam, userInput, channelObj, sayFunc);
     if (brailleString !== -1){
         if (brailleString.length > maxCharactersPerSend){
-            if (gifSpam){
-                let c = 0;
-                do {
-                    await new Promise(resolve => setTimeout(resolve, frameDelay));
-                    let match = brailleString.substring(0, bestCharactersPerSend).match(/(.+ )+/g);
-                    if (match === null)
-                        break;
-                    sayFunc(channelObj.name, match[0]);
-                    brailleString = brailleString.slice(match[0].length);
-                    c++;
-                }while(c < maxHeightFrames);
-            }else {
-                sayFunc(channelObj.name, brailleString.substring(0, maxCharactersPerSend).match(/(.+ )+/g)[0]);
-            }
-        }else{
+            printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString);
+        } else {
             sayFunc(channelObj.name, brailleString);
         }
     } else {
@@ -453,12 +459,23 @@ async function gifCheck(src){
 
 
 
-async function randomAscii(channelObj, sayFunc, userInput){
+async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
     let keyword = typeof userInput[0] !== 'undefined' 
             && userInput[0].charAt(0) === '-' ? '' : userInput[0];
     
-    let countFunction = userInput.includes("-ffz") ? emotes.getFFZEmoteStat : db.getRandomEmoteStat;
-    let getEmoteFunction = userInput.includes("-ffz") ? emotes.getRandomFFZEmote : db.getRandomEmote;
+    let countFunction = db.getRandomEmoteStat;
+    let getEmoteFunction = db.getRandomEmote;
+    
+    switch (true){
+        case userInput.includes("-ffz"):
+            countFunction = emotes.getFFZEmoteStat;
+            getEmoteFunction = emotes.getRandomFFZEmote;
+            break;
+        case userInput.includes("-bttv"):
+            countFunction = emotes.getBTTVEmoteStat;
+            getEmoteFunction = emotes.getRandomBTTVEmote;
+            break;
+    }
     
     if (userInput.includes("-supersecretbanderoption")){
         const count = await countFunction(keyword);
@@ -470,12 +487,16 @@ async function randomAscii(channelObj, sayFunc, userInput){
     if (emote === -1){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
-        ascii("ascii", [emote.url], false, userInput, null, null)
+        ascii("ascii", [emote.url], gifSpam, userInput, channelObj, sayFunc)
             .then((brailleString) => {
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {
-                     sayFunc(channelObj.name, `${emote.name} ${brailleString}`);   
+                    if (brailleString.length > maxCharactersPerSend){
+                        printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString, emote.name);
+                    } else {
+                        sayFunc(channelObj.name, `${emote.name} ${brailleString}`);
+                    }
                 }
         });
     }

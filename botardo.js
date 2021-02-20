@@ -597,7 +597,7 @@ client.on("PRIVMSG", (msg) => {
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "antimirror", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
             break;
         case `${prefix}ra`:
-            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, command.slice(1, command.length)]);
+            allowanceCheck(...identParams, ascii.randomAscii, [channelsObjs[channel], sayFunc, channelsObjs[channel].gifSpam, command.slice(1, command.length)]);
             break;
         case `${prefix}merge`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "merge", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
