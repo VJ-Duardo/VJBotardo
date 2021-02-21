@@ -11,3 +11,5 @@ config.js
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+# Visual Studio
+.vs*
