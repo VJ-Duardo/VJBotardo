@@ -1,22 +1,15 @@
 const {ChatClient} = require('dank-twitch-irc');
-const pass = require('./password.js');
-const guess = require('./guesstheemote.js');
-const snake = require('./snake.js');
-const darts = require('./darts.js');
-const emotes = require('./emotes.js');
-const db = require('./database.js');
-const ttt = require('./tictactoe.js');
-const braille = require('./generatebraille.js');
+const config = require('./configs/config.js');
+const guess = require('./modules/guesstheemote.js');
+const snake = require('./modules/snake.js');
+const darts = require('./modules/darts.js');
+const emotes = require('./modules/emotes.js');
+const db = require('./modules/database.js');
+const ttt = require('./modules/tictactoe.js');
 const fetch = require("node-fetch");
-const ascii = require('./ascii.js');
+const ascii = require('./modules/ascii.js');
 
-const client = new ChatClient({
-    username: "vjbotardo",
-    password: pass.password,
-    rateLimits: "verifiedBot",
-    ignoreUnhandledPromiseRejections: true
-});
-const devID = "84800191";
+const client = new ChatClient(config.opts);
 
 var commandCount = 0;
 var startTime = 0;
@@ -51,8 +44,6 @@ class Channel {
     }
 }
 var channelsObjs = {};
-
-
 
 
 class Command {
@@ -133,7 +124,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
-    pass.loadAppAccessToken();
+    loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
     await db.getAllData(loadCommand, "COMMAND");
@@ -213,12 +204,27 @@ function commands(channel){
 
 
 
+
+async function setNewAppAccessToken() {
+    const url = `https://id.twitch.tv/oauth2/token?client_id=${config.clientID}&client_secret=${config.clientSecret}&grant_type=client_credentials`;
+    let data = await (await fetch(url, {method: 'POST'})).json();
+    db.setToken(data['access_token']);
+    config.authToken = data['access_token'];
+}
+
+async function loadAppAccessToken() {
+    db.getAllData(function(token){
+        config.authToken = token;
+    },'IMPORTANT');
+}
+
+
 function getLiveStatus(channel_id, channel){
     const getStreamsUrl = `https://api.twitch.tv/helix/streams?user_id=${channel_id}`;
     return fetch(getStreamsUrl, {
         headers: {
-            'Authorization': `Bearer ${pass.authToken}`,
-            'Client-ID': pass.clientId
+            'Authorization': `Bearer ${config.authToken}`,
+            'Client-ID': config.clientID
         }
     })
     .then((response) => {
@@ -226,7 +232,7 @@ function getLiveStatus(channel_id, channel){
     })
     .then((dataObj) => {
         if (dataObj.status == 401 && dataObj.message === 'Invalid OAuth token'){
-            pass.setNewAppAccessToken();
+            setNewAppAccessToken();
             client.me(channel, '[Refreshed app access token] Try again please.');
             return true;
         }
@@ -244,8 +250,8 @@ async function allowanceCheck(channel, user, command, callback, params){
     if (!channelObj || !commandObj)
         return -1;
     
-    if (user['user-id'] !== devID){
-        if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && user['user-id'] !== devID)
+    if (!config.devIDs.includes(user['user-id'])){
+        if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && !config.devIDs.includes(user['user-id']))
             return -1;
 
         if (!(await commandObj.getEnabledStatus(channelObj.id)))
@@ -383,7 +389,7 @@ function optionCheck(channel, value, options){
 function modsCanEditCheck(channelObj, user){
     return (channelObj.modsCanEdit && user['mod'])
             || (user['user-id'] === channelObj.id)
-            || (user['user-id'] === devID);
+            || (config.devIDs.includes(user['user-id']));
 }
 
 
@@ -410,7 +416,7 @@ async function setBot(channel, user, option, value){
                 return -1;}
             break;
         case 'modsCanEdit':
-            if (!(user['user-id'] === channelObj.id) && !(user['user-id'] === devID))
+            if (!(user['user-id'] === channelObj.id) && (!config.devIDs.includes(user['user-id'])))
                 return -1;
         case 'gifSpam':
         case 'whileLive':
@@ -450,7 +456,7 @@ async function setCommand(channel, user, command, option, value){
     if (commandObj.devOnly)
         return -1;
     
-    if (!commandObj.changeable && user['user-id'] !== devID){
+    if (!commandObj.changeable && !config.devIDs.includes(user['user-id'])){
         client.me(channel, 'Don\'t change this command please. :/');
         return -1;
     }
@@ -520,7 +526,7 @@ async function suggest(channel, user, content){
     let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${pass.gitHubToken}`,
+          'Authorization': `Bearer ${config.gitHubToken}`,
           'Accept': 'application/vnd.github.v3+json'
         },
         body: JSON.stringify({

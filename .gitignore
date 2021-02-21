@@ -1,8 +1,11 @@
+# Bot
 password.js
+config.js
 database.db
 testdatabase.db
 /frames
 /fonts
+
 # Yarn
 .yarn/*
 !.yarn/releases
@@ -10,3 +13,9 @@ testdatabase.db
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+# Netbeans
+.netbeans.xml
+
+# Visual Studio
+.vs*

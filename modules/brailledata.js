@@ -293,7 +293,6 @@ function createMirrorDic() {
      return resultObj;
 }
 
-
 function createInvertedDic(){
     let resultDic = {};
     let brailleDescrElemNumbers = Array.from(Array(8), (_, x) => (x + 1).toString());

@@ -3,7 +3,6 @@ const db = require('./database.js');
 const { registerFont, createCanvas, loadImage } = require('canvas');
 registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
 
-
 const pixelWidth = 60;
 const pixelHeight = 60;
 const yCorrection = 0.158;
@@ -23,7 +22,6 @@ const minPlayers = 2;
 
 var games = {};
 
-
 class Ring{
     constructor(start, end, points, message){
         this.start = start;
@@ -36,6 +34,7 @@ class Ring{
         return ` You got ${this.points} points!`;
     }
 }
+
 const rings = [
     new Ring(0, 3, 25, "PogChamp bullseye!"),
     new Ring(3, 8, 18, "SeemsGood Second ring, pretty good."),
@@ -44,7 +43,6 @@ const rings = [
     new Ring(23, 30, 1, "NotLikeThis Fifth ring. Embarrassing."),
     new Ring(30, Number.POSITIVE_INFINITY, 0, "BibleThump You missed the board and hit my beautiful wall instead.")
 ];
-
 
 class Player {
     constructor(id, name){
@@ -204,7 +202,6 @@ class Game {
     }
 }
 
-
 class GameParty extends Game {
     constructor(channelObj, sayFunc, playerID, playerName){
         super(channelObj, sayFunc, playerID, playerName);
@@ -301,7 +298,6 @@ class GameParty extends Game {
     }
 }
 
-
 module.exports = {
     playDarts: function(channelObj, sayFunc, user, input){
         if (!games.hasOwnProperty(channelObj.name)){
@@ -355,7 +351,6 @@ module.exports = {
     }
 };
 
-
 function loadAndAddToCanvas(url, x, y, context){
     return loadImage(url)
         .then((image) => {
@@ -367,7 +362,6 @@ function loadAndAddToCanvas(url, x, y, context){
             return -1;
         });
 }
-
 
 function printField(context){
     let pixelData = context.getImageData(0, 0, pixelWidth, pixelHeight).data;

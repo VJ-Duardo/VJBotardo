@@ -19,7 +19,6 @@ var timeBetweenRounds = 4000;
 var emoteOrigins;
 loadOrigins().then(function(list){emoteOrigins=list;});
 
-
 class Game {
     constructor(channel, mode, rounds, playSet){
         this.channel = channel;
@@ -53,7 +52,6 @@ var modes = {
     all: ["ffzChannel", "bttvChannel", "twitchChannel", "ffzGlobal", "bttvGlobal", "twitchGlobal"]
 };
 
-
 module.exports = {
     guessTheEmote: function(channelObj, sayFunc, user, command){
         if (command[0] + command[1] === channelObj.prefix+"guessstop" && games.hasOwnProperty(channelObj.name)){
@@ -83,7 +81,6 @@ module.exports = {
         }
     }
 };
-
 
 async function startGame(channelObj, gameObj, sayFunc){
     await gameObj.setNewSolution();
@@ -125,8 +122,6 @@ async function startGame(channelObj, gameObj, sayFunc){
                             + '/' + gameObj.roundsOverall + '] : ' +getOriginHint(gameObj));
     }
 }
-
-
 
 function giveFirstHint(channelObj, gameObj, sayFunc){
     if (gameObj.mode === 'origin'){
@@ -196,7 +191,6 @@ function createGameObject(channelObj, mode, rounds){
     return newGame;
 }
 
-
 async function getRandomEmote(emoteSet, mode){
     if (mode === 'origin'){
         return emoteSet[Math.floor(Math.random() * emoteSet.length)];
@@ -224,7 +218,6 @@ async function getRandomEmote(emoteSet, mode){
     return emote;
 }
 
-
 function setRounds(rounds){
     rounds = parseInt(rounds);
     if (typeof rounds === 'undefined' || isNaN(parseInt(rounds)) || rounds <= defaultRounds){
@@ -236,12 +229,10 @@ function setRounds(rounds){
     }
 }
 
-
 function endGame(channelObj){
     delete games[channelObj.name];
     channelObj.gameRunning = false;
 }
-
 
 function getGameState(channelName){
     return games.hasOwnProperty(channelName);

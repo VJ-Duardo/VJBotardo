@@ -1,0 +1,27 @@
+"use strict";
+
+const pass = require('./password.js');
+
+// Config options can be found here: https://www.npmjs.com/package/dank-twitch-irc#client-options
+const opts = {
+    username: "botusername",
+    password: pass.password
+};
+
+// list of user IDs with superuser privileges
+const devIDs = ["123456", "654321"];
+
+// Auth-related shit
+const clientID = pass.clientId;
+const clientSecret = pass.clientSecret;
+const githubToken = pass.gitHubToken;
+var authToken = "";
+
+module.exports = {
+    opts: opts,
+    devIDs: devIDs,
+    clientID: clientID,
+    clientSecret: clientSecret,
+    githubToken: githubToken,
+		authToken: authToken
+};

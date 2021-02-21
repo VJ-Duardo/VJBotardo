@@ -1,10 +1,8 @@
 const db = require('./database.js');
-const fetch = require("node-fetch");
-const pass = require('./password.js');
+const config = require('../configs/config.js');
 const got = require('got');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
-
 
 process.on('message', async function(m) {
   if (m === "getTwitchEverything"){
@@ -23,7 +21,7 @@ async function getTwitchEverything(){
             isStream: true,
             headers: {
                     'Accept': 'application/vnd.twitchtv.v5+json',
-                    'Client-ID': pass.clientId
+                    'Client-ID': config.clientID
             }
         })
         .pipe(JSONStream.parse('emoticons.*'))
