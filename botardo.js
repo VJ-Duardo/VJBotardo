@@ -1,5 +1,5 @@
 const {ChatClient} = require('dank-twitch-irc');
-const config = require('./config.js');
+const config = require('./configs/config.js');
 const guess = require('./guesstheemote.js');
 const snake = require('./snake.js');
 const darts = require('./darts.js');
