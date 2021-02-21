@@ -1,6 +1,5 @@
 const fetch = require("node-fetch");
 const schedule = require('node-schedule');
-const pass = require('./password.js');
 const cp = require("child_process");
 const sizes = ['4', '2', '1'];
 
@@ -149,7 +148,7 @@ async function getRandomBTTVEmote(keyword){
         return data.length > 0 && !data.hasOwnProperty("message") ? convertBTTVAndTwitchLists(data, bttvPicUrl, '/3x')[0] : -1;
     }
 }
-
+/*
 function getTwitchChannel(channelObj){
     let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
     fetch(twitchUserUrl + channelObj.name, {
@@ -175,7 +174,7 @@ function getTwitchChannel(channelObj){
         });
      });
 }
-
+*/
 function getTwitchGlobal(){
     let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     
