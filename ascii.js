@@ -8,9 +8,6 @@ const fs = require('fs');
 const { registerFont, createCanvas, loadImage } = require('canvas');
 registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
 
-
-
-
 const asciiModes = {
     ascii: {params: 1, func: plainAscii},
     mirror: {params: 1, func: mirror},
@@ -42,10 +39,7 @@ const maxHeight = 60;
 const maxHeightOverall = 20*44;
 const maxCharactersPerSend = 460;
 const bestCharactersPerSend = 406;
-
 const frameDelay = 100;
-
-
 
 async function getUrlByInput(channelObj, input){
     if (/((ftp|http|https):\/\/.+)|(\.\/frames\/.+)/.test(input)){
@@ -61,7 +55,6 @@ async function getUrlByInput(channelObj, input){
     }
     return emote.url;
 }
-
 
 function createOptionsObj(optionsInput){
     let optionsObj = {"width": defaultWidth, "height": defaultHeight};
@@ -89,7 +82,6 @@ function createOptionsObj(optionsInput){
     
     return optionsObj;
 }
-
 
 function getTextObject(width, height, text){
     const relativeStartY = 0.83;
@@ -129,8 +121,6 @@ function getTextObject(width, height, text){
     return textObj;
 }
 
-
-
 async function printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString, extra=""){
     if (gifSpam){
         let c = 0;
@@ -148,7 +138,6 @@ async function printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString, 
         sayFunc(channelObj.name, `${extra} ${brailleString.substring(0, maxCharactersPerSend).match(/(.+ )+/g)[0]}`);
     }
 }
-
 
 async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     if (userInput.length < asciiModes[mode].params){
@@ -188,8 +177,6 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
     }
     return 1;
 }
-
-
 
 async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let options = createOptionsObj(asciiOptions);
@@ -238,11 +225,6 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     return brailleResult;
 }
 
-
-
-
-
-
 async function addPicsToContext(context, srcList, size){
     function createStringFromImage(url, x, y){
         return loadImage(url)
@@ -264,13 +246,11 @@ async function addPicsToContext(context, srcList, size){
     return context;
 }
 
-
 async function plainAscii(width, height, context, srcLeft, srcRight){
     return await addPicsToContext(context, 
         [{url: srcLeft, x: 0, y: 0}],
         {width: width, height: height});
 }
-
 
 async function overlay(width, height, context, srcLeft, srcRight){
     return await addPicsToContext(context, 
@@ -279,7 +259,6 @@ async function overlay(width, height, context, srcLeft, srcRight){
         {width: width, height: height});
 }
 
-
 async function merge(width, height, context, srcLeft, srcRight){
     return await addPicsToContext(context, 
         [{url: srcLeft, x: 0, y: 0},
@@ -287,15 +266,12 @@ async function merge(width, height, context, srcLeft, srcRight){
         {width: width/2, height: height});
 }
 
-
-
 async function stack(width, height, context, srcTop, srcBottom){
     return await addPicsToContext(context, 
         [{url: srcTop, x: 0, y: 0},
         {url: srcBottom, x: 0, y: height/2}],
         {width: width, height: height/2});
 }
-
 
 async function mix(width, height, context, srcTop, srcBottom){
     context.beginPath();
@@ -324,7 +300,6 @@ async function mix(width, height, context, srcTop, srcBottom){
         [{url: srcBottom, x: 0, y: 0}],
         {width: width, height: height});
 }
-
 
 async function mirrorFunctions(width, height, context, src, clipReg){
     context.beginPath();
@@ -357,13 +332,11 @@ async function mirrorFunctions(width, height, context, src, clipReg){
         {width: width, height: height});
 }
 
-
 async function mirror(width, height, context, src){
     return await mirrorFunctions(width, height, context, src, [
         {x: 0, y: 0}, {x: width/2, y: 0}, {x: width/2, y: height}, {x: 0, y: height}
     ]);
 }
-
 
 async function antimirror(width, height, context, src){
     return await mirrorFunctions(width, height, context, src, [
@@ -371,16 +344,12 @@ async function antimirror(width, height, context, src){
     ]);
 }
 
-
-
 function rotateContext(context, degree, width, height){
     let angle = degree * Math.PI / 180;
     context.translate(width/2, height/2);
     context.rotate(angle);
     context.translate(-width/2, -height/2);
 }
-
-
 
 function generateTextAscii(textObj, setBackground=true){
     //console.log(textObj);
@@ -404,11 +373,6 @@ function generateTextAscii(textObj, setBackground=true){
     
     return setBackground ? textAscii : braille.invert(textAscii);
 }
-
-
-
-
-
 
 async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index){
     let cumulativeVal = false;
@@ -443,7 +407,6 @@ async function printGifAscii(channelObj, sayFunc, mode, asciiOptions, src, index
         });
 }
 
-
 async function gifCheck(src){
     for (let i=0; i<src.length; i++){
         let result = await fetch(src[i], {method:"HEAD"})
@@ -456,8 +419,6 @@ async function gifCheck(src){
     }
     return -1;
 }
-
-
 
 async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
     let keyword = typeof userInput[0] !== 'undefined' 
