@@ -397,5 +397,4 @@ function checkIfUserExists(id){
             }
         });  
     });
-    
 }
