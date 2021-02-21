@@ -1,7 +1,6 @@
 const { createCanvas, loadImage } = require('canvas');
 const brailleData = require('./brailledata.js');
 
-
 class Pixel {
     constructor(red, green, blue, alpha){
         this.red = red;
@@ -24,7 +23,6 @@ class Pixel {
         this.blue = b;
     }
 }
-
 
 const defaultMaskWidth = 1;
 const defaultMaskHeight = 1/3;
@@ -71,7 +69,6 @@ function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyDat
     return resultArray.join(' ').replace(/[⠀]/g, '⠄');
 }
 
-
 function getTransparencyData(url){
     const width = 60;
     const height = 60;
@@ -89,7 +86,6 @@ function getTransparencyData(url){
             console.log(`${error}An error occured! (image)`);
         });
 }
-
 
 function floydSteinberg(pixelArray, width){
    for (i=0; i<pixelArray.length; i++){      
@@ -114,7 +110,6 @@ function floydSteinberg(pixelArray, width){
    }
    return pixelArray;
 }
-
 
 function getBrailleCode(pixelArray, pos, width, treshold, setBackground){
     let brailleCode = "";
@@ -142,14 +137,12 @@ function getBrailleCode(pixelArray, pos, width, treshold, setBackground){
     return brailleCode.split("").map(Number).sort((a, b) => (a - b)).join('');
 }
 
-
 function evaluatePixel(pixel, pos, treshold, setBackground){
     if (pixel.alpha === 0 && !setBackground)
         return false;
     else
         return ((pixel.alpha === 0 && setBackground) || (pixel.getAvg() > treshold[pos]));
 }
-
 
 function getTransparencyPercent(pixelArray){
     let transCount = 0;
@@ -160,7 +153,6 @@ function getTransparencyPercent(pixelArray){
     }
     return (transCount/pixelArray.length)*100;
 }
-
 
 function getAverageColor(pixelArray, width, mask){
     let tresholdsObj = {};
