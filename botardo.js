@@ -51,6 +51,11 @@ async function setNewAppAccessToken() {
     authToken = data['access_token'];
 }
 
+async function loadAppAccessToken() {
+    db.getAllData(function(token){
+        authToken = token;
+    },'IMPORTANT');
+}
 
 class Command {
     constructor (name, cooldown, minCooldown, maxCooldown, devOnly, changeable){
