@@ -34,6 +34,7 @@ class Ring{
         return ` You got ${this.points} points!`;
     }
 }
+
 const rings = [
     new Ring(0, 3, 25, "PogChamp bullseye!"),
     new Ring(3, 8, 18, "SeemsGood Second ring, pretty good."),
