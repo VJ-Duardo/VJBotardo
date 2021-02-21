@@ -35,7 +35,6 @@ const gapChance = 0.85;
 
 var games = {};
 
-
 class Game {
     constructor(channelObj, sayFunc, playerName, playerID, allMode=false){
         this.channelObj = channelObj;
@@ -136,8 +135,6 @@ class Game {
         this.turnDone = true;
     }
 }
-
-
 
 class Player {
     constructor(id, name){
@@ -312,8 +309,6 @@ class GameRoyale extends Game{
     }
 }
 
-
-
 class Cell{
     constructor(x, y, width, height, color){
         this.x = x;
@@ -327,9 +322,6 @@ class Cell{
         gameObj.drawRect(this.x, this.y, this.width, this.height, this.color);
     }
 }
-
-
-
 
 class Apple extends Cell{
     constructor(x, y, width, height, color, points){
@@ -353,7 +345,6 @@ class Apple extends Cell{
          gameObj.drawCircle(this.x+(elemWidth/2), this.y+(elemHeight/2), Math.floor(this.width/2), this.color);
     }
 }
-
 
 class Snake{
     constructor(color, width, height, startX = 0, startY = 0, direction = "east"){
@@ -393,8 +384,6 @@ class Snake{
             || this.head.y >= y || this.head.y < 0);
     }
 }
-
-
 
 module.exports = {
     playSnake: function(channelObj, sayFunc, user, input){
@@ -457,7 +446,6 @@ module.exports = {
     }
 };
 
-
 function update(channel){
     let gameObj = games[channel];
     gameObj.turnDone = false;
@@ -508,7 +496,6 @@ function update(channel){
         gameOver(gameObj, true);
     }
 }
-
 
 function printField(context){
     let pixelData = context.getImageData(0, 0, fieldWidth, fieldHeight).data;
