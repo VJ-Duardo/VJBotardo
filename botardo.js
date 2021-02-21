@@ -14,8 +14,6 @@ const client = new ChatClient(config.opts);
 var commandCount = 0;
 var startTime = 0;
 
-
-
 class Channel {
     constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam){
         this.id = id;
@@ -44,7 +42,6 @@ class Channel {
     }
 }
 var channelsObjs = {};
-
 
 
 
@@ -79,9 +76,6 @@ class Command {
     }
 }
 var commandObjs = {};
-
-
-
 
 function booleanCheck(bool, defaultBool){
     if (typeof bool !== 'undefined' && (parseInt(bool) === 0 || parseInt(bool) === 1))
@@ -121,8 +115,6 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
     return 1;
 }
 
-
-
 var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
@@ -134,12 +126,9 @@ var loading = true;
     loading = false;
 })();
 
-
-
 const sayFunc = function(channel, message){
     client.privmsg(channel, message);
 };
-
 
 function kill(channel){
     db.closeDB();
@@ -159,7 +148,6 @@ function showPoints(channel, userName, userId, anotherUser){
     }
 }
 
-
 async function getTop(channel, type){
     const top = 10;
     
@@ -174,13 +162,11 @@ async function getTop(channel, type){
         client.me(channel, topString);
 }
 
-
 async function reloadChannelEmotes(channel){
     channelsObjs[channel].loadEmotes();
     emotes.loadGlobalEmotes();
     client.me(channel, "Reloaded channel emotes.");
 }
-
 
 function ping(channel){
     let pingStart = new Date().getTime();
@@ -203,8 +189,6 @@ function about(channel){
 function commands(channel){
     client.me(channel, "A command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb");
 }
-
-
 
 function getLiveStatus(channel_id, channel){
     const getStreamsUrl = `https://api.twitch.tv/helix/streams?user_id=${channel_id}`;
@@ -268,7 +252,6 @@ async function allowanceCheck(channel, user, command, callback, params){
     }
 }
 
-
 async function devEval(channel, input){
     try{
         let output =  await eval(input);
@@ -277,9 +260,6 @@ async function devEval(channel, input){
         client.say(channel, e);
     }
 }
-
-
-
 
 async function addChannel(channel, id, channelName){
     channelName = typeof channelName !== 'undefined' ? channelName.toLowerCase() : channelName;
@@ -328,8 +308,6 @@ async function removeChannel(channel, id){
     }
 }
 
-
-
 async function addCommand(channel, name, cooldown, minCooldown, devOnly, changeable, maxCooldown){
     if (loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown, changeable) === -1){
         client.say(channel, "An Error occured!");
@@ -355,10 +333,6 @@ async function addCommand(channel, name, cooldown, minCooldown, devOnly, changea
     }
 }
 
-
-
-
-
 function optionCheck(channel, value, options){
     if (!options.some(isNaN) && options.length === 2 && !isNaN(value)){
         if (value >= options[0] && value <= options[1])
@@ -372,13 +346,11 @@ function optionCheck(channel, value, options){
     return false;
 }
 
-
 function modsCanEditCheck(channelObj, user){
     return (channelObj.modsCanEdit && user['mod'])
             || (user['user-id'] === channelObj.id)
             || (!config.devIDs.includes(user['user-id']));
 }
-
 
 async function setBot(channel, user, option, value){
     let channelObj = channelsObjs[channel];
@@ -423,7 +395,6 @@ async function setBot(channel, user, option, value){
         client.me(channel, 'Something went wrong in the db.');
     return 1;
 }
-
 
 async function setCommand(channel, user, command, option, value){
     let channelObj = channelsObjs[channel];  
@@ -475,11 +446,6 @@ async function setCommand(channel, user, command, option, value){
         
 }
 
-
-
-
-
-
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
     let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
@@ -500,10 +466,6 @@ async function checkCommand(channel, command){
     let enabled = await commandObj.getEnabledStatus(channelObj.id);
     client.me(channel, `Settings for command ${command}: cooldown: ${cooldown} sec, enabled: ${enabled}`);
 }
-
-
-
-
 
 async function suggest(channel, user, content){
     if (typeof content === 'undefined' || content === ""){
@@ -541,8 +503,6 @@ async function suggest(channel, user, content){
     }
     client.me(channel, "There was an issue, suggestion was most likely not saved :(");
 }
-
-
 
 client.on("PRIVMSG", (msg) => {
     if (!channelsObjs.hasOwnProperty(msg.channelName) || loading) {
