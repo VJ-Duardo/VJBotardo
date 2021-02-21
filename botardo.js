@@ -130,7 +130,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
-    config.loadAppAccessToken();
+    loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
     await db.getAllData(loadCommand, "COMMAND");
@@ -215,7 +215,7 @@ function getLiveStatus(channel_id, channel){
     })
     .then((dataObj) => {
         if (dataObj.status == 401 && dataObj.message === 'Invalid OAuth token'){
-            config.setNewAppAccessToken();
+            setNewAppAccessToken();
             client.me(channel, '[Refreshed app access token] Try again please.');
             return true;
         }
