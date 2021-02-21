@@ -1,8 +1,8 @@
 const fetch = require("node-fetch");
-const db = require('./database.js');
-const brailleData = require('./brailledata.js');
+const db = require('./handlers/database.js');
+const brailleData = require('./handlers/brailledata.js');
 const ascii = require('./ascii.js');
-const emotes = require('./emotes.js');
+const emotes = require('./handlers/emotes.js');
 
 var games = {};
 var defaultCharacters = ['x', 'o'];

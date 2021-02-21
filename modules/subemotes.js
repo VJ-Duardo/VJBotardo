@@ -1,5 +1,5 @@
 const db = require('./database.js');
-const config = require('./configs/config.js');
+const config = require('../configs/config.js');
 const got = require('got');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
