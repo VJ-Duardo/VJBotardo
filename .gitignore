@@ -16,3 +16,6 @@ testdatabase.db
 
 # Netbeans
 .netbeans.xml
+
+# Visual Studio
+.vs*
