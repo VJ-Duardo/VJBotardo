@@ -1,6 +1,4 @@
 const db = require('./database.js');
-const fetch = require("node-fetch");
-const pass = require('./password.js');
 const got = require('got');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
