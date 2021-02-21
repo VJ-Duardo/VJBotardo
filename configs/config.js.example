@@ -23,5 +23,5 @@ module.exports = {
     clientID: clientID,
     clientSecret: clientSecret,
     githubToken: githubToken,
-		authToken: authToken
+	authToken: authToken
 };
