@@ -1,7 +1,6 @@
 const fetch = require("node-fetch");
 const schedule = require('node-schedule');
 const pass = require('./password.js');
-const db = require('./database.js');
 const cp = require("child_process");
 const sizes = ['4', '2', '1'];
 
