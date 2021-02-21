@@ -1,4 +1,4 @@
-const braille = require('./generatebraille.js');
+const braille = require('../generatebraille.js');
 const db = require('./database.js');
 const { registerFont, createCanvas, loadImage } = require('canvas');
 registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
