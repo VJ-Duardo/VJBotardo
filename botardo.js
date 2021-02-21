@@ -6,7 +6,6 @@ const darts = require('./darts.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const ttt = require('./tictactoe.js');
-const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
 const ascii = require('./ascii.js');
 
