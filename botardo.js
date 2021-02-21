@@ -238,8 +238,8 @@ async function allowanceCheck(channel, user, command, callback, params){
     if (!channelObj || !commandObj)
         return -1;
     
-    if (user['user-id'] !== devID){
-        if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && user['user-id'] !== devID)
+    if (!config.devIDs.includes(user['user-id'])){
+        if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && !config.devIDs.includes(user['user-id']))
             return -1;
 
         if (!(await commandObj.getEnabledStatus(channelObj.id)))
@@ -377,7 +377,7 @@ function optionCheck(channel, value, options){
 function modsCanEditCheck(channelObj, user){
     return (channelObj.modsCanEdit && user['mod'])
             || (user['user-id'] === channelObj.id)
-            || (user['user-id'] === devID);
+            || (!config.devIDs.includes(user['user-id']));
 }
 
 
@@ -404,7 +404,7 @@ async function setBot(channel, user, option, value){
                 return -1;}
             break;
         case 'modsCanEdit':
-            if (!(user['user-id'] === channelObj.id) && !(user['user-id'] === devID))
+            if (!(user['user-id'] === channelObj.id) && (!config.devIDs.includes(user['user-id'])))
                 return -1;
         case 'gifSpam':
         case 'whileLive':
@@ -444,7 +444,7 @@ async function setCommand(channel, user, command, option, value){
     if (commandObj.devOnly)
         return -1;
     
-    if (!commandObj.changeable && user['user-id'] !== devID){
+    if (!commandObj.changeable && !config.devIDs.includes(user['user-id'])){
         client.me(channel, 'Don\'t change this command please. :/');
         return -1;
     }
