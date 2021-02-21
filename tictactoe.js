@@ -160,7 +160,6 @@ class Game {
     }
 }
 
-
 module.exports = {
     tictactoe: function(channelObj, sayFunc, user, command){
         if (getGameState(channelObj.name) && command[0] === channelObj.prefix+'concede'){
@@ -225,14 +224,12 @@ module.exports = {
     }
 };
 
-
 function startRound(channelObj, gameObj){
     gameObj.sayFunc(channelObj.name, `/me It's ${gameObj.turn.name}'s ( ${gameObj.turn.character} ) turn! Options: (${gameObj.getEmptyCells()})`);
     
     gameObj.waitForInput.status = true;
     gameObj.waitForInput.handle = setTimeout(function(){gameTurnTimeout(channelObj, gameObj);}, gameObj.waitForInput.waitTime);
 }
-
 
 async function settleGameEnd(channelObj, gameObj, result){
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -248,7 +245,6 @@ async function settleGameEnd(channelObj, gameObj, result){
     }
     endGame(channelObj);
 }
-
 
 function postRoundCheck(channelObj, gameObj){
     gameObj.waitForInput.status = false;
@@ -269,7 +265,6 @@ function gameTurnTimeout(channelObj, gameObj){
     postRoundCheck(channelObj, gameObj);
 }
 
-
 function gameRequestTimeout(channelObj, gameObj, initial){
     if (initial){
         gameObj.sayFunc(channelObj.name, `/me ${gameObj.playerTwo.name}, ${gameObj.playerOne.name} wants to play a game of tictactoe! Write ${channelObj.prefix}accept [<emote>] to play :)`);
@@ -280,7 +275,6 @@ function gameRequestTimeout(channelObj, gameObj, initial){
         endGame(channelObj);
     }
 }
-
 
 async function checkInputValues(channelObj, gameObj){
     let userExists = await checkUserExistence(channelObj, gameObj.playerTwo.name);
@@ -294,7 +288,6 @@ async function checkInputValues(channelObj, gameObj){
     
     return 0;
 }
-
 
 function checkUserExistence(channelObj, user){
     let api = `https://tmi.twitch.tv/group/user/${channelObj.name}/chatters`;
@@ -316,7 +309,6 @@ function checkUserExistence(channelObj, user){
             console.error(err);
         });
 }
-
 
 function checkCharacters(channelObj, gameObj){
     if (gameObj.playerOne.character === gameObj.playerTwo.character)
@@ -347,7 +339,6 @@ function checkCharacters(channelObj, gameObj){
     });
 }
 
-
 function checkPoints(channelObj, player, points){
     if (typeof this.counter === 'undefined'){
         this.counter = 1;
@@ -374,13 +365,9 @@ function checkPoints(channelObj, player, points){
     }
 }
 
-
-
-
 function getGameState(channelName){
     return games.hasOwnProperty(channelName);
 }
-
 
 function endGame(channelObj){
     delete games[channelObj.name];
