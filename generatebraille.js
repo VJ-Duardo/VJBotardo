@@ -1,6 +1,5 @@
 const { createCanvas, loadImage } = require('canvas');
 const brailleData = require('./brailledata.js');
-const fetch = require("node-fetch");
 
 
 class Pixel {
