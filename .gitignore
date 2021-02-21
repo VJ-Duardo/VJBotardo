@@ -3,6 +3,7 @@ database.db
 testdatabase.db
 /frames
 /fonts
+config.js
 # Yarn
 .yarn/*
 !.yarn/releases
