@@ -1,6 +1,6 @@
 const braille = require('./generatebraille.js');
 const db = require('./database.js');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas } = require('canvas');
 
 const fieldWidth = 60;
 const fieldHeight = 64;
