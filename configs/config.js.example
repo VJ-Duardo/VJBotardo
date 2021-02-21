@@ -15,11 +15,13 @@ const devIDs = ["123456", "654321"];
 const clientID = pass.clientId;
 const clientSecret = pass.clientSecret;
 const githubToken = pass.gitHubToken;
+var authToken = "";
 
 module.exports = {
     opts: opts,
     devIDs: devIDs,
     clientID: clientID,
     clientSecret: clientSecret,
-    githubToken: githubToken
-}
+    githubToken: githubToken,
+		authToken: authToken
+};
