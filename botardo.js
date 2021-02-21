@@ -1,13 +1,13 @@
 const {ChatClient} = require('dank-twitch-irc');
 const config = require('./configs/config.js');
-const guess = require('./guesstheemote.js');
-const snake = require('./snake.js');
-const darts = require('./darts.js');
-const emotes = require('./emotes.js');
-const db = require('./database.js');
-const ttt = require('./tictactoe.js');
+const guess = require('./modules/guesstheemote.js');
+const snake = require('./modules/snake.js');
+const darts = require('./modules/darts.js');
+const emotes = require('./modules/emotes.js');
+const db = require('./modules/database.js');
+const ttt = require('./modules/tictactoe.js');
 const fetch = require("node-fetch");
-const ascii = require('./ascii.js');
+const ascii = require('./modules/ascii.js');
 
 const client = new ChatClient(config.opts);
 

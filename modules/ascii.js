@@ -1,4 +1,4 @@
-const braille = require('../generatebraille.js');
+const braille = require('./generatebraille.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const fetch = require("node-fetch");
