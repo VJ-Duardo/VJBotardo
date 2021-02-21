@@ -4,7 +4,6 @@ const got = require('got');
 const JSONStream = require('JSONStream');
 const es = require('event-stream');
 
-
 process.on('message', async function(m) {
   if (m === "getTwitchEverything"){
       let r = await getTwitchEverything();
