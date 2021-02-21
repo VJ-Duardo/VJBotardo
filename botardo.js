@@ -1,5 +1,5 @@
 const {ChatClient} = require('dank-twitch-irc');
-const pass = require('./password.js');
+const config = require('./config.js');
 const guess = require('./guesstheemote.js');
 const snake = require('./snake.js');
 const darts = require('./darts.js');
@@ -10,13 +10,7 @@ const braille = require('./generatebraille.js');
 const fetch = require("node-fetch");
 const ascii = require('./ascii.js');
 
-const client = new ChatClient({
-    username: "vjbotardo",
-    password: pass.password,
-    rateLimits: "verifiedBot",
-    ignoreUnhandledPromiseRejections: true
-});
-const devID = "84800191";
+const client = new ChatClient(config.opts);
 
 var commandCount = 0;
 var startTime = 0;
@@ -133,7 +127,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
-    pass.loadAppAccessToken();
+    config.loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
     await db.getAllData(loadCommand, "COMMAND");
@@ -217,8 +211,8 @@ function getLiveStatus(channel_id, channel){
     const getStreamsUrl = `https://api.twitch.tv/helix/streams?user_id=${channel_id}`;
     return fetch(getStreamsUrl, {
         headers: {
-            'Authorization': `Bearer ${pass.authToken}`,
-            'Client-ID': pass.clientId
+            'Authorization': `Bearer ${config.authToken}`,
+            'Client-ID': config.clientID
         }
     })
     .then((response) => {
@@ -226,7 +220,7 @@ function getLiveStatus(channel_id, channel){
     })
     .then((dataObj) => {
         if (dataObj.status == 401 && dataObj.message === 'Invalid OAuth token'){
-            pass.setNewAppAccessToken();
+            config.setNewAppAccessToken();
             client.me(channel, '[Refreshed app access token] Try again please.');
             return true;
         }
@@ -520,7 +514,7 @@ async function suggest(channel, user, content){
     let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${pass.gitHubToken}`,
+          'Authorization': `Bearer ${config.gitHubToken}`,
           'Accept': 'application/vnd.github.v3+json'
         },
         body: JSON.stringify({
