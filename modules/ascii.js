@@ -449,7 +449,8 @@ async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
         sayFunc(channelObj.name, "/me Could not find a matching emote :(");
     } else {
         ascii("ascii", [emote.url], gifSpam, userInput, channelObj, sayFunc)
-            .then((brailleString) => {
+            .then(async (brailleString) => {
+                await new Promise(resolve => setTimeout(resolve, frameDelay));
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {
