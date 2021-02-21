@@ -20,7 +20,6 @@ class Emote{
     }
 }
 
-
 module.exports = {
     loadEmotes: function(channelObj){
         getFFZChannel(channelObj);
@@ -51,8 +50,6 @@ module.exports = {
     getRandomBTTVEmote: getRandomBTTVEmote
 };
 
-
-
 function getJsonProm(url, callback){
     return fetch(url)
         .then((response) => { 
@@ -62,10 +59,6 @@ function getJsonProm(url, callback){
             callback(data);
         });
 }
-
-
-
-
 
 function getFFZChannel(channelObj){
    let ffzChannel = `https://api.frankerfacez.com/v1/room/${channelObj.name}`; 
@@ -97,7 +90,6 @@ async function getFFZEmoteStat(keyword){
     return !data.hasOwnProperty('error') ? parseInt(data['_total']) : 0;
 }
 
-
 async function getRandomFFZEmote(keyword){
     const pages = await getFFZEmoteStat(keyword);
     if (pages === 0)
@@ -107,9 +99,6 @@ async function getRandomFFZEmote(keyword){
     let data = await response.json();
     return !data.hasOwnProperty('error') ? convertFFZLists([data['emoticons'][0]])[0] : -1;
 }
-
-
-
 
 function getBTTVChannel(channelObj){
     let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name}`;
@@ -160,10 +149,6 @@ async function getRandomBTTVEmote(keyword){
         return data.length > 0 && !data.hasOwnProperty("message") ? convertBTTVAndTwitchLists(data, bttvPicUrl, '/3x')[0] : -1;
     }
 }
-
-
-
-
 
 function getTwitchChannel(channelObj){
     let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
@@ -225,7 +210,6 @@ function startEmoteSchedule(){
     });
 }
 startEmoteSchedule();
-
 
 function convertBTTVAndTwitchLists(emoteList, url, postfix){
     for (i=0; i<emoteList.length; i++){
