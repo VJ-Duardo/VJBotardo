@@ -43,6 +43,13 @@ class Channel {
 }
 var channelsObjs = {};
 
+async function setNewAppAccessToken() {
+    const url = `https://id.twitch.tv/oauth2/token?client_id=${clientID}&client_secret=${clientSecret}&grant_type=client_credentials`;
+    let response = await fetch(url, {method: 'POST'});
+    let data = await response.json();
+    db.setToken(data['access_token']);
+    authToken = data['access_token'];
+}
 
 
 class Command {
