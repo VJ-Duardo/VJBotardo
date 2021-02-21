@@ -526,7 +526,7 @@ async function suggest(channel, user, content){
     let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${config.gitHubToken}`,
+          'Authorization': `Bearer ${config.githubToken}`,
           'Accept': 'application/vnd.github.v3+json'
         },
         body: JSON.stringify({
@@ -548,7 +548,7 @@ async function suggest(channel, user, content){
         return -1;
     });
       
-    if (status !== -1){
+    if (status !== -1 || typeof status === 'undefined'){
         client.me(channel, `Suggestion was saved under number #${status}.`);
         return;
     }
