@@ -548,7 +548,7 @@ async function suggest(channel, user, content){
         return -1;
     });
       
-    if (status !== -1 || typeof status === 'undefined'){
+    if (status !== -1 && typeof status !== 'undefined'){
         client.me(channel, `Suggestion was saved under number #${status}.`);
         return;
     }
