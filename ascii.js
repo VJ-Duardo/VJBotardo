@@ -2,8 +2,8 @@ const braille = require('./generatebraille.js');
 const emotes = require('./emotes.js');
 const db = require('./database.js');
 const fetch = require("node-fetch");
-var gifFrames = require('gif-frames');
-var fs = require('fs');
+const gifFrames = require('gif-frames');
+const fs = require('fs');
 
 const { registerFont, createCanvas, loadImage } = require('canvas');
 registerFont('./fonts/NotoSansJP-Regular.otf', { family: 'Noto Sans JP'});
