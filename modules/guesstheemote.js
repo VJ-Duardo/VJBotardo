@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
-const db = require('./handlers/database.js');
+const db = require('./database.js');
 const emotes = require('./emotes.js');
 const ascii = require('./ascii.js');
 
