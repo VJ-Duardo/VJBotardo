@@ -257,7 +257,7 @@ async function allowanceCheck(channel, user, command, callback, params){
         if (!(await commandObj.getEnabledStatus(channelObj.id)))
             return -1;
 
-        if (!channelObj.whileLive){
+        if (!channelObj.whileLive && !["setcommand", "setbot"].includes(command.toLowerCase())){
             if (await getLiveStatus(channelObj.id, channel))
                 return -1;
         }
