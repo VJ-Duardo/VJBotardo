@@ -28,6 +28,7 @@ class Channel {
         this.name = name;
         this.gameRunning = false;
         this.game = null;
+        this.isVipOrMod = false;
         this.emotes = {
             ffzChannel: [],
             ffzGlobal: [],
@@ -96,11 +97,12 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
     prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
       
     try {
-        await client.join(name);
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
+        await client.join(name);
         channelsObjs[name].loadEmotes();
         return 1;
     } catch (e) {
+        delete channelsObjs[name];
         console.log(`Error: ${name}: ${e}`);
         return -1;
     }
@@ -251,6 +253,14 @@ async function allowanceCheck(channel, user, command, callback, params){
         return -1;
     
     if (!config.devIDs.includes(user['user-id'])){
+        console.log(channelObj.isVipOrMod);
+        if (!channelObj.isVipOrMod){
+            client.me(channel, "Due to certain limitations the bot needs vip or mod to function properly. \
+                                To limit spam you can still disable commands, adjust cooldowns, disable the spam option and more :) \
+                                (Trigger the bot one more time after modding/giving vip)");
+            return -1;
+        }
+        
         if (typeof commandObj.devOnly !== 'undefined' && commandObj.devOnly && !config.devIDs.includes(user['user-id']))
             return -1;
 
@@ -555,6 +565,10 @@ async function suggest(channel, user, content){
     client.me(channel, "There was an issue, suggestion was most likely not saved :(");
 }
 
+
+client.on("USERSTATE", (msg) => {
+    channelsObjs[msg.channelName].isVipOrMod = typeof msg.badges.find(b => ["moderator", "vip"].includes(b.name)) !== 'undefined';
+});
 
 
 client.on("PRIVMSG", (msg) => {
