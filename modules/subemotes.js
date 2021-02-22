@@ -12,6 +12,7 @@ process.on('message', async function(m) {
 });
 
 async function getTwitchEverything(){
+    console.log("begin of emote loading");
     const twitchEmoteAPI = 'https://api.twitch.tv/kraken/chat/emoticons';
     
     const count = await db.getRandomEmoteStat("");

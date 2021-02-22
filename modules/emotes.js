@@ -187,7 +187,7 @@ function getTwitchGlobal(){
 
 function getTwitchEverything(){
     return new Promise(function(resolve){
-        var child = cp.fork('./subemotes.js');
+        var child = cp.fork('./modules/subemotes.js');
 
         child.on('message', function(m) {
           resolve(m);
