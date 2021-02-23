@@ -17,7 +17,7 @@ var startTime = 0;
 
 
 class Channel {
-    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam){
+    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam, banphraseAPI){
         this.id = id;
         this.prefix = prefix;
         this.minPrefix = 1;
@@ -25,6 +25,7 @@ class Channel {
         this.modsCanEdit = modsCanEdit;
         this.whileLive = whileLive;
         this.gifSpam = gifSpam;
+        this.banphraseAPI = banphraseAPI;
         this.name = name;
         this.gameRunning = false;
         this.game = null;
@@ -89,7 +90,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=false){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(name)){
         return -1;
     }
@@ -97,7 +98,7 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
     prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
       
     try {
-        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
+        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true), banphraseAPI, booleanCheck(allowIfPajbotDown, true));
         await client.join(name);
         channelsObjs[name].loadEmotes();
         return 1;
@@ -136,8 +137,38 @@ var loading = true;
 
 
 
-const sayFunc = function(channel, message){
-    client.privmsg(channel, message);
+const sayFunc = function(channel, nMessage){
+    if (channelsObjs[channel].banphraseAPI !== null){
+        fetch(`https://${channelsObjs[channel].banphraseAPI}/api/v1/banphrases/test`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'message': nMessage
+            })
+        })
+        .then(response => {
+            if (response.status !== 200){
+                throw new Error('Invalid');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            if(data.banned){
+                client.me(channel, "[BANPHRASED]");
+            } else {
+                client.privmsg(channel, nMessage);
+            }
+        })
+        .catch(_ => {
+            client.privmsg(channel, "The provided banhprase url caused an issue. Please check if it is correct or set it to null if it's not needed.");
+        });
+    } else {
+        client.privmsg(channel, nMessage);
+    }
 };
 
 
@@ -253,7 +284,6 @@ async function allowanceCheck(channel, user, command, callback, params){
         return -1;
     
     if (!config.devIDs.includes(user['user-id'])){
-        console.log(channelObj.isVipOrMod);
         if (!channelObj.isVipOrMod){
             client.me(channel, "Due to certain limitations the bot needs vip or mod to function properly. \
                                 To limit spam you can still disable commands, adjust cooldowns, disable the spam option and more :) \
@@ -436,6 +466,16 @@ async function setBot(channel, user, option, value){
                 dbStatus = await db.setChannelValue(channelObj.id, option, boolInteger);
             } else { return -1;}
             break;
+        case 'banphraseAPI':
+            value = value.toLowerCase();
+            if (value === "null"){
+                dbStatus = await db.setChannelValue(channelObj.id, 'banphraseAPI', null);
+                channelObj[option] = null;
+            } else {
+                dbStatus = await db.setChannelValue(channelObj.id, 'banphraseAPI', value);
+                channelObj[option] = value;
+            }
+            break;
         default:
             client.me(channel, 'That option cannot be found.');
             return -1;
@@ -505,7 +545,7 @@ async function setCommand(channel, user, command, option, value){
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
-    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
+    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam', 'banphraseAPI'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
     client.me(channel, `Settings in this channel: ${channelAttributes}`);
 }
 
