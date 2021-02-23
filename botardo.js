@@ -17,7 +17,7 @@ var startTime = 0;
 
 
 class Channel {
-    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam, banphraseAPI){
+    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam, banphraseAPI, allowIfPajbotDown){
         this.id = id;
         this.prefix = prefix;
         this.minPrefix = 1;
@@ -26,6 +26,7 @@ class Channel {
         this.whileLive = whileLive;
         this.gifSpam = gifSpam;
         this.banphraseAPI = banphraseAPI;
+        this.allowIfPajbotDown = allowIfPajbotDown;
         this.name = name;
         this.gameRunning = false;
         this.game = null;
@@ -90,7 +91,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=false){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=0){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(name)){
         return -1;
     }
@@ -138,6 +139,7 @@ var loading = true;
 
 
 const sayFunc = function(channel, nMessage){
+    if (nMessage === ""){return;}
     if (channelsObjs[channel].banphraseAPI !== null){
         fetch(`https://${channelsObjs[channel].banphraseAPI}/api/v1/banphrases/test`, {
             method: 'POST',
@@ -151,7 +153,11 @@ const sayFunc = function(channel, nMessage){
         })
         .then(response => {
             if (response.status !== 200){
-                throw new Error('Invalid');
+                if (response.status === 502){
+                    if (!channelsObjs[channel].allowIfPajbotDown) throw new Error("down");
+                } else {
+                    throw new Error("invalid");
+                }
             }
             return response.json();
         })
@@ -163,8 +169,12 @@ const sayFunc = function(channel, nMessage){
                 client.privmsg(channel, nMessage);
             }
         })
-        .catch(_ => {
-            client.privmsg(channel, "The provided banhprase url caused an issue. Please check if it is correct or set it to null if it's not needed.");
+        .catch(e => {
+            if (e === "down"){
+                client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
+            } else {
+                client.me(channel, "The provided banhprase url caused an issue. Please check if it is correct or set it to null if it's not needed.");
+            }
         });
     } else {
         client.privmsg(channel, nMessage);
@@ -460,6 +470,7 @@ async function setBot(channel, user, option, value){
                 return -1;
         case 'gifSpam':
         case 'whileLive':
+        case 'allowIfPajbotDown':
             if (optionCheck(channel, value, ['true', 'false'])){
                 channelObj[option] = value === 'true';
                 let boolInteger = value === 'true' ? 1 : 0;
