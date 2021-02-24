@@ -152,29 +152,20 @@ const sayFunc = function(channel, nMessage){
             })
         })
         .then(response => {
-            if (response.status !== 200){
-                if (response.status === 502){
-                    if (!channelsObjs[channel].allowIfPajbotDown) throw new Error("down");
-                } else {
-                    throw new Error("invalid");
-                }
+            if (response.status !== 200 && !channelsObjs[channel].allowIfPajbotDown){
+                throw new Error("invalid");
             }
             return response.json();
         })
         .then(data => {
-            console.log(data);
             if(data.banned){
                 client.me(channel, "[BANPHRASED]");
             } else {
                 client.privmsg(channel, nMessage);
             }
         })
-        .catch(e => {
-            if (e === "down"){
-                client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
-            } else {
-                client.me(channel, "The provided banhprase url caused an issue. Please check if it is correct or set it to null if it's not needed.");
-            }
+        .catch(() => {
+            client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
         });
     } else {
         client.privmsg(channel, nMessage);
@@ -443,6 +434,35 @@ function modsCanEditCheck(channelObj, user){
 }
 
 
+function isPajbotLinkValid(link){
+    return fetch(`https://${link}/api/v1/banphrases/test`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            'message': "test"
+        })
+    })
+    .then(response => {
+        if (response.status !== 200){
+           throw new Error("invalid");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(!data.hasOwnProperty("banned")){
+            throw new Error("invalid");
+        }
+        return true;
+    })
+    .catch(() =>{
+       return false;
+    });
+}
+
+
 async function setBot(channel, user, option, value){
     let channelObj = channelsObjs[channel];
     if (!modsCanEditCheck(channelObj, user))
@@ -479,6 +499,10 @@ async function setBot(channel, user, option, value){
             break;
         case 'banphraseAPI':
             value = value.toLowerCase();
+            if (value !== "null" && await isPajbotLinkValid(value) === false){
+                client.me(channel, "The url seems to be invalid. If it's correct, make sure the pajbot is running.");
+                return -1;
+            }
             if (value === "null"){
                 dbStatus = await db.setChannelValue(channelObj.id, 'banphraseAPI', null);
                 channelObj[option] = null;
@@ -556,7 +580,7 @@ async function setCommand(channel, user, command, option, value){
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
-    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam', 'banphraseAPI'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
+    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam', 'banphraseAPI', 'allowIfPajbotDown'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
     client.me(channel, `Settings in this channel: ${channelAttributes}`);
 }
 
