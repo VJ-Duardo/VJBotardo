@@ -1,4 +1,5 @@
 const {ChatClient} = require('dank-twitch-irc');
+const fetch = require("node-fetch");
 const config = require('./configs/config.js');
 const guess = require('./modules/guesstheemote.js');
 const snake = require('./modules/snake.js');
@@ -6,8 +7,8 @@ const darts = require('./modules/darts.js');
 const emotes = require('./modules/emotes.js');
 const db = require('./modules/database.js');
 const ttt = require('./modules/tictactoe.js');
-const fetch = require("node-fetch");
 const ascii = require('./modules/ascii.js');
+const brailleData = require('./modules/brailledata.js');
 
 const client = new ChatClient(config.opts);
 
@@ -17,7 +18,7 @@ var startTime = 0;
 
 
 class Channel {
-    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam){
+    constructor(id, name, prefix, modsCanEdit, whileLive, gifSpam, banphraseAPI, allowIfPajbotDown){
         this.id = id;
         this.prefix = prefix;
         this.minPrefix = 1;
@@ -25,6 +26,8 @@ class Channel {
         this.modsCanEdit = modsCanEdit;
         this.whileLive = whileLive;
         this.gifSpam = gifSpam;
+        this.banphraseAPI = banphraseAPI;
+        this.allowIfPajbotDown = allowIfPajbotDown;
         this.name = name;
         this.gameRunning = false;
         this.game = null;
@@ -89,7 +92,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=0){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(name)){
         return -1;
     }
@@ -97,7 +100,7 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
     prefix = typeof prefix === 'undefined' ? '!' : String(prefix);
       
     try {
-        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true));
+        channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true), banphraseAPI, booleanCheck(allowIfPajbotDown, true));
         await client.join(name);
         channelsObjs[name].loadEmotes();
         return 1;
@@ -136,8 +139,39 @@ var loading = true;
 
 
 
-const sayFunc = function(channel, message){
-    client.privmsg(channel, message);
+const sayFunc = async function(channel, nMessage){
+    if (nMessage === ""){return;}
+    if (channelsObjs[channel].banphraseAPI !== null 
+            && !brailleData.pureBrailleRegex.test(nMessage)){
+        return fetch(`https://${channelsObjs[channel].banphraseAPI}/api/v1/banphrases/test`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'message': nMessage
+            })
+        })
+        .then(response => {
+            if (response.status !== 200 && !channelsObjs[channel].allowIfPajbotDown){
+                throw new Error("invalid");
+            }
+            return response.json();
+        })
+        .then(async data => {
+            if(data.banned){
+                await client.me(channel, "[BANPHRASED]");
+            } else {
+                await client.privmsg(channel, nMessage);
+            }
+        })
+        .catch(async () => {
+            await client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
+        });
+    } else {
+        await client.privmsg(channel, nMessage);
+    }
 };
 
 
@@ -253,7 +287,6 @@ async function allowanceCheck(channel, user, command, callback, params){
         return -1;
     
     if (!config.devIDs.includes(user['user-id'])){
-        console.log(channelObj.isVipOrMod);
         if (!channelObj.isVipOrMod){
             client.me(channel, "Due to certain limitations the bot needs vip or mod to function properly. \
                                 To limit spam you can still disable commands, adjust cooldowns, disable the spam option and more :) \
@@ -403,6 +436,35 @@ function modsCanEditCheck(channelObj, user){
 }
 
 
+function isPajbotLinkValid(link){
+    return fetch(`https://${link}/api/v1/banphrases/test`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            'message': "test"
+        })
+    })
+    .then(response => {
+        if (response.status !== 200){
+           throw new Error("invalid");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(!data.hasOwnProperty("banned")){
+            throw new Error("invalid");
+        }
+        return true;
+    })
+    .catch(() =>{
+       return false;
+    });
+}
+
+
 async function setBot(channel, user, option, value){
     let channelObj = channelsObjs[channel];
     if (!modsCanEditCheck(channelObj, user))
@@ -430,11 +492,26 @@ async function setBot(channel, user, option, value){
                 return -1;
         case 'gifSpam':
         case 'whileLive':
+        case 'allowIfPajbotDown':
             if (optionCheck(channel, value, ['true', 'false'])){
                 channelObj[option] = value === 'true';
                 let boolInteger = value === 'true' ? 1 : 0;
                 dbStatus = await db.setChannelValue(channelObj.id, option, boolInteger);
             } else { return -1;}
+            break;
+        case 'banphraseAPI':
+            value = value.toLowerCase();
+            if (value !== "null" && await isPajbotLinkValid(value) === false){
+                client.me(channel, "The url seems to be invalid. If it's correct, make sure the pajbot is running.");
+                return -1;
+            }
+            if (value === "null"){
+                dbStatus = await db.setChannelValue(channelObj.id, 'banphraseAPI', null);
+                channelObj[option] = null;
+            } else {
+                dbStatus = await db.setChannelValue(channelObj.id, 'banphraseAPI', value);
+                channelObj[option] = value;
+            }
             break;
         default:
             client.me(channel, 'That option cannot be found.');
@@ -505,7 +582,7 @@ async function setCommand(channel, user, command, option, value){
 
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
-    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
+    let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam', 'banphraseAPI', 'allowIfPajbotDown'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
     client.me(channel, `Settings in this channel: ${channelAttributes}`);
 }
 

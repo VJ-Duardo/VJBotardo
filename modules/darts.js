@@ -100,9 +100,8 @@ class Game {
         await loadAndAddToCanvas(handImagePath, x, y-(pixelHeight * yCorrection), this.context);
         this.currentPoint.x = x;
         this.currentPoint.y = y;
-        this.sayFunc(this.channelObj.name, `/me Round ${this.round}/${maxRounds} ${printField(this.context)}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        this.sayFunc(this.channelObj.name, `/me You have ${secondsToInput} seconds!`);
+        await this.sayFunc(this.channelObj.name, `/me Round ${this.round}/${maxRounds} ${printField(this.context)}`);
+        await this.sayFunc(this.channelObj.name, `/me You have ${secondsToInput} seconds!`);
         this.waitForInput.status = true;
         this.waitForInput.handle = setTimeout(function(){_this.evaluateRound("0r", "[Out of time]");}, secondsToInput*1000);
     }
@@ -157,11 +156,9 @@ class Game {
         
         await loadAndAddToCanvas(boardImagePath, 0, 0, this.context);
         this.addPreviousHits([{x: this.currentPoint.x, y: this.currentPoint.y}]);
-        this.sayFunc(this.channelObj.name, `/me ${printField(this.context)}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await this.sayFunc(this.channelObj.name, `/me ${printField(this.context)}`);
         
-        this.sayFunc(this.channelObj.name, `/me ${origin} ${ring.message}${ring.getPointsString()} Points overall: ${this.getPlayerByIndex(this.currentPlayer).points}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await this.sayFunc(this.channelObj.name, `/me ${origin} ${ring.message}${ring.getPointsString()} Points overall: ${this.getPlayerByIndex(this.currentPlayer).points}`);
         this.updateGameStatus();
     }
     

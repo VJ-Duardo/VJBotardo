@@ -266,7 +266,8 @@ module.exports = {
         vertLine: '⠀'
     },
     mirroredDic: createMirrorDic(),
-    invertedDic: createInvertedDic()
+    invertedDic: createInvertedDic(),
+    pureBrailleRegex: new RegExp(`^((${Object.values(brailleDescrObj).concat([' ']).join('|')})(?!\w))+$`)
 };
 
 function createMirrorDic() {

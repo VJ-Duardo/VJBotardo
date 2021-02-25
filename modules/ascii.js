@@ -129,7 +129,7 @@ async function printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString, 
             let match = brailleString.substring(0, bestCharactersPerSend).match(/(.+ )+/g);
             if (match === null)
                 break;
-            sayFunc(channelObj.name, match[0]);
+            await sayFunc(channelObj.name, match[0]);
             brailleString = brailleString.slice(match[0].length);
             c++;
         }while(c < maxHeightFrames);
@@ -169,7 +169,7 @@ async function printAscii(channelObj, sayFunc, mode, userInput, gifSpam){
         if (brailleString.length > maxCharactersPerSend){
             printOversizedAscii(channelObj, sayFunc, gifSpam, brailleString);
         } else {
-            sayFunc(channelObj.name, brailleString);
+            await sayFunc(channelObj.name, brailleString);
         }
     } else {
         sayFunc(channelObj.name, `/me Cant find emote in this channel or invalid link :Z If you added a new emote, do ${channelObj.prefix}reload`);
@@ -450,7 +450,6 @@ async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
     } else {
         ascii("ascii", [emote.url], gifSpam, userInput, channelObj, sayFunc)
             .then(async (brailleString) => {
-                await new Promise(resolve => setTimeout(resolve, frameDelay));
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {

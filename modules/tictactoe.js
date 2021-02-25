@@ -6,6 +6,7 @@ const emotes = require('./emotes.js');
 
 var games = {};
 var defaultCharacters = ['x', 'o'];
+const timeToStart = 500;
 
 class Game {
     constructor(channel, sayFunc, player1, player1ID, player1Character, player2, stake){
@@ -161,7 +162,7 @@ class Game {
 }
 
 module.exports = {
-    tictactoe: function(channelObj, sayFunc, user, command){
+    tictactoe: async function(channelObj, sayFunc, user, command){
         if (getGameState(channelObj.name) && command[0] === channelObj.prefix+'concede'){
             let gameObj = games[channelObj.name];
             if (gameObj.gameStarted){
@@ -169,7 +170,7 @@ module.exports = {
                 clearTimeout(gameObj.nextRoundTimeout.handle);
                 gameObj.loser = gameObj.getPlayerByAttribute('name', user['username'].toLowerCase());
                 gameObj.winner = gameObj.getOtherPlayer(gameObj.loser);
-                sayFunc(channelObj.name, `/me ${user['username']} has given up :/`);
+                await sayFunc(channelObj.name, `/me ${user['username']} has given up :/`);
                 settleGameEnd(channelObj, gameObj, 1);
             } else {
                 clearTimeout(gameObj.waitForAccept.handle);
@@ -202,10 +203,10 @@ module.exports = {
                 checkCharacters(channelObj, gameObj);
                 gameObj.randomStartTurn();
                 gameObj.gameStarted = true;
-                setTimeout(function(){
-                    gameObj.sayFunc(channelObj.name, gameObj.turnToString());
+                setTimeout(async function(){
+                    await gameObj.sayFunc(channelObj.name, gameObj.turnToString());
                     startRound(channelObj, gameObj);
-                }, 500);
+                }, timeToStart);
             } else if (gameObj.waitForInput.status 
                     && user['username'].toLowerCase() === gameObj.turn.name.toLowerCase() 
                     && Object.keys(gameObj.field).includes(command[0].toLowerCase())){
@@ -246,10 +247,10 @@ async function settleGameEnd(channelObj, gameObj, result){
     endGame(channelObj);
 }
 
-function postRoundCheck(channelObj, gameObj){
+async function postRoundCheck(channelObj, gameObj){
     gameObj.waitForInput.status = false;
     clearTimeout(gameObj.waitForInput.handle);
-    gameObj.sayFunc(channelObj.name, gameObj.turnToString());
+    await gameObj.sayFunc(channelObj.name, gameObj.turnToString());
     let gameOverStatus = gameObj.checkIfGameOver();
     if (gameOverStatus === -1){
         gameObj.turn = gameObj.getOtherPlayer(gameObj.turn);
@@ -259,8 +260,8 @@ function postRoundCheck(channelObj, gameObj){
     }
 }
 
-function gameTurnTimeout(channelObj, gameObj){
-    gameObj.sayFunc(channelObj.name, `/me ${gameObj.turn.name} did not complete his turn in time. A random move was done! :Z`);
+async function gameTurnTimeout(channelObj, gameObj){
+    await gameObj.sayFunc(channelObj.name, `/me ${gameObj.turn.name} did not complete his turn in time. A random move was done! :Z`);
     gameObj.setRandomCell(gameObj.turn.character);
     postRoundCheck(channelObj, gameObj);
 }

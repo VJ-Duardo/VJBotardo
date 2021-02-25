@@ -283,6 +283,8 @@ module.exports = {
                 case 'prefix': column = 'prefix'; break;
                 case 'whileLive': column = 'while_live'; break;
                 case 'gifSpam': column = 'gif_spam'; break;
+                case 'banphraseAPI': column = 'banphrase_api'; break;
+                case 'allowIfPajbotDown': column = 'allow_if_pajbot_down'; break;
                 default: resolve(-1); return;
             } 
             let sql = `UPDATE CHANNEL SET ${column} = ? WHERE channel_id = ?`;
