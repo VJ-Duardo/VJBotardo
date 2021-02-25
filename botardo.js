@@ -640,7 +640,9 @@ async function suggest(channel, user, content){
 
 
 client.on("USERSTATE", (msg) => {
-    channelsObjs[msg.channelName].isVipOrMod = typeof msg.badges.find(b => ["moderator", "vip"].includes(b.name)) !== 'undefined';
+    if (typeof channelsObjs[msg.channelName] !== 'undefined'){
+        channelsObjs[msg.channelName].isVipOrMod = typeof msg.badges.find(b => ["moderator", "vip"].includes(b.name)) !== 'undefined';
+    }
 });
 
 
