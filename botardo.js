@@ -606,10 +606,6 @@ async function checkCommand(channel, command){
 
 
 async function suggest(channel, user, content){
-    if (typeof content === 'undefined' || content === ""){
-        client.me(channel, "Suggestions cannot be empty!");
-        return;
-    }
     let status = await fetch('https://api.github.com/repos/VJ-Duardo/VJBotardo/issues', {
         method: 'POST',
         headers: {
@@ -618,7 +614,7 @@ async function suggest(channel, user, content){
         },
         body: JSON.stringify({
             title: user['username'],
-            body: content
+            body: `From #${channel}: ${content !== '' ? content : "(no message, most likely channel request)"}`
         })
     })
     .then(response => {
