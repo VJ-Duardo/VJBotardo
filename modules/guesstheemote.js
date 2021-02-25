@@ -100,12 +100,11 @@ async function startGame(channelObj, gameObj, sayFunc){
                 } else {
                     channelObj.gameRunning = true;
                     channelObj.game = module.exports.guessTheEmote;
-                    sayFunc(channelObj.name, '/me GUESS THE EMOTE! (' 
+                    await sayFunc(channelObj.name, '/me GUESS THE EMOTE! (' 
                             + modes[gameObj.mode] + ') [' 
                             + ((gameObj.roundsOverall-gameObj.rounds)+1) 
                             + '/' + gameObj.roundsOverall + ']');
                     
-                    await new Promise(resolve => setTimeout(resolve, 100));
                     sayFunc(channelObj.name, brailleString);
                 }
             });
@@ -138,12 +137,12 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
         const maxRotation = 360;
         const randomRoation = Math.floor(Math.random() * maxRotation);
         ascii.ascii("ascii", [gameObj.solution.url], false, ["-r", randomRoation, "-d"], null, null)
-            .then((brailleString) => {
+            .then(async (brailleString) => {
                 if (brailleString === -1){
                     return;
                 } else {
-                    sayFunc(channelObj.name, '/me Second Hint: ');
-                    sayFunc(channelObj.name, brailleString);
+                    await sayFunc(channelObj.name, '/me Second Hint: ');
+                    await sayFunc(channelObj.name, brailleString);
                 }
             });
         }
@@ -152,11 +151,10 @@ function giveSecondHint(channelObj, gameObj, sayFunc){
 async function resolveRound(channelObj, gameObj, sayFunc, endString){
     gameObj.roundActive = false;
     gameObj.originLastHint = false;
-    sayFunc(channelObj.name, endString);
+    await sayFunc(channelObj.name, endString);
     gameObj.clearHints();
     gameObj.rounds--;
     if (games[channelObj.name].rounds === 0){
-        await new Promise(resolve => setTimeout(resolve, 100));
         sayFunc(channelObj.name, '/me game ended nam');
         endGame(channelObj);
     } else {

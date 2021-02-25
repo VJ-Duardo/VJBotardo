@@ -1,4 +1,5 @@
 const {ChatClient} = require('dank-twitch-irc');
+const fetch = require("node-fetch");
 const config = require('./configs/config.js');
 const guess = require('./modules/guesstheemote.js');
 const snake = require('./modules/snake.js');
@@ -6,8 +7,8 @@ const darts = require('./modules/darts.js');
 const emotes = require('./modules/emotes.js');
 const db = require('./modules/database.js');
 const ttt = require('./modules/tictactoe.js');
-const fetch = require("node-fetch");
 const ascii = require('./modules/ascii.js');
+const brailleData = require('./modules/brailledata.js');
 
 const client = new ChatClient(config.opts);
 
@@ -138,10 +139,11 @@ var loading = true;
 
 
 
-const sayFunc = function(channel, nMessage){
+const sayFunc = async function(channel, nMessage){
     if (nMessage === ""){return;}
-    if (channelsObjs[channel].banphraseAPI !== null){
-        fetch(`https://${channelsObjs[channel].banphraseAPI}/api/v1/banphrases/test`, {
+    if (channelsObjs[channel].banphraseAPI !== null 
+            && !brailleData.pureBrailleRegex.test(nMessage)){
+        return fetch(`https://${channelsObjs[channel].banphraseAPI}/api/v1/banphrases/test`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -157,18 +159,18 @@ const sayFunc = function(channel, nMessage){
             }
             return response.json();
         })
-        .then(data => {
+        .then(async data => {
             if(data.banned){
-                client.me(channel, "[BANPHRASED]");
+                await client.me(channel, "[BANPHRASED]");
             } else {
-                client.privmsg(channel, nMessage);
+                await client.privmsg(channel, nMessage);
             }
         })
-        .catch(() => {
-            client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
+        .catch(async () => {
+            await client.me(channel, "The banphrase API cannot be reached at this moment. If you want to allow messages anyway, set the bot option allowIfPajbotDown to true.");
         });
     } else {
-        client.privmsg(channel, nMessage);
+        await client.privmsg(channel, nMessage);
     }
 };
 
