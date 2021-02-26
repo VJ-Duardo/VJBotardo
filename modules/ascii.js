@@ -105,15 +105,20 @@ function getTextObject(width, height, text){
     
     let lines = new Array(maxLines).fill("");
     let currentLine = 0;
-    for (let word of text.split(" ")){
-        if ((lines[currentLine].length/2)-1 + word.length <= maxCharsPerLine){
-            lines[currentLine] += " "+word.split("").join(" ")+"  ";
-        } else {
-            if (word.length <= maxCharsPerLine && currentLine < lines.length-1){
-                currentLine++;
+    
+    if (text && text.length > 0){
+        for (let word of text.split(" ")){
+            if ((lines[currentLine].length/2)-1 + word.length <= maxCharsPerLine){
                 lines[currentLine] += " "+word.split("").join(" ")+"  ";
+            } else {
+                if (word.length <= maxCharsPerLine && currentLine < lines.length-1){
+                    currentLine++;
+                    lines[currentLine] += " "+word.split("").join(" ")+"  ";
+                }
             }
         }
+    }else {
+        lines[0] = " ";
     }
     textObj['textLines'] = lines.filter(line => line !== "");
     textObj['heightAll'] = lineHeight * textObj['textLines'].length;
