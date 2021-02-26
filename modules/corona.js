@@ -1,5 +1,9 @@
-const fs = require("fs");
+const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
+
+
+var csvData;
+loadData();
 
 
 // The input data consists of comma separated values for each country. 
@@ -7,14 +11,12 @@ const braille = require('./generatebraille.js');
 // The following values in the line are numerical values corresponding to Coronavirus cases.
 // Data starts at 22/1/2020
 // Parsing data for queried country      australia,0,0,0,1,2,5,10 --> [0,0,0,1,2,5,10]
-function parseData(filename, country) {
-    let file = fs.readFileSync(filename, "utf8");
-    let rawArray = file.split(/\r?\n/);
+function parseData(country) {
     let multipleMatches = false;
     let rawCountryData = [];
-    for (let i = 0; i < rawArray.length; i++) {
-        if (rawArray[i].includes(country)) {
-            let numericalData = rawArray[i].split(',').slice(4).map(function (x) {
+    for (let i = 0; i < csvData.length; i++) {
+        if (csvData[i].includes(country)) {
+            let numericalData = csvData[i].split(',').slice(4).map(function (x) {
                 return parseInt(x);
             });
             if (multipleMatches === false) {
@@ -86,6 +88,21 @@ function histogramToMatrix(data, height) {
 }
 
 
+function loadData(){
+    fetch("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
+        .then((response) => {
+            return response.text();
+        })
+        .then((text) => {
+            if (text !== "" && text)
+                csvData = text.toLowerCase().split(/\r?\n/);
+        })
+        .catch(function(e) {
+            console.log(e);
+        });
+}
+
+
 function corona(channelObj, sayFunc, userInput) {
     if (typeof userInput === 'undefined' || userInput === ""){
         sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
@@ -93,9 +110,9 @@ function corona(channelObj, sayFunc, userInput) {
     }
     
     const height = 13;
-    const width = 31;
-    let inputCountry = userInput;
-    let cumulativeData = parseData("./assets/corona.csv", inputCountry);
+    const width = 30;
+    let inputCountry = userInput.toLowerCase();
+    let cumulativeData = parseData(inputCountry);
     if (cumulativeData === -1) {
         sayFunc(channelObj.name, "/me Country not found.");
         return;
@@ -117,3 +134,4 @@ function corona(channelObj, sayFunc, userInput) {
 
 
 module.exports.corona = corona;
+module.exports.loadCoronaData = loadData;
