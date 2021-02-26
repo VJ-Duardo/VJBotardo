@@ -20,10 +20,10 @@ class Emote{
 }
 
 module.exports = {
-    loadEmotes: function(channelObj){
-        getFFZChannel(channelObj);
-        getBTTVChannel(channelObj);
-        //getTwitchChannel(channelObj);
+    loadEmotes: async function(channelObj){
+        await getFFZChannel(channelObj);
+        await getBTTVChannel(channelObj);
+        await getTwitchChannel(channelObj);
     },  
     loadGlobalEmotes: function(){
         getTwitchGlobal();
@@ -62,7 +62,7 @@ function getJsonProm(url, callback){
 function getFFZChannel(channelObj){
    let ffzChannel = `https://api.frankerfacez.com/v1/room/${channelObj.name}`; 
    
-   getJsonProm(ffzChannel, function(ffzChObj){
+   return getJsonProm(ffzChannel, function(ffzChObj){
        if (ffzChObj.hasOwnProperty("error")){
            return;
        }
@@ -102,7 +102,7 @@ async function getRandomFFZEmote(keyword){
 function getBTTVChannel(channelObj){
     let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name}`;
     
-    getJsonProm(bttvChannel, function(bttvChObj){
+    return getJsonProm(bttvChannel, function(bttvChObj){
         if (bttvChObj.hasOwnProperty("message") && bttvChObj['message'] === "channel not found"){
             return;
         }
@@ -148,33 +148,21 @@ async function getRandomBTTVEmote(keyword){
         return data.length > 0 && !data.hasOwnProperty("message") ? convertBTTVAndTwitchLists(data, bttvPicUrl, '/3x')[0] : -1;
     }
 }
-/*
-function getTwitchChannel(channelObj){
-    let twitchUserUrl = 'https://api.twitch.tv/helix/users?login=';
-    fetch(twitchUserUrl + channelObj.name, {
-        headers: {
-            'Authorization': `Bearer ${pass.authToken}`,
-            'Client-ID': pass.clientId
-        }
-    })
-    .then((response) => {
-        return response.json();
-    })
-    .then((dataObj) => {
-        let twitchEmotesUrl = `https://api.twitchemotes.com/api/v4/channels/${dataObj.data[0].id}`;
 
-        getJsonProm(twitchEmotesUrl, function(twChObj){
-            if(twChObj.hasOwnProperty("error")){
-                return;
-            }
-            
-            let emoteList = twChObj['emotes'];
-            console.log(`twitchchannel in ${channelObj.name} loaded!`);
-            channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
-        });
-     });
+function getTwitchChannel(channelObj){
+    let twitchEmotesUrl = `https://api.twitchemotes.com/api/v4/channels/${channelObj.id}`;
+
+    return getJsonProm(twitchEmotesUrl, function(twChObj){
+        if(twChObj.hasOwnProperty("error")){
+            return;
+        }
+
+        let emoteList = twChObj['emotes'];
+        console.log(`twitchchannel in ${channelObj.name} loaded!`);
+        channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+    });
 }
-*/
+
 function getTwitchGlobal(){
     let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     

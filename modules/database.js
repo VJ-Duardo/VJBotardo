@@ -285,6 +285,7 @@ module.exports = {
                 case 'gifSpam': column = 'gif_spam'; break;
                 case 'banphraseAPI': column = 'banphrase_api'; break;
                 case 'allowIfPajbotDown': column = 'allow_if_pajbot_down'; break;
+                case 'emotesString': column = 'emotes_string'; break;
                 default: resolve(-1); return;
             } 
             let sql = `UPDATE CHANNEL SET ${column} = ? WHERE channel_id = ?`;

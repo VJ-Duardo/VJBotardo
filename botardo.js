@@ -43,8 +43,9 @@ class Channel {
         this.lastCommandTime = {};
     }
     
-    loadEmotes(){
-        emotes.loadEmotes(this);
+    async loadEmotes(){
+        await emotes.loadEmotes(this);
+        await db.setChannelValue(this.id, "emotesString", JSON.stringify(this.emotes));
     }
 }
 var channelsObjs = {};
@@ -92,7 +93,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=0){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI=null, allowIfPajbotDown=0, emotesString=null){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(name)){
         return -1;
     }
@@ -102,7 +103,13 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
     try {
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true), banphraseAPI, booleanCheck(allowIfPajbotDown, true));
         await client.join(name);
-        channelsObjs[name].loadEmotes();
+        
+        if (emotesString === null)
+            await channelsObjs[name].loadEmotes();
+        else
+            channelsObjs[name].emotes = JSON.parse(emotesString);
+        
+        console.log(`Joined channel ${name}`);
         return 1;
     } catch (e) {
         delete channelsObjs[name];
