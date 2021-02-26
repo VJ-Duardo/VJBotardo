@@ -87,22 +87,32 @@ function histogramToMatrix(data, height) {
 
 
 function corona(channelObj, sayFunc, userInput) {
+    if (typeof userInput === 'undefined' || userInput === ""){
+        sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
+        return;
+    }
+    
     const height = 13;
     const width = 31;
     let inputCountry = userInput;
     let cumulativeData = parseData("./assets/corona.csv", inputCountry);
     if (cumulativeData === -1) {
-        return "Country not found";
+        sayFunc(channelObj.name, "/me Country not found.");
+        return;
     }
 
     let dailyData = [];
     for (let i = 1; i < cumulativeData.length; i++) {
         dailyData.push(cumulativeData[i] - cumulativeData[i - 1]);
     }
-
-    matrix = histogramToMatrix(createHistogram(dailyData, width * 2, height * 4), height * 4);
+    
+    let histogram = createHistogram(dailyData, width * 2, height * 4);
+    if (histogram === -1){
+        sayFunc(channelObj.name, "Something went wrong :(");
+        return;
+    }
+    matrix = histogramToMatrix(histogram, height * 4);
     sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
-    return;
 }
 
 
