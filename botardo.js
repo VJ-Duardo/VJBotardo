@@ -5,6 +5,7 @@ const guess = require('./modules/guesstheemote.js');
 const snake = require('./modules/snake.js');
 const darts = require('./modules/darts.js');
 const emotes = require('./modules/emotes.js');
+const corona = require('./modules/corona.js');
 const db = require('./modules/database.js');
 const ttt = require('./modules/tictactoe.js');
 const ascii = require('./modules/ascii.js');
@@ -682,6 +683,9 @@ client.on("PRIVMSG", (msg) => {
             break;
         case `${prefix}commands`:
             allowanceCheck(...identParams, commands, [channel]);
+            break;
+        case `${prefix}corona`:
+            allowanceCheck(...identParams, corona.corona, [channelsObjs[channel], sayFunc, command.slice(1, command.length)]);
             break;
         case `${prefix}ascii`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "ascii", command.slice(1, command.length), channelsObjs[channel].gifSpam]);

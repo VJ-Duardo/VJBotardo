@@ -39,10 +39,14 @@ module.exports = {
 function iterateOverPixels(dataArray, width, treshold, onlyReturnTransparencyData, useDithering=false, mask=defaultMask, setBackground=true){
     let resultArray = new Array();
     let pixelArray = new Array();
-    for(i=0; i<dataArray.length; i+=4){
-        pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
+    // for(i=0; i<dataArray.length; i+=4){
+    //     pixelArray.push(new Pixel(dataArray[i], dataArray[i+1], dataArray[i+2], dataArray[i+3]));
+    // }
+	// Provisional to get corona to work
+    for(i=0; i<dataArray.length; i++){
+        pixelArray.push(dataArray[i]);
     }
-    
+
     if (onlyReturnTransparencyData){
         return getTransparencyPercent(pixelArray);
     }
@@ -128,7 +132,9 @@ function getBrailleCode(pixelArray, pos, width, treshold, setBackground){
             continue
         for(l=0; l<4; l++){
             if ((pos + k + (width*l)) < pixelArray.length){
-                if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold, setBackground)){
+                // if (evaluatePixel(pixelArray[(pos + k + (width*l))], (pos + k + (width*l)), treshold, setBackground)){
+	// Provisional to get corona to work
+                if (pixelArray[(pos + k + (width*l))]){
                     brailleCode += pixelPosToBraillePos[(k.toString() + l.toString())];
                 }
             }
