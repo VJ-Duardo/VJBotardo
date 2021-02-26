@@ -659,7 +659,7 @@ client.on("PRIVMSG", (msg) => {
     let channel = msg.channelName;
     let message = msg.messageText;
 
-    const command = message.replace('󠀀', '').trim().split(" ");
+    const command = message.replace('󠀀', '').trim().split(/\s+/);
     const prefix = channelsObjs[channel].prefix;
     const identParams = [channel, userstate, command[0].replace(prefix, '')];
     
