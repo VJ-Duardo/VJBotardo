@@ -44,8 +44,9 @@ class Channel {
         this.lastCommandTime = {};
     }
     
-    loadEmotes(){
-        emotes.loadEmotes(this);
+    async loadEmotes(){
+        await emotes.loadEmotes(this);
+        await db.setChannelValue(this.id, "emotesString", JSON.stringify(this.emotes));
     }
 }
 var channelsObjs = {};
@@ -93,7 +94,7 @@ function booleanCheck(bool, defaultBool){
         return defaultBool;
 }
 
-async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI="", allowIfPajbotDown=0){
+async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gifSpam=1, banphraseAPI=null, allowIfPajbotDown=0, emotesString=null){
     if (!id || !name || isNaN(parseInt(id)) || channelsObjs.hasOwnProperty(name)){
         return -1;
     }
@@ -103,7 +104,13 @@ async function loadChannel(id, name, prefix='!', modsCanEdit=1, whileLive=1, gif
     try {
         channelsObjs[name] = new Channel(String(id), name, prefix, booleanCheck(modsCanEdit, true), booleanCheck(whileLive, true), booleanCheck(gifSpam, true), banphraseAPI, booleanCheck(allowIfPajbotDown, true));
         await client.join(name);
-        channelsObjs[name].loadEmotes();
+        
+        if (emotesString === null)
+            await channelsObjs[name].loadEmotes();
+        else
+            channelsObjs[name].emotes = JSON.parse(emotesString);
+        
+        console.log(`Joined channel ${name}`);
         return 1;
     } catch (e) {
         delete channelsObjs[name];
@@ -178,18 +185,18 @@ const sayFunc = async function(channel, nMessage){
 
 function kill(channel){
     db.closeDB();
-    client.me(channel, "bye FeelsBadMan");
+    sayFunc(channel, "/me bye FeelsBadMan");
     process.exit();
 }
 
 function showPoints(channel, userName, userId, anotherUser){
     if (typeof anotherUser !== 'undefined'){
         db.getPoints(channelsObjs[channel], 'username', anotherUser, function(_, name, points){
-            client.me(channel, `${name} has ${points} Ugandan shilling!`);
+            sayFunc(channel, `/me ${name} has ${points} Ugandan shilling!`);
         }); 
     } else {
         db.getPoints(channelsObjs[channel], 'id', userId, function(_, _, points){
-            client.me(channel, `${userName} has ${points} Ugandan shilling!`);
+            sayFunc(channel, `/me ${userName} has ${points} Ugandan shilling!`);
         });
     }
 }
@@ -200,20 +207,20 @@ async function getTop(channel, type){
     
     if (typeof type === 'undefined'){
         let p = channelsObjs[channel].prefix;
-        client.me(channel, `Available leaderboards: ${p}top ush, ${p}top snake, ${p}top darts`);
+        sayFunc(channel, `/me Available leaderboards: ${p}top ush, ${p}top snake, ${p}top darts`);
         return;
     }
     
     let topString = await db.getTopUserScores(top, type);
     if (topString !== -1)
-        client.me(channel, topString);
+        sayFunc(channel, `/me ${topString}`);
 }
 
 
 async function reloadChannelEmotes(channel){
     channelsObjs[channel].loadEmotes();
     emotes.loadGlobalEmotes();
-    client.me(channel, "Reloaded channel emotes.");
+    sayFunc(channel, "/me Reloaded channel emotes.");
 }
 
 
@@ -221,22 +228,22 @@ function ping(channel){
     let pingStart = new Date().getTime();
     client.ping()
         .then(() => {
-            client.me(channel, `BING! (${new Date().getTime()-pingStart}ms). \
-            Bot running for ${(((new Date().getTime() / 1000) - startTime) / 60).toFixed(2)} minutes. \
-            Commands used: ${commandCount}. \
-            Used prefix in this channel: ${channelsObjs[channel].prefix}`);
+            sayFunc(channel, `/me BING! (${new Date().getTime()-pingStart}ms). \
+Bot running for ${(((new Date().getTime() / 1000) - startTime) / 60).toFixed(2)} minutes. \
+Commands used: ${commandCount}. \
+Used prefix in this channel: ${channelsObjs[channel].prefix}`);
         })
         .catch(() => {
-            client.me(channel, "Timed out");
+            sayFunc(channel, "/me Timed out");
         });
 }
 
 function about(channel){
-    client.me(channel, `A bot by Duardo1. Command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb Used prefix in this channel: ${channelsObjs[channel].prefix}`);
+    sayFunc(channel, `/me A bot by Duardo1. Command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb Used prefix in this channel: ${channelsObjs[channel].prefix}`);
 }
 
 function commands(channel){
-    client.me(channel, "A command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb");
+    sayFunc(channel, "/me A command list can be found here: https://gist.github.com/VJ-Duardo/ee90088cb8b8aeec623a6092eaaa38bb");
 }
 
 
@@ -270,7 +277,7 @@ function getLiveStatus(channel_id, channel){
     .then((dataObj) => {
         if (dataObj.status == 401 && dataObj.message === 'Invalid OAuth token'){
             setNewAppAccessToken();
-            client.me(channel, '[Refreshed app access token] Try again please.');
+            sayFunc(channel, '/me [Refreshed app access token] Try again please.');
             return true;
         }
         return dataObj.data.length > 0;
@@ -425,7 +432,7 @@ function optionCheck(channel, value, options){
     if (options.includes(value))
         return true;
     
-    client.me(channel, `Value must be ${options.join('-')}`);
+    sayFunc(channel, `/me Value must be ${options.join('-')}`);
     return false;
 }
 
@@ -472,7 +479,7 @@ async function setBot(channel, user, option, value){
         return -1;
     
     if ([user, option, value].includes(undefined)){
-        client.me(channel, "Some parameters are missing!");
+        sayFunc(channel, "/me Some parameters are missing!");
         return -1;
     }
     
@@ -485,7 +492,7 @@ async function setBot(channel, user, option, value){
                 channelObj.prefix = value;
                 dbStatus = await db.setChannelValue(channelObj.id, 'prefix', value);
             } else { 
-                client.me(channel, `Allowed characters: a-zA-Z0-9^!?"'#$%&()[]{}=+*~\\-_,;@<>° Min length: ${channelObj.minPrefix}, Max length: ${channelObj.maxPrefix}`);
+                sayFunc(channel, `/me Allowed characters: a-zA-Z0-9^!?"'#$%&()[]{}=+*~\\-_,;@<>° Min length: ${channelObj.minPrefix}, Max length: ${channelObj.maxPrefix}`);
                 return -1;}
             break;
         case 'modsCanEdit':
@@ -503,7 +510,7 @@ async function setBot(channel, user, option, value){
         case 'banphraseAPI':
             value = value.toLowerCase();
             if (value !== "null" && await isPajbotLinkValid(value) === false){
-                client.me(channel, "The url seems to be invalid. If it's correct, make sure the pajbot is running.");
+                sayFunc(channel, "/me The url seems to be invalid. If it's correct, make sure the pajbot is running.");
                 return -1;
             }
             if (value === "null"){
@@ -515,13 +522,13 @@ async function setBot(channel, user, option, value){
             }
             break;
         default:
-            client.me(channel, 'That option cannot be found.');
+            sayFunc(channel, '/me That option cannot be found.');
             return -1;
     }
     if (dbStatus === 1)
-        client.me(channel, `Changed option ${option} to ${value}`);
+        sayFunc(channel, `/me Changed option ${option} to ${value}`);
     else
-        client.me(channel, 'Something went wrong in the db.');
+        sayFunc(channel, '/me Something went wrong in the db.');
     return 1;
 }
 
@@ -532,12 +539,12 @@ async function setCommand(channel, user, command, option, value){
         return -1;
     
     if ([user, command, option, value].includes(undefined)){
-        client.me(channel, "Some parameters are missing!");
+        sayFunc(channel, "/me Some parameters are missing!");
         return -1;
     }
     
     if (!Object.keys(commandObjs).includes(command)){
-        client.me(channel, "This command cannot be found!");
+        sayFunc(channel, "/me This command cannot be found!");
         return -1;
     }
     let commandObj = commandObjs[command];
@@ -545,7 +552,7 @@ async function setCommand(channel, user, command, option, value){
         return -1;
     
     if (!commandObj.changeable && !config.devIDs.includes(user['user-id'])){
-        client.me(channel, 'Don\'t change this command please. :/');
+        sayFunc(channel, '/me Don\'t change this command please. :/');
         return -1;
     }
         
@@ -565,13 +572,13 @@ async function setCommand(channel, user, command, option, value){
             } else { return -1; };
             break;
         default:
-            client.me(channel, 'That option cannot be found.');
+            sayFunc(channel, '/me That option cannot be found.');
             return -1;
     }
     if (dbStatus === 1)
-        client.me(channel, `Changed option ${option} of ${command} to ${value}`);
+        sayFunc(channel, `/me Changed option ${option} of ${command} to ${value}`);
     else
-        client.me(channel, 'Something went wrong in the db.');
+        sayFunc(channel, '/me Something went wrong in the db.');
     return 1;
         
 }
@@ -584,12 +591,12 @@ async function setCommand(channel, user, command, option, value){
 function checkBot(channel){
     let channelObj = channelsObjs[channel];
     let channelAttributes = ['prefix', 'modsCanEdit', 'whileLive', 'gifSpam', 'banphraseAPI', 'allowIfPajbotDown'].map(attr => {return `${attr}: ${channelObj[attr]}`;}).join(', ');
-    client.me(channel, `Settings in this channel: ${channelAttributes}`);
+    sayFunc(channel, `/me Settings in this channel: ${channelAttributes}`);
 }
 
 async function checkCommand(channel, command){
     if (!commandObjs.hasOwnProperty(command)){
-        client.me(channel, "Unknown command!");
+        sayFunc(channel, "/me Unknown command!");
         return;
     }
     let commandObj = commandObjs[command];
@@ -599,7 +606,7 @@ async function checkCommand(channel, command){
     
     let cooldown = await commandObj.getChannelCooldown(channelObj.id);
     let enabled = await commandObj.getEnabledStatus(channelObj.id);
-    client.me(channel, `Settings for command ${command}: cooldown: ${cooldown} sec, enabled: ${enabled}`);
+    sayFunc(channel, `/me Settings for command ${command}: cooldown: ${cooldown} sec, enabled: ${enabled}`);
 }
 
 
@@ -633,16 +640,16 @@ async function suggest(channel, user, content){
     });
       
     if (status !== -1 && typeof status !== 'undefined'){
-        client.me(channel, `Suggestion was saved under number #${status}.`);
+        sayFunc(channel, `/me Suggestion was saved under number #${status}.`);
         return;
     }
-    client.me(channel, "There was an issue, suggestion was most likely not saved :(");
+    sayFunc(channel, "/me There was an issue, suggestion was most likely not saved :(");
 }
 
 
 client.on("USERSTATE", (msg) => {
     if (typeof channelsObjs[msg.channelName] !== 'undefined'){
-        channelsObjs[msg.channelName].isVipOrMod = typeof msg.badges.find(b => ["moderator", "vip"].includes(b.name)) !== 'undefined';
+        channelsObjs[msg.channelName].isVipOrMod = msg.badges.hasModerator || msg.badges.hasVIP || msg.badges.hasBroadcaster;
     }
 });
 
@@ -660,7 +667,7 @@ client.on("PRIVMSG", (msg) => {
     let channel = msg.channelName;
     let message = msg.messageText;
 
-    const command = message.replace('󠀀', '').trim().split(" ");
+    const command = message.replace('󠀀', '').trim().split(/\s+/);
     const prefix = channelsObjs[channel].prefix;
     const identParams = [channel, userstate, command[0].replace(prefix, '')];
     
