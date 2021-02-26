@@ -75,9 +75,9 @@ function histogramToMatrix(data, height) {
     for (let i = 0; i < height; i++) {
         for (let j = 0; j < data.length; j++) {
             if (data[j] === height) {
-                matrix.push(1);
+                matrix = matrix.concat([255, 255, 255, 1]);
             } else {
-                matrix.push(0);
+                matrix = matrix.concat([0, 0, 0, 1]);
                 data[j]++;
             }
         }
