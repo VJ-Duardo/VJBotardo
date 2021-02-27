@@ -5,18 +5,17 @@ const braille = require('./generatebraille.js');
 var csvData;
 loadData();
 
-
 // The input data consists of comma separated values for each country. 
 // The first 4 values in each line correspond to the Country, State and Latitude and Longitude.
 // The following values in the line are numerical values corresponding to Coronavirus cases.
 // Data starts at 22/1/2020
 // Parsing data for queried country      australia,0,0,0,1,2,5,10 --> [0,0,0,1,2,5,10]
-function parseData(country) {
+function parseData(country,startTime=0,endTime=csvData.length) {
     let multipleMatches = false;
     let rawCountryData = [];
     for (let i = 0; i < csvData.length; i++) {
         if (csvData[i].includes(country)) {
-            let numericalData = csvData[i].split(',').slice(4).map(function (x) {
+            let numericalData = csvData[i].split(',').slice(4+startTime,endTime).map(function (x) {
                 return parseInt(x);
             });
             if (multipleMatches === false) {
@@ -43,7 +42,6 @@ function createHistogram(data, bins, height) {
         return 1;
     }
     let minBinSize = Math.trunc(data.length / bins);
-    // size of first bin will be equal or lower than bin size to guarantee always
     // the number of bins given via input (aka make sure we get desired width)
     let binChange = bins - data.length % bins;
     let histogramData = [];
@@ -63,6 +61,7 @@ function createHistogram(data, bins, height) {
         }));
     }
 
+    // Scale histogram according to height
     const dataMax = Math.max(...histogramData);
     histogramData = histogramData.map(function (x) {
         return Math.round(x / dataMax * height);
@@ -104,32 +103,55 @@ function loadData(){
 
 
 function corona(channelObj, sayFunc, userInput) {
-    if (typeof userInput === 'undefined' || userInput === ""){
-        sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
-        return;
-    }
-    
-    const height = 13;
-    const width = 30;
-    let inputCountry = userInput.toLowerCase();
-    let cumulativeData = parseData(inputCountry);
-    if (cumulativeData === -1) {
-        sayFunc(channelObj.name, "/me Country not found.");
-        return;
-    }
+	if (typeof userInput === 'undefined' || userInput === ""){
+		sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
+	return;
+	}
 
-    let dailyData = [];
-    for (let i = 1; i < cumulativeData.length; i++) {
-        dailyData.push(cumulativeData[i] - cumulativeData[i - 1]);
-    }
-    
-    let histogram = createHistogram(dailyData, width * 2, height * 4);
-    if (histogram === -1){
-        sayFunc(channelObj.name, "Something went wrong :(");
-        return;
-    }
-    matrix = histogramToMatrix(histogram, height * 4);
-    sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
+	let baseDate = new Date('2020-01-22');
+	let dateStart = new Date('2020-01-22');
+	let dateEnd = new Date();
+	userInput = userInput.split(" ");
+	const dayInMiliseconds = 60*60*24*1000;
+			    console.log("test");
+	for (let i=0; i<userInput.length; i++){
+	    if (userInput[i].includes('-')){
+		    parameter = userInput.splice(i,i+2);
+
+		    switch(parameter[0]){
+			    case '-s':
+				    dateStart = new Date(parameter[1]);
+				    break;
+			    case '-e':
+				    dateEnd = new Date(parameter[1]);
+				    break;
+		    }
+	    }
+	}
+	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds) + 1;
+	const diffDaysEnd =  Math.round(Math.abs(dateEnd-baseDate)/dayInMiliseconds) + 1;
+
+	const height = 13;
+	const width = 30;
+	let inputCountry = userInput.join(" ").toLowerCase();
+	let cumulativeData = parseData(inputCountry,diffDaysStart,diffDaysEnd);
+	if (cumulativeData === -1) {
+	sayFunc(channelObj.name, "/me Country not found.");
+	return;
+	}
+
+	let dailyData = [];
+	for (let i = 1; i < cumulativeData.length; i++) {
+	dailyData.push(cumulativeData[i] - cumulativeData[i - 1]);
+	}
+
+	let histogram = createHistogram(dailyData, width * 2, height * 4);
+	if (histogram === -1){
+	sayFunc(channelObj.name, "Something went wrong :(");
+	return;
+	}
+	matrix = histogramToMatrix(histogram, height * 4);
+	sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
 }
 
 
