@@ -1,6 +1,7 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 
+const util = require('util');
 
 var csvData;
 loadData();
@@ -10,14 +11,17 @@ loadData();
 // The following values in the line are numerical values corresponding to Coronavirus cases.
 // Data starts at 22/1/2020
 // Parsing data for queried country      australia,0,0,0,1,2,5,10 --> [0,0,0,1,2,5,10]
-function parseData(country,startTime=0,endTime=csvData.length) {
+function parseData(country,startTime,endTime) {
     let multipleMatches = false;
     let rawCountryData = [];
     for (let i = 0; i < csvData.length; i++) {
         if (csvData[i].includes(country)) {
-            let numericalData = csvData[i].split(',').slice(4+startTime,endTime).map(function (x) {
+            let numericalData = csvData[i].split(',').slice(4+startTime,endTime+4).map(function (x) {
                 return parseInt(x);
             });
+	// console.log(util.inspect(numericalData,{maxArrayLength: null }));
+
+	// Deal with more than 1 row of data per country (USA, canada, etc)
             if (multipleMatches === false) {
                 multipleMatches = true;
                 rawCountryData = numericalData;
@@ -108,31 +112,45 @@ function corona(channelObj, sayFunc, userInput) {
 	return;
 	}
 
+	// Default values
+	let height = 13;
+	let width = 30;
 	let baseDate = new Date('2020-01-22');
-	let dateStart = new Date('2020-01-22');
-	let dateEnd = new Date();
-	userInput = userInput.split(" ");
+	let dateStart = new Date('2020-01-22'); //Start of data record
+	let dateEnd = new Date(); //Today
 	const dayInMiliseconds = 60*60*24*1000;
-			    console.log("test");
+
+	userInput = userInput.split(" ");
 	for (let i=0; i<userInput.length; i++){
 	    if (userInput[i].includes('-')){
 		    parameter = userInput.splice(i,i+2);
 
 		    switch(parameter[0]){
-			    case '-s':
+			    case '-f' || '--from':
 				    dateStart = new Date(parameter[1]);
 				    break;
-			    case '-e':
+			    case '-t' || '--to':
 				    dateEnd = new Date(parameter[1]);
 				    break;
+
+			    case '-h':
+				    height = parseInt(parameter[1]);
+				    break;
+
+			    case '-w':
+				    width = parseInt(parameter[1]);
+				    break;
+			    
+			    default:
+				sayFunc(channelObj.name, "/me Could not understand parameter "+ parameter[0]+". Check !commands for more info.");
+				    return;
 		    }
 	    }
 	}
-	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds) + 1;
+	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds);
 	const diffDaysEnd =  Math.round(Math.abs(dateEnd-baseDate)/dayInMiliseconds) + 1;
 
-	const height = 13;
-	const width = 30;
+
 	let inputCountry = userInput.join(" ").toLowerCase();
 	let cumulativeData = parseData(inputCountry,diffDaysStart,diffDaysEnd);
 	if (cumulativeData === -1) {
