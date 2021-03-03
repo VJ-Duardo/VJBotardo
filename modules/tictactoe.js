@@ -233,7 +233,7 @@ function startRound(channelObj, gameObj){
 }
 
 async function settleGameEnd(channelObj, gameObj, result){
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
     if (result === 0){
         gameObj.sayFunc(channelObj.name, "/me Tie! No one loses USh :)");
     } else {

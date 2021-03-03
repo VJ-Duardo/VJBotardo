@@ -39,7 +39,7 @@ const maxHeight = 60;
 const maxHeightOverall = 20*44;
 const maxCharactersPerSend = 460;
 const bestCharactersPerSend = 406;
-const frameDelay = 100;
+const frameDelay = 120;
 const lineHeight = 12;
 
 async function getUrlByInput(channelObj, input){
@@ -478,6 +478,7 @@ async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
     } else {
         ascii("ascii", [emote.url], gifSpam, userInput, channelObj, sayFunc)
             .then(async (brailleString) => {
+                await new Promise(resolve => setTimeout(resolve, frameDelay));
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {
