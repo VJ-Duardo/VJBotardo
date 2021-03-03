@@ -46,7 +46,11 @@ class Channel {
     
     async loadEmotes(){
         await emotes.loadEmotes(this);
-        await db.setChannelValue(this.id, "emotesString", JSON.stringify(this.emotes));
+        this.cacheEmotes();
+    }
+    
+    cacheEmotes(){
+        db.setChannelValue(this.id, "emotesString", JSON.stringify(this.emotes));
     }
 }
 var channelsObjs = {};
@@ -358,6 +362,7 @@ async function addChannel(channel, id, channelName){
         let insertCCStatus = await db.insertIntoChannelCommand("channel", id);
         if (insertCCStatus === 1){
             client.say(channel, "Success!");
+            channelsObjs[channelName].cacheEmotes();
             return 1;
         } else {
             client.say(channel, String(insertCCStatus));
