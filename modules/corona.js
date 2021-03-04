@@ -1,8 +1,6 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 
-const util = require('util');
-
 var csvData;
 loadData();
 
@@ -19,7 +17,6 @@ function parseData(country,startTime,endTime) {
             let numericalData = csvData[i].split(',').slice(4+startTime,endTime+4).map(function (x) {
                 return parseInt(x);
             });
-	// console.log(util.inspect(numericalData,{maxArrayLength: null }));
 
 	// Deal with more than 1 row of data per country (USA, canada, etc)
             if (multipleMatches === false) {
@@ -75,6 +72,11 @@ function createHistogram(data, bins, height) {
 }
 
 
+//		  [0, 0, 0, 0, ^
+// 		   0, 0, 1, 0, |
+// [0,2,4,3] -->   0, 0, 1, 1, | height
+// 		   0, 1, 1, 1, |
+// 		   0, 1, 1, 1] ∨
 function histogramToMatrix(data, height) {
     let matrix = [];
     for (let i = 0; i < height; i++) {
@@ -118,18 +120,21 @@ function corona(channelObj, sayFunc, userInput) {
 	let baseDate = new Date('2020-01-22');
 	let dateStart = new Date('2020-01-22'); //Start of data record
 	let dateEnd = new Date(); //Today
+	let gifMode = false;
 	const dayInMiliseconds = 60*60*24*1000;
 
 	userInput = userInput.split(" ");
-	for (let i=0; i<userInput.length; i++){
-	    if (userInput[i].includes('-')){
-		    parameter = userInput.splice(i,i+2);
+	for (let i = 0; i<userInput.length; i++){
+	    if (userInput[i].charAt(0) =='-'){
+		    let parameter = userInput.slice(i,i+2);
 
 		    switch(parameter[0]){
-			    case '-f' || '--from':
+			    case '-f':
+			    case '--from':
 				    dateStart = new Date(parameter[1]);
 				    break;
-			    case '-t' || '--to':
+			    case '-t':
+			    case '--to':
 				    dateEnd = new Date(parameter[1]);
 				    break;
 
@@ -140,6 +145,9 @@ function corona(channelObj, sayFunc, userInput) {
 			    case '-w':
 				    width = parseInt(parameter[1]);
 				    break;
+			    case '-g':
+				    gifMode = true;
+				    break;
 			    
 			    default:
 				sayFunc(channelObj.name, "/me Could not understand parameter "+ parameter[0]+". Check !commands for more info.");
@@ -147,12 +155,20 @@ function corona(channelObj, sayFunc, userInput) {
 		    }
 	    }
 	}
+	let inputCountry = userInput[0];
+
 	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds);
 	const diffDaysEnd =  Math.round(Math.abs(dateEnd-baseDate)/dayInMiliseconds) + 1;
 
 
-	let inputCountry = userInput.join(" ").toLowerCase();
-	let cumulativeData = parseData(inputCountry,diffDaysStart,diffDaysEnd);
+	coronaGenAscii(inputCountry, diffDaysStart, diffDaysEnd, width, height,sayFunc,channelObj);
+
+}
+
+
+function coronaGenAscii(country, start, end, width, height ,sayFunc,channelObj){
+
+	let cumulativeData = parseData(country,start,end);
 	if (cumulativeData === -1) {
 	sayFunc(channelObj.name, "/me Country not found.");
 	return;
@@ -163,6 +179,7 @@ function corona(channelObj, sayFunc, userInput) {
 	dailyData.push(cumulativeData[i] - cumulativeData[i - 1]);
 	}
 
+
 	let histogram = createHistogram(dailyData, width * 2, height * 4);
 	if (histogram === -1){
 	sayFunc(channelObj.name, "Something went wrong :(");
@@ -170,6 +187,7 @@ function corona(channelObj, sayFunc, userInput) {
 	}
 	matrix = histogramToMatrix(histogram, height * 4);
 	sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
+
 }
 
 
