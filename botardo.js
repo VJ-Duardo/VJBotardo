@@ -222,7 +222,7 @@ async function getTop(channel, type){
 
 
 async function reloadChannelEmotes(channel){
-    channelsObjs[channel].loadEmotes();
+    await channelsObjs[channel].loadEmotes();
     emotes.loadGlobalEmotes();
     sayFunc(channel, "/me Reloaded channel emotes.");
 }
