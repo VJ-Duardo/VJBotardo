@@ -9,12 +9,22 @@ loadData();
 // The following values in the line are numerical values corresponding to Coronavirus cases.
 // Data starts at 22/1/2020
 // Parsing data for queried country      australia,0,0,0,1,2,5,10 --> [0,0,0,1,2,5,10]
-function parseData(country,startTime,endTime) {
-    let multipleMatches = false;
-    let rawCountryData = [];
+function parseData(country,dateStart,dateEnd, sayFunc, channelObj) {
+	let multipleMatches = false;
+	let rawCountryData = [];
+	const dayInMiliseconds = 60*60*24*1000;
+	let baseDate = new Date('2020-01-22');
+
+	if (dateStart.getTime() === dateEnd.getTime() || dateStart > dateEnd){
+	sayFunc(channelObj.name, "/me An error ocurred when trying to interpret the provided dates");
+	return -1;
+	}
+
+	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds);
+	const diffDaysEnd =  Math.round(Math.abs(dateEnd-baseDate)/dayInMiliseconds) + 1;
     for (let i = 0; i < csvData.length; i++) {
         if (csvData[i].includes(country)) {
-            let numericalData = csvData[i].split(',').slice(4+startTime,endTime+4).map(function (x) {
+            let numericalData = csvData[i].split(',').slice(4+diffDaysStart,diffDaysEnd+4).map(function (x) {
                 return parseInt(x);
             });
 
@@ -30,18 +40,20 @@ function parseData(country,startTime,endTime) {
         }
     }
     if (rawCountryData.length === 0) {
-        return -1;
+	sayFunc(channelObj.name, "/me Country not found.");
+	return -1;
     }
     return rawCountryData;
 }
 
 
 // [0,0,0,1,2,5,10,15] --> [0,0] [0,1] [2,5] [10,15] --> [0, 1, 7, 25]
-function createHistogram(data, bins, height) {
+function createHistogram(data, bins, height, sayFunc, channelObj) {
     if (bins > data.length) {
-        console.log("Error: Number of bins greater than data length");
-        return 1;
+	sayFunc(channelObj.name, "/me Width is too large or data range is too short to fit the data");
+        return -1;
     }
+
     let minBinSize = Math.trunc(data.length / bins);
     // the number of bins given via input (aka make sure we get desired width)
     let binChange = bins - data.length % bins;
@@ -117,15 +129,13 @@ function corona(channelObj, sayFunc, userInput) {
 	// Default values
 	let height = 13;
 	let width = 30;
-	let baseDate = new Date('2020-01-22');
 	let dateStart = new Date('2020-01-22'); //Start of data record
 	let dateEnd = new Date(); //Today
 	let gifMode = false;
-	const dayInMiliseconds = 60*60*24*1000;
 
 	userInput = userInput.split(" ");
 	for (let i = 0; i<userInput.length; i++){
-	    if (userInput[i].charAt(0) =='-'){
+	    if (userInput[i].charAt(0) ==='-'){
 		    let parameter = userInput.slice(i,i+2);
 
 		    switch(parameter[0]){
@@ -139,13 +149,16 @@ function corona(channelObj, sayFunc, userInput) {
 				    break;
 
 			    case '-h':
+			    case '--height':
 				    height = parseInt(parameter[1]);
 				    break;
 
 			    case '-w':
+			    case '--width':
 				    width = parseInt(parameter[1]);
 				    break;
 			    case '-g':
+			    case '--gif':
 				    gifMode = true;
 				    break;
 			    
@@ -155,23 +168,51 @@ function corona(channelObj, sayFunc, userInput) {
 		    }
 	    }
 	}
+
+	if((width+1) * height > 500){
+		sayFunc(channelObj.name, "/me You reached the character limit (500). Adjust your height and width.");
+	}
+
 	let inputCountry = userInput[0];
 
-	const diffDaysStart =  Math.round(Math.abs(dateStart-baseDate)/dayInMiliseconds);
-	const diffDaysEnd =  Math.round(Math.abs(dateEnd-baseDate)/dayInMiliseconds) + 1;
 
 
-	coronaGenAscii(inputCountry, diffDaysStart, diffDaysEnd, width, height,sayFunc,channelObj);
+	if (gifMode === true){
+		const frames = 15;
+		const initialDayOffset = 60;
+		const dateStart = new Date('2020-01-22');
+		let movingDate = new Date(dateStart.valueOf());
+		movingDate.setDate(movingDate.getDate() + initialDayOffset);
+
+		const dayInMiliseconds = 60*60*24*1000;
+		const  daysSinceStart = Math.round(Math.abs(new Date() - dateStart)/dayInMiliseconds);
+	//Days we move forward every frame. This is calculated such that  we always reach the end of the data and we never exceed 20 frames in total.
+		const advanceDays = Math.ceil((daysSinceStart - initialDayOffset)/(frames-1));
+
+		for (let i=0; i<frames; i++){
+
+		console.log(movingDate);
+		if (coronaGenAscii(inputCountry, dateStart, movingDate, width, height,sayFunc,channelObj) === -1){
+			break;
+		}
+		
+
+		movingDate.setDate(movingDate.getDate() + advanceDays);
+		}
+
+	}
+	else{
+	coronaGenAscii(inputCountry, dateStart, dateEnd, width, height,sayFunc,channelObj);
+	}
 
 }
 
 
-function coronaGenAscii(country, start, end, width, height ,sayFunc,channelObj){
+function coronaGenAscii(country, start, end, width, height , sayFunc, channelObj){
 
-	let cumulativeData = parseData(country,start,end);
-	if (cumulativeData === -1) {
-	sayFunc(channelObj.name, "/me Country not found.");
-	return;
+	let cumulativeData = parseData(country,start,end, sayFunc, channelObj);
+	if (cumulativeData === -1){
+		return -1;
 	}
 
 	let dailyData = [];
@@ -180,13 +221,13 @@ function coronaGenAscii(country, start, end, width, height ,sayFunc,channelObj){
 	}
 
 
-	let histogram = createHistogram(dailyData, width * 2, height * 4);
+	let histogram = createHistogram(dailyData, width * 2, height * 4, sayFunc, channelObj);
 	if (histogram === -1){
-	sayFunc(channelObj.name, "Something went wrong :(");
-	return;
+		return -1;
 	}
 	matrix = histogramToMatrix(histogram, height * 4);
-	sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
+	 
+	sayFunc(channelObj.name,braille.iterateOverPixels(matrix, width * 2, 128, false));
 
 }
 
