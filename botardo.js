@@ -300,9 +300,12 @@ async function allowanceCheck(channel, user, command, callback, params){
     
     if (!config.devIDs.includes(user['user-id'])){
         if (!channelObj.isVipOrMod){
-            client.me(channel, "Due to certain limitations the bot needs vip or mod to function properly. \
-                                To limit spam you can still disable commands, adjust cooldowns, disable the spam option and more :) \
-                                (Trigger the bot one more time after modding/giving vip)");
+            client.me(
+                channel,
+                "Due to certain limitations the bot needs vip or mod to function properly. \
+                To limit spam you can still disable commands, adjust cooldowns, disable the spam option and more :) \
+                (Trigger the bot one more time after modding/giving vip)"
+            );
             return -1;
         }
         
