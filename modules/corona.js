@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
+const countryCodes = require('./countryCodes.js');
 
 var csvData;
 loadData();
@@ -40,7 +41,7 @@ function parseData(country,dateStart,dateEnd, sayFunc, channelObj) {
         }
     }
     if (rawCountryData.length === 0) {
-	sayFunc(channelObj.name, "/me Country not found.");
+	sayFunc(channelObj.name, "/me There doesn't seem to be data for this country");
 	return -1;
     }
     return rawCountryData;
@@ -133,6 +134,7 @@ function corona(channelObj, sayFunc, userInput) {
 	let dateEnd = new Date(); //Today
 	let gifMode = false;
 
+	// Parsing of parameters
 	userInput = userInput.split(" ");
 	for (let i = 0; i<userInput.length; i++){
 	    if (userInput[i].charAt(0) ==='-'){
@@ -173,7 +175,26 @@ function corona(channelObj, sayFunc, userInput) {
 		sayFunc(channelObj.name, "/me You reached the character limit (500). Adjust your height and width.");
 	}
 
+	// Try to recognize country provided by user
 	let inputCountry = userInput[0];
+	let validCountry = false;
+
+	// Convert emoji to country code
+	if ( inputCountry.length === 4 ){
+		inputCountry = Array.from(inputCountry).map(countryCodes.emojiToLetter).join("");
+	}
+	for (let i=0; i<countryCodes.countryCodes.length; i++){
+		if (countryCodes.countryCodes[i].includes(inputCountry.toLowerCase())){
+			inputCountry = countryCodes.countryCodes[i][0];
+			validCountry = true;
+			break;
+		}
+	}
+	if (validCountry === false){
+		sayFunc(channelObj.name, "/me Input was not recognised as a country");
+		return;
+	}
+	console.log("Country found:" + inputCountry);
 
 
 
@@ -191,11 +212,9 @@ function corona(channelObj, sayFunc, userInput) {
 
 		for (let i=0; i<frames; i++){
 
-		console.log(movingDate);
 		if (coronaGenAscii(inputCountry, dateStart, movingDate, width, height,sayFunc,channelObj) === -1){
 			break;
 		}
-		
 
 		movingDate.setDate(movingDate.getDate() + advanceDays);
 		}
