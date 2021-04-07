@@ -39,7 +39,8 @@ const maxHeight = 60;
 const maxHeightOverall = 20*44;
 const maxCharactersPerSend = 460;
 const bestCharactersPerSend = 406;
-const frameDelay = 100;
+const frameDelay = 120;
+const lineHeight = 12;
 
 async function getUrlByInput(channelObj, input){
     if (/((ftp|http|https):\/\/.+)|(\.\/frames\/.+)/.test(input)){
@@ -93,15 +94,28 @@ function getTextObject(width, height, text){
     const maxLines = Math.ceil(Math.ceil(height/lineHeight)*relativeTextLinesPerMainHeight);
     const maxCharsPerLine = Math.ceil(width * relativeCharactersPerWidth);
     
-    if (height <= lineHeight)
-        return null;
-    
     let textObj = {
         'height': lineHeight,
         'width': width,
+        'widthAll': 0,
         'y': lineHeight * relativeStartY,
         'x': width * relativeStartX
     };
+    
+    if (height < lineHeight){
+        return null;
+    } else if (height === lineHeight){
+        const charsPerWidth = 0.25;
+        textObj['heightAll'] = 0;
+        let textWidth = Math.ceil(width/2);
+        textObj['width'] = textWidth + (textWidth%2);
+        
+        let picWidth = Math.floor(width/2);
+        textObj['widthAll'] = picWidth - (picWidth%2);
+        textObj['textLines'] = (typeof text !== 'undefined') ? [text.slice(0, Math.floor(textObj['width']*charsPerWidth)).split("").join(" ")+" "] : [" "];
+        textObj['x'] = textObj['width'] * relativeStartX;
+        return textObj;
+    }
     
     let lines = new Array(maxLines).fill("");
     let currentLine = 0;
@@ -192,10 +206,11 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
     let textObject = null;
     if (options.hasOwnProperty('text')){
         textObject = getTextObject(options['width'], options['height'], options['text']);
-        if (textObject !== null)
+        if (textObject !== null){
             options['height'] -= textObject['heightAll'];
+            options['width'] -= textObject['widthAll'];
+        }
     }
-    
     let canvas = createCanvas(options['width'], options['height']);
     let context = canvas.getContext('2d');
     if (options.hasOwnProperty('rotate'))
@@ -224,7 +239,15 @@ async function ascii(mode, urls, gifSpam, asciiOptions, channelObj, sayFunc){
         false,
         options.hasOwnProperty('dither'),
         asciiModes[mode].mask,
-        !options.hasOwnProperty('background'))} ${brailleText}`;
+        !options.hasOwnProperty('background'))}`;
+    if (textObject !== null){
+        if (options['height'] === lineHeight){
+            brailleText = brailleText.split(" ");
+            brailleResult = brailleResult.split(" ").map((line, i) => line += brailleText[i]).join(" ");
+        } else{
+            brailleResult += " "+brailleText;
+        }
+    }
     brailleResult = options.hasOwnProperty('invert') ? braille.invert(brailleResult) : brailleResult;
     brailleResult = options.hasOwnProperty('empty') ? brailleResult.replace(/[⠄]/g, '⠀') : brailleResult;
     return brailleResult;
@@ -455,6 +478,7 @@ async function randomAscii(channelObj, sayFunc, gifSpam, userInput){
     } else {
         ascii("ascii", [emote.url], gifSpam, userInput, channelObj, sayFunc)
             .then(async (brailleString) => {
+                await new Promise(resolve => setTimeout(resolve, frameDelay));
                 if (brailleString === -1){
                     sayFunc(channelObj.name, "/me Something went wrong :(");
                 } else {

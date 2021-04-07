@@ -16,6 +16,8 @@ var secondHintTime = 30000;
 var resolveTime = 45000;
 var timeBetweenRounds = 4000;
 
+const postDelay = 200;
+
 var emoteOrigins;
 loadOrigins().then(function(list){emoteOrigins=list;});
 
@@ -105,6 +107,7 @@ async function startGame(channelObj, gameObj, sayFunc){
                             + ((gameObj.roundsOverall-gameObj.rounds)+1) 
                             + '/' + gameObj.roundsOverall + ']');
                     
+                    await new Promise(resolve => setTimeout(resolve, postDelay));
                     sayFunc(channelObj.name, brailleString);
                 }
             });
@@ -155,6 +158,7 @@ async function resolveRound(channelObj, gameObj, sayFunc, endString){
     gameObj.clearHints();
     gameObj.rounds--;
     if (games[channelObj.name].rounds === 0){
+        await new Promise(resolve => setTimeout(resolve, postDelay));
         sayFunc(channelObj.name, '/me game ended nam');
         endGame(channelObj);
     } else {

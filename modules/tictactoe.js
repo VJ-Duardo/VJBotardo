@@ -4,12 +4,16 @@ const brailleData = require('./brailledata.js');
 const ascii = require('./ascii.js');
 const emotes = require('./emotes.js');
 
+const postDelay = 200;
+
 var games = {};
 var defaultCharacters = ['x', 'o'];
 const timeToStart = 500;
+const reward = 50;
+const consolationReward = 15;
 
 class Game {
-    constructor(channel, sayFunc, player1, player1ID, player1Character, player2, stake){
+    constructor(channel, sayFunc, player1, player1ID, player1Character, player2){
         this.channel = channel;
         this.playerOne = {
             name: player1,
@@ -35,7 +39,6 @@ class Game {
             handle: null,
             waitTime: 3000
         };
-        this.stake = stake;
         this.sayFunc = sayFunc;
         this.turn;
         this.field = {
@@ -181,11 +184,11 @@ module.exports = {
         }
         
         if (!getGameState(channelObj.name)){
-            if (typeof command[1] === 'undefined' || typeof command[2] === 'undefined'){
-                sayFunc(channelObj.name, `/me Correct syntax is: ${channelObj.prefix}ttt <enemy> <points> [<emote>]`);
+            if (typeof command[1] === 'undefined'){
+                sayFunc(channelObj.name, `/me Correct syntax is: ${channelObj.prefix}ttt <enemy> [<emote>]`);
                 return;
             }
-            let newGame = new Game(channelObj.name, sayFunc, user['username'].toLowerCase(), user['user-id'], command[3], command[1].toLowerCase(), command[2]);
+            let newGame = new Game(channelObj.name, sayFunc, user['username'].toLowerCase(), user['user-id'], command[2], command[1].toLowerCase());
             games[channelObj.name] = newGame;
             channelObj.gameRunning = true;
             channelObj.game = module.exports.tictactoe;
@@ -205,6 +208,7 @@ module.exports = {
                 gameObj.gameStarted = true;
                 setTimeout(async function(){
                     await gameObj.sayFunc(channelObj.name, gameObj.turnToString());
+                    await new Promise(resolve => setTimeout(resolve, postDelay));
                     startRound(channelObj, gameObj);
                 }, timeToStart);
             } else if (gameObj.waitForInput.status 
@@ -233,16 +237,14 @@ function startRound(channelObj, gameObj){
 }
 
 async function settleGameEnd(channelObj, gameObj, result){
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, postDelay));
     if (result === 0){
-        gameObj.sayFunc(channelObj.name, "/me Tie! No one loses USh :)");
+        gameObj.sayFunc(channelObj.name, `/me Tie! Both get a consolation prize of ${consolationReward} USh!`);
+        db.addUserPoints(gameObj.playerOne.id, gameObj.playerOne.name, consolationReward);
+        db.addUserPoints(gameObj.playerTwo.id, gameObj.playerTwo.name, consolationReward);
     } else {
-        gameObj.sayFunc(channelObj.name, `/me ${gameObj.winner.name} won! He wins ${gameObj.stake} USh!`);
-        if (gameObj.stake === 0){
-        } else {
-            db.addUserPoints(gameObj.winner.id, gameObj.winner.name, gameObj.stake);
-            db.addUserPoints(gameObj.loser.id, gameObj.loser.name, -gameObj.stake);        
-        }
+        gameObj.sayFunc(channelObj.name, `/me ${gameObj.winner.name} won! He wins ${reward} USh!`);
+        db.addUserPoints(gameObj.winner.id, gameObj.winner.name, reward);
     }
     endGame(channelObj);
 }
@@ -250,6 +252,7 @@ async function settleGameEnd(channelObj, gameObj, result){
 async function postRoundCheck(channelObj, gameObj){
     gameObj.waitForInput.status = false;
     clearTimeout(gameObj.waitForInput.handle);
+    await new Promise(resolve => setTimeout(resolve, postDelay));
     await gameObj.sayFunc(channelObj.name, gameObj.turnToString());
     let gameOverStatus = gameObj.checkIfGameOver();
     if (gameOverStatus === -1){
@@ -278,15 +281,13 @@ function gameRequestTimeout(channelObj, gameObj, initial){
 }
 
 async function checkInputValues(channelObj, gameObj){
-    let userExists = await checkUserExistence(channelObj, gameObj.playerTwo.name);
-    
-    if (!userExists){
+    if (!await checkUserExistence(channelObj, gameObj.playerTwo.name)){
+        games[channelObj.name].sayFunc(channelObj.name, `/me ${gameObj.playerTwo.name} cannot be found in this channel!`);
+        endGame(channelObj);
         return -1;
     }
     
-    db.getPoints(channelObj, 'username', gameObj.playerOne.name, checkPoints);
-    db.getPoints(channelObj, 'username', gameObj.playerTwo.name, checkPoints);
-    
+    gameRequestTimeout(channelObj, games[channelObj.name], true);
     return 0;
 }
 
@@ -302,12 +303,11 @@ function checkUserExistence(channelObj, user){
                    return true;
                 }
             }
-            games[channelObj.name].sayFunc(channelObj.name, `/me ${user} cannot be found in this channel!`);
-            endGame(channelObj);
             return false;
         })
         .catch((err) => {
             console.error(err);
+            return true;
         });
 }
 
@@ -338,32 +338,6 @@ function checkCharacters(channelObj, gameObj){
                 }
             });
     });
-}
-
-function checkPoints(channelObj, player, points){
-    if (typeof this.counter === 'undefined'){
-        this.counter = 1;
-        this.err = false;
-    } else {
-        this.counter++;
-    }
-    
-    if (typeof games[channelObj.name] !== 'undefined' && this.err === false){
-        if (isNaN(parseInt(games[channelObj.name].stake)) || games[channelObj.name].stake > points){
-            games[channelObj.name].sayFunc(channelObj.name, `/me ${player} does not have enough USh! You can use 0 to play for nothing :)`);
-            this.err = true;
-        }
-    }
-        
-    if (this.counter === 2){
-        if (this.err === false){
-            gameRequestTimeout(channelObj, games[channelObj.name], true);
-        } else {
-            endGame(channelObj);
-        }
-        this.counter = 0;
-        this.err = false;
-    }
 }
 
 function getGameState(channelName){

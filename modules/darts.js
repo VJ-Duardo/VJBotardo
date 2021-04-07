@@ -20,6 +20,8 @@ const timeToWaitForPlayers = 30000;
 const maxPlayers = 5;
 const minPlayers = 2;
 
+const postDelay = 200;
+
 var games = {};
 
 class Ring{
@@ -101,6 +103,7 @@ class Game {
         this.currentPoint.x = x;
         this.currentPoint.y = y;
         await this.sayFunc(this.channelObj.name, `/me Round ${this.round}/${maxRounds} ${printField(this.context)}`);
+        await new Promise(resolve => setTimeout(resolve, postDelay));
         await this.sayFunc(this.channelObj.name, `/me You have ${secondsToInput} seconds!`);
         this.waitForInput.status = true;
         this.waitForInput.handle = setTimeout(function(){_this.evaluateRound("0r", "[Out of time]");}, secondsToInput*1000);
@@ -157,8 +160,10 @@ class Game {
         await loadAndAddToCanvas(boardImagePath, 0, 0, this.context);
         this.addPreviousHits([{x: this.currentPoint.x, y: this.currentPoint.y}]);
         await this.sayFunc(this.channelObj.name, `/me ${printField(this.context)}`);
+        await new Promise(resolve => setTimeout(resolve, postDelay));
         
         await this.sayFunc(this.channelObj.name, `/me ${origin} ${ring.message}${ring.getPointsString()} Points overall: ${this.getPlayerByIndex(this.currentPlayer).points}`);
+        await new Promise(resolve => setTimeout(resolve, postDelay));
         this.updateGameStatus();
     }
     
