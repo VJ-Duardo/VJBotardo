@@ -2,6 +2,8 @@ const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 const countryCodes = require('./countryCodes.js');
 
+const frameDelay = 120;
+
 var csvData;
 loadData();
 
@@ -116,7 +118,7 @@ function loadData() {
 }
 
 
-function corona(channelObj, sayFunc, userInput) {
+async function corona(channelObj, sayFunc, userInput, gifSpam) {
     if (typeof userInput === 'undefined' || userInput === "") {
         sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
         return;
@@ -131,8 +133,10 @@ function corona(channelObj, sayFunc, userInput) {
     let gifMode = false;
 
     // Parsing of parameters
-    userInput = userInput.split(" ");
+    userInput = userInput.toLowerCase().split(" ");
     
+    
+    //Check from and to options
     let dateVars = [dateStart, dateEnd];
     ['-f', '-t'].forEach((opt, i) => {
         let optIndex = userInput.findIndex(str => str === opt);
@@ -145,6 +149,8 @@ function corona(channelObj, sayFunc, userInput) {
     if (dateVars[0] < dateVars[1])
         dateStart = dateVars[0], dateEnd = dateVars[1];
     
+    
+    //Check height and width options
     let sizeVars = [height, width];
     ['-h', '-w'].forEach((opt, i) => {
         let optIndex = userInput.findIndex(str => str === opt);
@@ -158,12 +164,24 @@ function corona(channelObj, sayFunc, userInput) {
         sayFunc(channelObj.name, `/me You reached the character limit ${maxCharacters}. Adjust your height and width.`);
     }
     
-    gifMode = userInput.findIndex(str => str === "-gif") !== -1;
+    
+    //Check gif option
+    gifMode = (userInput.findIndex(str => str === "-g") !== -1) && gifSpam;
     
     
 
     // Try to recognize country provided by user
-    let inputCountry = userInput[0];
+    let inputCountry = userInput.findIndex(e => e.charAt(0) === '-');
+    inputCountry = inputCountry === -1 ? userInput.join(" ") : userInput.slice(0, inputCountry).join(" ");
+    let country = countryCodes.countryCodes.find(ctr => ctr.includes(inputCountry));
+    if (!country){
+        sayFunc(channelObj.name, "/me Input was not recognised as a country.");
+        return;
+    } else {
+        country = country[0];
+    }
+    
+    /*let inputCountry = userInput[0];
     let validCountry = false;
 
     // Convert emoji to country code
@@ -181,9 +199,9 @@ function corona(channelObj, sayFunc, userInput) {
         sayFunc(channelObj.name, "/me Input was not recognised as a country.");
         return;
     }
-    console.log("Country found:" + inputCountry);
-
-
+    console.log("Country found:" + inputCountry);*/
+    
+   
 
     if (gifMode) {
         const frames = 15;
@@ -198,16 +216,14 @@ function corona(channelObj, sayFunc, userInput) {
         const advanceDays = Math.ceil((daysSinceStart - initialDayOffset) / (frames - 1));
 
         for (let i = 0; i < frames; i++) {
-
-            if (coronaGenAscii(inputCountry, dateStart, movingDate, width, height, sayFunc, channelObj) === -1) {
+            await new Promise(resolve => setTimeout(resolve, frameDelay));
+            if (coronaGenAscii(country, dateStart, movingDate, width, height, sayFunc, channelObj) === -1) {
                 break;
             }
-
             movingDate.setDate(movingDate.getDate() + advanceDays);
         }
-
     } else {
-        coronaGenAscii(inputCountry, dateStart, dateEnd, width, height, sayFunc, channelObj);
+        coronaGenAscii(country, dateStart, dateEnd, width, height, sayFunc, channelObj);
     }
 
 }
