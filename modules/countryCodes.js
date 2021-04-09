@@ -230,7 +230,7 @@ var countryCodes = [
     ["ukraine", "ua", "ukr"],
     ["united arab emirates", "ae", "are", "uae"],
     ["united kingdom", "gb", "gbr", "uk"],
-    ["us", "united states", "usa"],
+    ["us", "united states of america", "united states", "usa"],
     ["united states minor outlying islands", "um", "umi"],
     ["uruguay", "uy", "ury"],
     ["uzbekistan", "uz", "uzb"],

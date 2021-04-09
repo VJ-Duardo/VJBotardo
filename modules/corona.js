@@ -14,12 +14,7 @@ function parseData(country, dateStart, dateEnd, sayFunc, channelObj) {
     let multipleMatches = false;
     let rawCountryData = [];
     const dayInMiliseconds = 60 * 60 * 24 * 1000;
-    let baseDate = new Date('2020-01-22');
-
-    if (dateStart.getTime() === dateEnd.getTime() || dateStart > dateEnd) {
-        sayFunc(channelObj.name, "/me An error ocurred when trying to interpret the provided dates");
-        return -1;
-    }
+    const baseDate = new Date('2020-01-22');
 
     const diffDaysStart = Math.round(Math.abs(dateStart - baseDate) / dayInMiliseconds);
     const diffDaysEnd = Math.round(Math.abs(dateEnd - baseDate) / dayInMiliseconds) + 1;
@@ -41,7 +36,7 @@ function parseData(country, dateStart, dateEnd, sayFunc, channelObj) {
         }
     }
     if (rawCountryData.length === 0) {
-        sayFunc(channelObj.name, "/me There doesn't seem to be data for this country");
+        sayFunc(channelObj.name, "/me There doesn't seem to be data for this country.");
         return -1;
     }
     return rawCountryData;
@@ -51,7 +46,7 @@ function parseData(country, dateStart, dateEnd, sayFunc, channelObj) {
 // [0,0,0,1,2,5,10,15] --> [0,0] [0,1] [2,5] [10,15] --> [0, 1, 7, 25]
 function createHistogram(data, bins, height, sayFunc, channelObj) {
     if (bins > data.length) {
-        sayFunc(channelObj.name, "/me Width is too large or data range is too short to fit the data");
+        sayFunc(channelObj.name, "/me Width is too large or data range is too short to fit the data.");
         return -1;
     }
 
@@ -108,16 +103,16 @@ function histogramToMatrix(data, height) {
 
 function loadData() {
     fetch("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
-            .then((response) => {
-                return response.text();
-            })
-            .then((text) => {
-                if (text !== "" && text)
-                    csvData = text.toLowerCase().split(/\r?\n/);
-            })
-            .catch(function (e) {
-                console.log(e);
-            });
+        .then((response) => {
+            return response.text();
+        })
+        .then((text) => {
+            if (text !== "" && text)
+                csvData = text.toLowerCase().split(/\r?\n/);
+        })
+        .catch(function (e) {
+            console.log(e);
+        });
 }
 
 
@@ -128,6 +123,7 @@ function corona(channelObj, sayFunc, userInput) {
     }
 
     // Default values
+    const maxCharacters = 460;
     let height = 13;
     let width = 30;
     let dateStart = new Date('2020-01-22'); //Start of data record
@@ -136,44 +132,35 @@ function corona(channelObj, sayFunc, userInput) {
 
     // Parsing of parameters
     userInput = userInput.split(" ");
-    for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i].charAt(0) === '-') {
-            let parameter = userInput.slice(i, i + 2);
-
-            switch (parameter[0]) {
-                case '-f':
-                case '--from':
-                    dateStart = new Date(parameter[1]);
-                    break;
-                case '-t':
-                case '--to':
-                    dateEnd = new Date(parameter[1]);
-                    break;
-
-                case '-h':
-                case '--height':
-                    height = parseInt(parameter[1]);
-                    break;
-
-                case '-w':
-                case '--width':
-                    width = parseInt(parameter[1]);
-                    break;
-                case '-g':
-                case '--gif':
-                    gifMode = true;
-                    break;
-
-                default:
-                    sayFunc(channelObj.name, "/me Could not understand parameter " + parameter[0] + ". Check !commands for more info.");
-                    return;
-            }
+    
+    let dateVars = [dateStart, dateEnd];
+    ['-f', '-t'].forEach((opt, i) => {
+        let optIndex = userInput.findIndex(str => str === opt);
+        if (optIndex !== -1 && optIndex+1 < userInput.length){
+            let newDate = new Date(userInput[optIndex+1]);
+            if (newDate !== "Invalid Date" && newDate.getTime() >= dateStart && newDate.getTime() <= dateEnd.getTime())
+                dateVars[i] = newDate;
         }
+    });
+    if (dateVars[0] < dateVars[1])
+        dateStart = dateVars[0], dateEnd = dateVars[1];
+    
+    let sizeVars = [height, width];
+    ['-h', '-w'].forEach((opt, i) => {
+        let optIndex = userInput.findIndex(str => str === opt);
+        if (optIndex !== -1 && optIndex+1 < userInput.length && !isNaN(parseInt(userInput[i+1]))){
+            sizeVars[i] = parseInt(userInput[i+1]);
+        }
+    });
+    if ((sizeVars[1] + 1) * sizeVars[0] <= maxCharacters){
+        height = sizeVars[0], width = sizeVars[1];
+    } else {
+        sayFunc(channelObj.name, `/me You reached the character limit ${maxCharacters}. Adjust your height and width.`);
     }
-
-    if ((width + 1) * height > 500) {
-        sayFunc(channelObj.name, "/me You reached the character limit (500). Adjust your height and width.");
-    }
+    
+    gifMode = userInput.findIndex(str => str === "-gif") !== -1;
+    
+    
 
     // Try to recognize country provided by user
     let inputCountry = userInput[0];
@@ -191,14 +178,14 @@ function corona(channelObj, sayFunc, userInput) {
         }
     }
     if (validCountry === false) {
-        sayFunc(channelObj.name, "/me Input was not recognised as a country");
+        sayFunc(channelObj.name, "/me Input was not recognised as a country.");
         return;
     }
     console.log("Country found:" + inputCountry);
 
 
 
-    if (gifMode === true) {
+    if (gifMode) {
         const frames = 15;
         const initialDayOffset = 60;
         const dateStart = new Date('2020-01-22');
@@ -227,7 +214,6 @@ function corona(channelObj, sayFunc, userInput) {
 
 
 function coronaGenAscii(country, start, end, width, height, sayFunc, channelObj) {
-
     let cumulativeData = parseData(country, start, end, sayFunc, channelObj);
     if (cumulativeData === -1) {
         return -1;
@@ -246,7 +232,6 @@ function coronaGenAscii(country, start, end, width, height, sayFunc, channelObj)
     matrix = histogramToMatrix(histogram, height * 4);
 
     sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
-
 }
 
 
