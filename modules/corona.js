@@ -1,6 +1,7 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
 const countryCodes = require('./countryCodes.js');
+const db = require('./database.js');
 
 const frameDelay = 120;
 
@@ -173,8 +174,8 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
     // Try to recognize country provided by user
     let inputCountry = userInput.findIndex(e => e.charAt(0) === '-');
     inputCountry = inputCountry === -1 ? userInput.join(" ") : userInput.slice(0, inputCountry).join(" ");
-    let country = countryCodes.countryCodes.find(ctr => ctr.includes(inputCountry));
-    if (!country){
+    let country = await db.getCoronaCountry(inputCountry);
+    if (country === -1){
         sayFunc(channelObj.name, "/me Input was not recognised as a country.");
         return;
     } else {
