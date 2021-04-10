@@ -1,12 +1,12 @@
 const fetch = require("node-fetch");
 const braille = require('./generatebraille.js');
-const countryCodes = require('./countryCodes.js');
 const db = require('./database.js');
 
 const frameDelay = 120;
 
 var csvData;
 loadData();
+
 
 // The input data consists of comma separated values for each country. 
 // The first 4 values in each line correspond to the Country, State and Latitude and Longitude.
@@ -119,6 +119,17 @@ function loadData() {
 }
 
 
+function emojiToLetter(RIS) {
+    let codepointHex = parseInt(RIS.codePointAt(0).toString(16), 16);
+    if (codepointHex >= 0x1F1E6 && codepointHex <= 0x1F1FF) {
+        latinChar = String.fromCharCode(codepointHex - 0x1F1E6 + 65);
+        return latinChar;
+    } else {
+        return RIS;
+    }
+}
+
+
 async function corona(channelObj, sayFunc, userInput, gifSpam) {
     if (typeof userInput === 'undefined' || userInput === "") {
         sayFunc(channelObj.name, `/me Correct usage: ${channelObj.prefix}corona <country>`);
@@ -173,7 +184,7 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
 
     // Try to recognize country provided by user
     let inputCountry = userInput.findIndex(e => e.charAt(0) === '-');
-    inputCountry = inputCountry === -1 ? userInput.join(" ") : userInput.slice(0, inputCountry).join(" ");
+    inputCountry = Array.from(inputCountry === -1 ? userInput.join(" ") : userInput.slice(0, inputCountry).join(" ")).map(emojiToLetter).join("").toLowerCase();
     let country = await db.getCoronaCountry(inputCountry);
     if (country === -1){
         sayFunc(channelObj.name, "/me Input was not recognised as a country.");
@@ -182,28 +193,8 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
         country = country[0];
     }
     
-    /*let inputCountry = userInput[0];
-    let validCountry = false;
-
-    // Convert emoji to country code
-    if (inputCountry.length === 4) {
-        inputCountry = Array.from(inputCountry).map(countryCodes.emojiToLetter).join("");
-    }
-    for (let i = 0; i < countryCodes.countryCodes.length; i++) {
-        if (countryCodes.countryCodes[i].includes(inputCountry.toLowerCase())) {
-            inputCountry = countryCodes.countryCodes[i][0];
-            validCountry = true;
-            break;
-        }
-    }
-    if (validCountry === false) {
-        sayFunc(channelObj.name, "/me Input was not recognised as a country.");
-        return;
-    }
-    console.log("Country found:" + inputCountry);*/
-    
    
-
+    // Print graph in multiple frames if gifMode
     if (gifMode) {
         const frames = 15;
         const initialDayOffset = 60;
