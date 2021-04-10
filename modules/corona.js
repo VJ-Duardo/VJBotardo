@@ -21,8 +21,9 @@ function parseData(country, dateStart, dateEnd, sayFunc, channelObj) {
 
     const diffDaysStart = Math.round(Math.abs(dateStart - baseDate) / dayInMiliseconds);
     const diffDaysEnd = Math.round(Math.abs(dateEnd - baseDate) / dayInMiliseconds) + 1;
+    const regex = new RegExp(`\\b${country}\\b`);
     for (let i = 0; i < csvData.length; i++) {
-        if (csvData[i].includes(country)) {
+        if (regex.test(csvData[i])) {
             let numericalData = csvData[i].split(',').slice(4 + diffDaysStart, diffDaysEnd + 4).map(function (x) {
                 return parseInt(x);
             });
@@ -189,8 +190,6 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
     if (country === -1){
         sayFunc(channelObj.name, "/me Input was not recognised as a country.");
         return;
-    } else {
-        country = country[0];
     }
     
    
