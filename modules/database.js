@@ -117,6 +117,25 @@ module.exports = {
         });
     },
     
+    getCoronaCountry: function(country){
+        return new Promise(function(resolve){
+            let sql = 'SELECT name FROM COUNTRY WHERE alias = ? OR name = ? LIMIT 1';
+            db.get(sql, [country, country], function(err, row){
+                if (err){
+                    console.log(err);
+                    resolve(-1);
+                    return;
+                }       
+                if (!row){
+                    resolve(-1);
+                    return;
+                } else {
+                    resolve(row.name);
+                }
+            });
+        });
+    },
+    
     addUserPoints: function(id, name, points){
         return new Promise(function(resolve){
             checkIfUserExists(id)

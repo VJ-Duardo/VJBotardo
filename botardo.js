@@ -700,7 +700,7 @@ client.on("PRIVMSG", (msg) => {
             allowanceCheck(...identParams, commands, [channel]);
             break;
         case `${prefix}corona`:
-            allowanceCheck(...identParams, corona.corona, [channelsObjs[channel], sayFunc, command.slice(1, command.length).join(" ")]);
+            allowanceCheck(...identParams, corona.corona, [channelsObjs[channel], sayFunc, command.slice(1, command.length).join(" "), channelsObjs[channel].gifSpam]);
             break;
         case `${prefix}ascii`:
             allowanceCheck(...identParams, ascii.printAscii, [channelsObjs[channel], sayFunc, "ascii", command.slice(1, command.length), channelsObjs[channel].gifSpam]);
