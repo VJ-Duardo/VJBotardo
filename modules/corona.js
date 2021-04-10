@@ -139,8 +139,8 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
 
     // Default values
     const maxCharacters = 460;
-    let height = 13;
-    let width = 30;
+    let height = 52;
+    let width = 60;
     let dateStart = new Date('2020-01-22'); //Start of data record
     let dateEnd = new Date(); //Today
     let gifMode = false;
@@ -167,14 +167,16 @@ async function corona(channelObj, sayFunc, userInput, gifSpam) {
     let sizeVars = [height, width];
     ['-h', '-w'].forEach((opt, i) => {
         let optIndex = userInput.findIndex(str => str === opt);
-        if (optIndex !== -1 && optIndex+1 < userInput.length && !isNaN(parseInt(userInput[i+1]))){
-            sizeVars[i] = parseInt(userInput[i+1]);
+        if (optIndex !== -1 && optIndex+1 < userInput.length && !isNaN(parseInt(userInput[optIndex+1]))){
+            sizeVars[i] = parseInt(userInput[optIndex+1]);
         }
     });
-    if ((sizeVars[1] + 1) * sizeVars[0] <= maxCharacters){
-        height = sizeVars[0], width = sizeVars[1];
+    if ((sizeVars[1]/2) * (sizeVars[0]/4) <= maxCharacters){
+        height = sizeVars[0];
+        width = sizeVars[1];
     } else {
         sayFunc(channelObj.name, `/me You reached the character limit ${maxCharacters}. Adjust your height and width.`);
+        return;
     }
     
     
@@ -232,13 +234,13 @@ function coronaGenAscii(country, start, end, width, height, sayFunc, channelObj)
     }
 
 
-    let histogram = createHistogram(dailyData, width * 2, height * 4, sayFunc, channelObj);
+    let histogram = createHistogram(dailyData, width, height, sayFunc, channelObj);
     if (histogram === -1) {
         return -1;
     }
-    matrix = histogramToMatrix(histogram, height * 4);
+    matrix = histogramToMatrix(histogram, height);
 
-    sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width * 2, 128, false));
+    sayFunc(channelObj.name, braille.iterateOverPixels(matrix, width, 128, false));
 }
 
 

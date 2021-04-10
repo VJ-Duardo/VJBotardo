@@ -19,7 +19,7 @@ var timeBetweenRounds = 4000;
 const postDelay = 200;
 
 var emoteOrigins;
-//loadOrigins().then(function(list){emoteOrigins=list;});
+loadOrigins().then(function(list){emoteOrigins=list;});
 
 class Game {
     constructor(channel, mode, rounds, playSet){
