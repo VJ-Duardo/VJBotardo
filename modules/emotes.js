@@ -167,6 +167,10 @@ function getTwitchGlobal(){
     let twitchGlobalUrl = 'https://api.twitchemotes.com/api/v4/channels/0';
     
     return getJsonProm(twitchGlobalUrl, function(twGlObj){
+        if(twGlObj.hasOwnProperty("error")){
+            return;
+        }
+        
         let emoteList = twGlObj['emotes'].filter(emote => emote.id > 14);
         globalEmotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
         console.log("twitchglobal loaded!");
