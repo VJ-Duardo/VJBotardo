@@ -101,24 +101,24 @@ async function getRandomFFZEmote(keyword){
 }
 
 function getBTTVChannel(channelObj){
-    let bttvChannel = `https://api.betterttv.net/2/channels/${channelObj.name}`;
+    let bttvChannel = `https://api.betterttv.net/3/cached/users/twitch/${channelObj.id}`;
     
     return getJsonProm(bttvChannel, function(bttvChObj){
-        if (bttvChObj.hasOwnProperty("message") && bttvChObj['message'] === "channel not found"){
+        if (bttvChObj.hasOwnProperty("message") && bttvChObj['message'] === "user not found"){
             return;
         }
         
-        let emoteList = bttvChObj['emotes'];
+        let emoteList = bttvChObj['channelEmotes'];
         console.log(`bttvchannel in ${channelObj.name} loaded!`);
         channelObj.emotes.bttvChannel = convertBTTVLists(emoteList, bttvPicUrl, '/3x');
     });
 }
 
 function getBTTVGlobal(){
-    let bttvGlobal = 'https://api.betterttv.net/2/emotes';
+    let bttvGlobal = 'https://api.betterttv.net/3/cached/emotes/global';
     
     getJsonProm(bttvGlobal, function(bttvGlObj){
-        let emoteList = bttvGlObj['emotes'];
+        let emoteList = bttvGlObj;
         globalEmotes.bttvGlobal = convertBTTVLists(emoteList, bttvPicUrl, '/2x');
         console.log("bttvglobal loaded!");
     });
