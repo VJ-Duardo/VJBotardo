@@ -8,7 +8,7 @@ var globalEmotes = {
     bttvGlobal: [],
     ffzGlobal: []
 };
-var twitchPicUrl = 'https://static-cdn.jtvnw.net/emoticons/v1/';
+var twitchPicUrl = 'https://static-cdn.jtvnw.net/emoticons/v2/';
 var bttvPicUrl = 'https://cdn.betterttv.net/emote/';
 
 class Emote{
@@ -159,7 +159,7 @@ function getTwitchChannel(channelObj){
 
         let emoteList = twChObj['emotes'];
         console.log(`twitchchannel in ${channelObj.name} loaded!`);
-        channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        channelObj.emotes.twitchChannel = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/default/dark/2.0');
     });
 }
 
@@ -172,7 +172,7 @@ function getTwitchGlobal(){
         }
         
         let emoteList = twGlObj['emotes'].filter(emote => emote.id > 14);
-        globalEmotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/2.0');
+        globalEmotes.twitchGlobal = convertBTTVAndTwitchLists(emoteList, twitchPicUrl, '/default/dark/2.0');
         console.log("twitchglobal loaded!");
     });
 }
