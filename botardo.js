@@ -141,7 +141,7 @@ function loadCommand(name, cooldown, minCooldown, devOnly, maxCooldown=600000, c
 var loading = true;
 (async function(){
     startTime = new Date().getTime()/1000;
-    loadAppAccessToken();
+    await loadAppAccessToken();
     emotes.loadGlobalEmotes();
     await client.connect();
     await db.getAllData(loadCommand, "COMMAND");
@@ -260,10 +260,13 @@ async function setNewAppAccessToken() {
     config.authToken = data['access_token'];
 }
 
-async function loadAppAccessToken() {
-    db.getAllData(function(token){
-        config.authToken = token;
-    },'IMPORTANT');
+function loadAppAccessToken() {
+    return new Promise(function(resolve){
+        db.getAllData(function(token){
+            config.authToken = token;
+            resolve();
+        },'IMPORTANT');
+    });
 }
 
 
