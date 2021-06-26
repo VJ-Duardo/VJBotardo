@@ -106,7 +106,7 @@ function getBTTVChannel(channelObj){
             return;
         }
         
-        let emoteList = bttvChObj['channelEmotes'];
+        let emoteList = bttvChObj['channelEmotes'].concat(bttvChObj['sharedEmotes']);
         console.log(`bttvchannel in ${channelObj.name} loaded!`);
         channelObj.emotes.bttvChannel = convertBTTVLists(emoteList, '/3x');
     });
