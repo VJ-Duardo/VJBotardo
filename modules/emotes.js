@@ -210,7 +210,7 @@ function startEmoteSchedule(){
         getTwitchEverything();
     });
 }
-startEmoteSchedule();
+//startEmoteSchedule();
 
 function convertBTTVLists(emoteList, postfix){
     const bttvPicUrl = 'https://cdn.betterttv.net/emote/';
