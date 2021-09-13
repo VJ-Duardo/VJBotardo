@@ -166,8 +166,12 @@ const sayFunc = async function(channel, nMessage){
             })
         })
         .then(response => {
-            if (response.status !== 200 && !channelsObjs[channel].allowIfPajbotDown){
-                throw new Error("invalid");
+            if (response.status !== 200){
+                if (channelsObjs[channel].allowIfPajbotDown){
+                    return {'banned':false};
+                } else {
+                    throw new Error("invalid");
+                }
             }
             return response.json();
         })
