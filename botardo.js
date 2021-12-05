@@ -885,6 +885,41 @@ client.on("PRIVMSG", (msg) => {
         [channel]
       );
       break;
+    case `${prefix}sparlerlink`:
+      allowanceCheck(
+        channel,
+        userstate,
+        "sparler",
+        async (channel, input) => {
+          let url = `https://pr0gramm.com/api/items/get?flags=1`;
+          if (input.includes("-p")) {
+            input = input.slice(
+              0,
+              input.findIndex((str) => str == "-p")
+            );
+            url += `&promoted=1`;
+          }
+
+          input.push("video");
+          url += `&tags=${input.join("+")}`;
+
+          try {
+            let data = (await (await fetch(url)).json()).items;
+            if (data.length < 1) {
+              sayFunc(channel, "No link for @Sparler :(");
+            } else {
+              sayFunc(
+                channel,
+                `https://vid.pr0gramm.com/${data[Math.floor(Math.random() * data.length)].image}`
+              );
+            }
+          } catch (e) {
+            sayFunc(channel, "No link for @Sparler :( (something went wrong)");
+          }
+        },
+        [channel, command.slice(1, command.length)]
+      );
+      break;
   }
 
   if (channelsObjs[channel].gameRunning) {
