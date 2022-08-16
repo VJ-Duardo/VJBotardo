@@ -14,7 +14,7 @@
     "node-fetch": "^2.6.7",
     "node-schedule": "^2.0.0",
     "rewire": "^5.0.0",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.3"
   },
   "scripts": {
     "test": "mocha"
