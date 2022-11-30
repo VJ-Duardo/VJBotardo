@@ -885,6 +885,26 @@ client.on("PRIVMSG", (msg) => {
         [channel]
       );
       break;
+    case `${prefix}aoc`:
+      allowanceCheck(
+        ...identParams,
+        async (channel) => {
+          const url = `https://adventofcode.com/2022/leaderboard/private/view/1102631.json`;
+          const opts = {
+            headers: {
+              cookie: 'session=53616c7465645f5f60d452f6d4e4fb5fb841a07d3884cb738181a64ad442e01fe88a1223d34ba0b916ae5e89adcee653038d55ee7c6c5aea19288d37c0c1df37'
+            }
+          };
+          let data = (await (await fetch(url,opts)).json());
+          msg = ''
+          for (const [key, value] of Object.entries(data.members)) {
+            msg += ` ${value.name}: ${value.stars}|`;
+          }
+          sayFunc(channel, msg);
+        },
+        [channel]
+      );
+      break;
     case `${prefix}sparlerlink`:
       allowanceCheck(
         channel,
