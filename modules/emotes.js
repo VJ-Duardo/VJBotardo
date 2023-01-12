@@ -33,7 +33,7 @@ module.exports = {
         return getTwitchEverything();
     },
     getEmojiURL: function(emoji){
-        let emojiUrl = 'https://twemoji.maxcdn.com/v/latest/72x72/';
+        let emojiUrl = 'https://pajbot.com/static/emoji-v2/img/twitter/64/';
         if (emoji.length < 4)
             return emojiUrl + emoji.codePointAt(0).toString(16) + '.png';
         return emojiUrl + emoji.codePointAt(0).toString(16) + '-' + emoji.codePointAt(2).toString(16) + '.png';
