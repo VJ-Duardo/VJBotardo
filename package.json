@@ -9,7 +9,7 @@
     "dank-twitch-irc": "^4.3.0",
     "event-stream": "^4.0.1",
     "gif-frames": "^1.0.1",
-    "got": "^11.8.5",
+    "got": "^12.5.3",
     "mocha": "^9.2.2",
     "node-fetch": "^2.6.7",
     "node-schedule": "^2.0.0",
