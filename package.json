@@ -4,9 +4,9 @@
   "description": "A twitch.tv chat bot",
   "main": "botardo.js",
   "dependencies": {
+    "@kararty/dank-twitch-irc": "^5.0.1",
     "JSONStream": "^1.3.5",
     "canvas": "^2.8.0",
-    "dank-twitch-irc": "^4.3.0",
     "event-stream": "^4.0.1",
     "gif-frames": "^1.0.1",
     "got": "^11.8.5",
