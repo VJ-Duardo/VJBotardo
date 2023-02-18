@@ -1,4 +1,4 @@
-const { ChatClient } = require("dank-twitch-irc");
+const { ChatClient } = require("@kararty/dank-twitch-irc");
 const fetch = require("node-fetch");
 const config = require("./configs/config.js");
 const guess = require("./modules/guesstheemote.js");
