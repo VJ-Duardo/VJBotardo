@@ -28,5 +28,6 @@
   "bugs": {
     "url": "https://github.com/VJ-Duardo/VJBotardo/issues"
   },
-  "homepage": "https://github.com/VJ-Duardo/VJBotardo#readme"
+  "homepage": "https://github.com/VJ-Duardo/VJBotardo#readme",
+  "packageManager": "yarn@3.4.1"
 }
