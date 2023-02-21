@@ -7,7 +7,8 @@ const sizes = ['4', '2', '1'];
 var globalEmotes = {
     twitchGlobal: [],
     bttvGlobal: [],
-    ffzGlobal: []
+    ffzGlobal: [],
+    seventvGlobal: []
 };
 
 class Emote{
@@ -28,6 +29,7 @@ module.exports = {
         getTwitchGlobal();
         getBTTVGlobal();
         getFFZGlobal();
+        getSeventvGlobal();
     },  
     loadTwitchSubEmotes: function(){
         return getTwitchEverything();
@@ -219,6 +221,40 @@ function convertBTTVLists(emoteList, postfix){
         emoteList[i] = new Emote(emoteList[i]['code'], emoteUrl, "bttv");
     }
     return emoteList;
+}
+
+async function getSeventvGlobal(){
+    const response = await fetch("https://7tv.io/v2/emotes/global", 
+         {"headers": {"content-type": "application/json"},}
+    );
+    const json = await response.json();
+
+
+    console.log(json);
+    for (const i in json) { 
+        const name = json[i]["name"];
+        const url = json[i]["urls"][3][1];
+        const correctedUrl = await getSeventvEmoteUrl(url);
+        console.log(name,correctedUrl);
+        globalEmotes.seventvGlobal.push(new Emote(name,correctedUrl,"7tv"));
+    }
+}
+
+async function getSeventvEmoteUrl(url){
+    // The 7TV REST API v2 doesn't indicate whether the
+    // webp file is an animation or not, so I'll
+    // ask first for the .gif file, if it fails, I
+    // assume it's a png file.
+    const dotIndex = url.lastIndexOf(".");
+    const strippedUrl = url.substring(0,dotIndex);
+    extension = "png";
+
+    //Check if it is an animated emote instead
+    const resp = await fetch(strippedUrl+".gif", {method: 'HEAD'});
+    if (resp.status === 200){
+        extension = "gif";
+    }
+    return strippedUrl+"."+extension
 }
 
 function convertTwitchLists(emoteList){
