@@ -38,6 +38,8 @@ class Channel {
       bttvGlobal: [],
       twitchChannel: [],
       twitchGlobal: [],
+      seventvChannel: [],
+      seventvGlobal: [],
     };
     this.lastCommandTime = {};
   }

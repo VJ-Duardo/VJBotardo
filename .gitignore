@@ -5,6 +5,7 @@ database.db
 testdatabase.db
 /frames
 /fonts
+node_modules
 
 # Yarn
 .yarn/*
