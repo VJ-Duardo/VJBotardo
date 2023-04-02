@@ -30,7 +30,7 @@ module.exports = {
     getTwitchGlobal();
     getBTTVGlobal();
     getFFZGlobal();
-    //getSeventvGlobal();
+    getSeventvGlobal();
   },
   getEmojiURL: function (emoji) {
     let emojiUrl = "https://pajbot.com/static/emoji-v2/img/twitter/64/";
