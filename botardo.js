@@ -124,7 +124,7 @@ async function loadChannel(
     await client.join(name);
 
     if (emotesString === null) await channelsObjs[name].loadEmotes();
-    else channelsObjs[name].emotes = JSON.parse(emotesString);
+    else channelsObjs[name].emotes = { ...channelsObjs[name].emotes, ...JSON.parse(emotesString) };
 
     console.log(`Joined channel ${name}`);
     return 1;

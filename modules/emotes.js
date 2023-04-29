@@ -287,6 +287,9 @@ function convertFFZLists(emoteList) {
 }
 
 function convertSevenTvLists(emoteList) {
+  if (!emoteList) {
+    return [];
+  }
   for (i = 0; i < emoteList.length; i++) {
     let isAnimated = emoteList[i]["data"]["animated"];
     emoteList[i] = new Emote(

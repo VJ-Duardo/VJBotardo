@@ -215,7 +215,9 @@ function createGameObject(channelObj, mode, rounds) {
       if (modes["global"].includes(list)) {
         emoteSet = emoteSet.concat(emotes.globalEmotes[list]);
       } else {
-        emoteSet = emoteSet.concat(channelObj.emotes[list]);
+        if (channelObj.emotes.hasOwnProperty(list)) {
+          emoteSet = emoteSet.concat(channelObj.emotes[list]);
+        }
       }
     }
   }
@@ -242,17 +244,17 @@ async function getRandomEmote(emoteSet, mode) {
   let triesUntiBackup = 10;
   let emote = null;
   let trData = 0;
-  const min = 10;
+  const min = 5;
   const max = 90;
 
-  while (trData < min || trData > max) {
-    emote = emoteSet[Math.floor(Math.random() * emoteSet.length)];
-    trData = await braille.getTransparencyData(emote.url);
-    triesUntiBackup--;
+  do {
     if (triesUntiBackup === 0) {
       return backupEmote;
     }
-  }
+    emote = emoteSet[Math.floor(Math.random() * emoteSet.length)];
+    trData = await braille.getTransparencyData(emote.url);
+  } while (trData < min || trData > max);
+
   return emote;
 }
 
