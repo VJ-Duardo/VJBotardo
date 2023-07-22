@@ -902,8 +902,8 @@ client.on("PRIVMSG", (msg) => {
             url += `&promoted=1`;
           }
 
-          input.forEach(function(word,index,input){
-              input[index] = encodeURIComponent(word);
+          input.forEach(function (word, index, input) {
+            input[index] = encodeURIComponent(word);
           });
           input.push("video");
           url += `&tags=${input.join("+")}`;
