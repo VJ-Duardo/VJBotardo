@@ -251,8 +251,13 @@ async function getRandomEmote(emoteSet, mode) {
     if (triesUntiBackup === 0) {
       return backupEmote;
     }
+    triesUntiBackup--;
     emote = emoteSet[Math.floor(Math.random() * emoteSet.length)];
-    trData = await braille.getTransparencyData(emote.url);
+    try {
+      trData = await braille.getTransparencyData(emote.url);
+    } catch (e) {
+      continue;
+    }
   } while (trData < min || trData > max);
 
   return emote;
