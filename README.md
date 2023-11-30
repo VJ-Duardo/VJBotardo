@@ -16,4 +16,5 @@ A twitch.tv chat bot
 3. Git clone the repo
 4. Get the dependencies: `yarn`
 5. Copy the `password.example.js` file and rename to `password.js`, then input your credentials
-6. Run the bot: `yarn node botardo.js`
+6. Create a sqlite3 database.db with the required [tables](https://gist.github.com/VJ-Duardo/f605e10c8063d34f5169d02fd640f70c)
+7. Run the bot: `yarn node botardo.js`
